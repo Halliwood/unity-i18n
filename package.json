@@ -1,0 +1,26 @@
+{
+  "name": "i18n",
+  "version": "1.0.0",
+  "description": "i18n",
+  "main": "index.js",
+  "scripts": {
+    "test": "tsc && node bin/index.js"
+  },
+  "keywords": [
+    "i18n",
+    "unity",
+    "localization"
+  ],
+  "author": "teppei",
+  "license": "ISC",
+  "dependencies": {
+    "md5": "^2.3.0",
+    "xlsx": "^0.16.6"
+  },
+  "devDependencies": {
+    "@types/md5": "^2.2.0",
+    "@types/node": "^14.6.3",
+    "@types/typescript": "^2.0.0",
+    "@types/xlsx": "0.0.36"
+  }
+}
