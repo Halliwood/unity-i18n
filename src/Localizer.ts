@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import path = require('path');
 import md5 = require('md5');
 import xlsx = require('xlsx');
-import { LocalizeOption } from './LocalizeOption';
+import { GlobalOption, LocalizeTask, LocalizeOption } from './LocalizeOption';
 
 interface LanguageRow {
     ID: string;
@@ -13,7 +13,7 @@ interface LanguageRow {
 export class Localizer {
     private readonly HanPattern = /[\u4e00-\u9fa5]+/;
     private readonly CodeZhPattern = /(?<!\\)(["|']{1})(.*?)(?<!\\)\1/g;
-    private readonly XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/g;
+    private readonly XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
     private readonly PrefabZhPattern = /^\s+m_Text: "(.*)"/;
 
     private readonly TagID = 'ID=';
@@ -22,14 +22,15 @@ export class Localizer {
     private readonly OutXlsx = 'language.xlsx';
     private readonly OutTxt = 'languages_mid.txt';
 
-    private sheetJson: LanguageRow[] = [];
+    private sheetRows: LanguageRow[];
     private strMap: {[zh: string]: LanguageRow} = {};
 
     private newCnt = 0;
     private fileLog = '';
     private skipLogs = [];
+    private crtFile: string;
 
-    searchZhInFiles(root: string, option?: LocalizeOption) {
+    searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
         let startAt = (new Date()).getTime();
 
         this.newCnt = 0;
@@ -43,39 +44,56 @@ export class Localizer {
             let xlsxBook = xlsx.readFile(xlsxPath);
             sheetName = xlsxBook.SheetNames[0];
             xlsxSheet = xlsxBook.Sheets[sheetName];
-            this.sheetJson = xlsx.utils.sheet_to_json<LanguageRow>(xlsxSheet);
-            for(let i = 0, len = this.sheetJson.length; i < len; i++) {
-                let strNode = this.sheetJson[i];
-                this.strMap[strNode.ID] = strNode;
+            this.sheetRows = xlsx.utils.sheet_to_json<LanguageRow>(xlsxSheet);
+            for(let oneRow of this.sheetRows) {
+                this.strMap[oneRow.ID] = oneRow;
             }
-            console.log('[unity-i18n]读入翻译记录：%d', this.sheetJson.length);
+            console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
         } else {
             console.log('[unity-i18n]找不到旧的翻译记录：%s', xlsxPath);
-            this.sheetJson = [];
+            this.sheetRows = [];
         }
+        console.log('start....');
 
-        let rootStat = fs.statSync(root);
-        if(rootStat.isFile()) {
-            this.searchZhInFile(root, option);
+        if(typeof(tasks) == 'string') {
+            // 单个路径
+            this.runTask(tasks, option);
         } else {
-            this.searchZhInDir(root, option);
+            let tasksAlias = tasks as LocalizeTask[];
+            for(let oneTask of tasksAlias) {
+                this.runTask(oneTask, option);
+            }
         }
 
-        if(this.sheetJson.length == 0) {
+        if(this.sheetRows.length == 0) {
             console.log('[unity-i18n]No zh strings found.');
             return;
         }
 
+        // 排序，没翻译的放前面
+        let sortedRows: LanguageRow[] = [];
+        for(let oneRow of this.sheetRows) {
+            if(!oneRow.LOCAL) {
+                sortedRows.push(oneRow);
+            }
+        }
+        for(let oneRow of this.sheetRows) {
+            if(oneRow.LOCAL) {
+                sortedRows.push(oneRow);
+            }
+        }
+
         let txtContent = '';
-        for(let i = 0, len = this.sheetJson.length; i < len; i++) {
-            let row = this.sheetJson[i];
-            txtContent += this.TagID + row.ID + '\n';
-            txtContent += this.TagCN + row.CN + '\n';
-            txtContent += this.TagLOCAL + row.LOCAL + '\n\n';
+        for(let id in this.strMap) {
+            let oneRow = this.strMap[id];
+            txtContent += this.TagID + oneRow.ID + '\n';
+            txtContent += this.TagCN + oneRow.CN + '\n';
+            txtContent += this.TagLOCAL + oneRow.LOCAL + '\n\n';
+            // txtContent += 'FROM=' + (oneRow as any).FROM + '\n\n';
         }
         fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
         let newBook = xlsx.utils.book_new();
-        let newSheet = xlsx.utils.json_to_sheet(this.sheetJson);
+        let newSheet = xlsx.utils.json_to_sheet(sortedRows);
         if(xlsxSheet) {
             newSheet["!cols"] = xlsxSheet["!cols"];
         } else {
@@ -87,18 +105,54 @@ export class Localizer {
         fs.writeFileSync('log.txt', this.fileLog + this.skipLogs.join('\n'), 'utf-8');
 
         let endAt = (new Date()).getTime();
-        console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0m s costed. Total: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m', 
-        ((endAt - startAt) / 1000).toFixed(), this.sheetJson.length, this.newCnt);
+        console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Total: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', 
+        ((endAt - startAt) / 1000).toFixed(), sortedRows.length, this.newCnt);
     }
 
-    searchZhInDir(dirPath: string, option?: LocalizeOption) {
+    private runTask(oneTask: LocalizeTask, option: GlobalOption) {
+        if(typeof(oneTask) == 'string') {
+            oneTask = {
+                "roots": [oneTask], 
+                "option": option
+            };
+        }
+        oneTask.option = this.mergeOption(oneTask.option, option);
+
+        for(let oneRoot of oneTask.roots) {
+            if(option.inputRoot && !path.isAbsolute(oneRoot)) {
+                oneRoot = path.join(option.inputRoot, oneRoot);
+            }
+            let rootStat = fs.statSync(oneRoot);
+            if(rootStat.isFile()) {
+                this.searchZhInFile(oneRoot, oneTask.option);
+            } else {
+                this.searchZhInDir(oneRoot, oneTask.option);
+            }
+        }
+    }
+
+    private mergeOption(local: LocalizeOption, global: LocalizeOption) {
+        if(!local) local = {};
+        if(global) {
+            for(let globalKey in global) {
+                if(!local[globalKey]) {
+                    local[globalKey] = global[globalKey];
+                }
+            }
+        }
+        return local;
+    }
+
+    searchZhInDir(dirPath: string, option?: GlobalOption) {
         if(path.basename(dirPath).charAt(0) == '.') {
+            this.skipLogs.push('--: ' + dirPath);
             return;
         }
         
         if(option?.excludes?.dirs) {
             for(let i = 0, len = option.excludes.dirs.length; i < len; i++) {
                 if(dirPath.search(option.excludes.dirs[i]) >= 0) {
+                    this.skipLogs.push('--: ' + dirPath);
                     return;
                 }
             }
@@ -138,10 +192,20 @@ export class Localizer {
         }
     }
 
-    searchZhInFile(filePath: string, option?: LocalizeOption) {
+    searchZhInFile(filePath: string, option?: GlobalOption) {
+        let fileExt = path.extname(filePath).toLowerCase();
+        if(option?.excludes?.exts && option.excludes.exts.indexOf(fileExt) >= 0) {
+            this.skipLogs.push('--: ' + filePath);
+            return;
+        }
+        if(option?.includes?.exts && option.includes.exts.indexOf(fileExt) < 0) {
+            this.skipLogs.push('--: ' + filePath);
+            return;
+        }
         if(option?.excludes?.files) {
             for(let i = 0, len = option.excludes.files.length; i < len; i++) {
                 if(filePath.search(option.excludes.files[i]) >= 0) {
+                    this.skipLogs.push('--: ' + filePath);
                     return;
                 }
             }
@@ -155,14 +219,13 @@ export class Localizer {
                 }
             }
             if(!isIncluded) {
+                this.skipLogs.push('--: ' + filePath);
                 return;
             }
         }
 
-        let fileExt = path.extname(filePath).toLowerCase();
-        if('.svn' == fileExt) return;
-
-        // console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
+        this.crtFile = filePath;
+        console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
         this.fileLog += '++' + filePath + '\n';
 
         if('.prefab' == fileExt) {
@@ -176,7 +239,7 @@ export class Localizer {
         }
     }
 
-    private searchZnInXml(filePath: string, option?: LocalizeOption) {
+    private searchZnInXml(filePath: string, option?: GlobalOption) {
         let fileContent = fs.readFileSync(filePath, 'utf-8');
         let lines = fileContent.split(/[\r\n]+/);
         for(let i = 0, len = lines.length; i < len; i++) {
@@ -184,19 +247,18 @@ export class Localizer {
             let ret = oneLine.match(this.XmlZhPattern);
 			if(ret)
 			{
-                for(let j = 0, jlen = ret.length; j < jlen; j++) {
-                    let rawContent = ret[j];
-                    if(rawContent.search(this.HanPattern) >= 0) {
-                        this.insertString(rawContent);
-                        ret = oneLine.match(this.CodeZhPattern);
-                    }
+                let rawContent = ret[2];
+                if(!rawContent.startsWith('0') && rawContent.search(this.HanPattern) >= 0) {
+                    this.insertString(rawContent);
                 }
 			}
         }
     }
 
-    private searchZnInCodeFile(filePath: string, option?: LocalizeOption) {
+    private searchZnInCodeFile(filePath: string, option?: GlobalOption) {
         let fileContent = fs.readFileSync(filePath, 'utf-8');
+        // 去掉跨行注释
+        fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, '');
         let lines = fileContent.split(/[\r|\n]+/);
         for(let i = 0, len = lines.length; i < len; i++) {
             let oneLine = lines[i];
@@ -226,7 +288,7 @@ export class Localizer {
         }
     }
 
-    private searchZnInJSON(filePath: string, option?: LocalizeOption) {
+    private searchZnInJSON(filePath: string, option?: GlobalOption) {
         let fileContent = fs.readFileSync(filePath, 'utf-8');
         let ret = fileContent.match(this.CodeZhPattern);
         if(ret)
@@ -234,13 +296,13 @@ export class Localizer {
             for(let i = 0, len = ret.length; i < len; i++) {
                 let rawContent = ret[i];
                 if(rawContent.search(this.HanPattern) >= 0) {
-                    this.insertString(rawContent);
+                    this.insertString(rawContent.substr(1, rawContent.length - 2));
                 }
             }
         }
     }
 
-    private searchZnInPrefab(filePath: string, option?: LocalizeOption) {
+    private searchZnInPrefab(filePath: string, option?: GlobalOption) {
         let fileContent = fs.readFileSync(filePath, 'utf-8');
         let lines = fileContent.split(/[\r\n]+/);
         for(let i = 0, len = lines.length; i < len; i++) {
@@ -249,10 +311,9 @@ export class Localizer {
             let ret = oneLine.match(this.PrefabZhPattern);
 			if(ret)
 			{
-                let rawContent = ret[0];
+                let rawContent = ret[1];
                 if(rawContent.search(this.HanPattern) >= 0) {
                     this.insertString(rawContent);
-                    ret = oneLine.match(this.CodeZhPattern);
                 }
 			}
         }
@@ -261,11 +322,13 @@ export class Localizer {
     private insertString(cn: string)
     {
         cn = this.formatString(cn);
+        // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');
         let id = this.getStringMd5(cn);
         if (this.strMap[id]) return;
         let node: LanguageRow = {ID: id, CN: cn, LOCAL: ''};
         this.strMap[id] = node;
-        this.sheetJson.unshift(node);
+        (node as any).FROM = this.crtFile;
+        this.sheetRows.push(node);
         this.newCnt++;
     }
 

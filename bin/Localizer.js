@@ -28,20 +28,19 @@ var Localizer = /** @class */ (function () {
     function Localizer() {
         this.HanPattern = /[\u4e00-\u9fa5]+/;
         this.CodeZhPattern = /(?<!\\)(["|']{1})(.*?)(?<!\\)\1/g;
-        this.XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/g;
+        this.XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
         this.PrefabZhPattern = /^\s+m_Text: "(.*)"/;
         this.TagID = 'ID=';
         this.TagCN = 'CN=';
         this.TagLOCAL = 'LOCAL=';
         this.OutXlsx = 'language.xlsx';
         this.OutTxt = 'languages_mid.txt';
-        this.sheetJson = [];
         this.strMap = {};
         this.newCnt = 0;
         this.fileLog = '';
         this.skipLogs = [];
     }
-    Localizer.prototype.searchZhInFiles = function (root, option) {
+    Localizer.prototype.searchZhInFiles = function (tasks, option) {
         var startAt = (new Date()).getTime();
         this.newCnt = 0;
         var outputRoot = (option === null || option === void 0 ? void 0 : option.outputRoot) || 'output/';
@@ -53,38 +52,58 @@ var Localizer = /** @class */ (function () {
             var xlsxBook = xlsx.readFile(xlsxPath);
             sheetName = xlsxBook.SheetNames[0];
             xlsxSheet = xlsxBook.Sheets[sheetName];
-            this.sheetJson = xlsx.utils.sheet_to_json(xlsxSheet);
-            for (var i = 0, len = this.sheetJson.length; i < len; i++) {
-                var strNode = this.sheetJson[i];
-                this.strMap[strNode.ID] = strNode;
+            this.sheetRows = xlsx.utils.sheet_to_json(xlsxSheet);
+            for (var _i = 0, _a = this.sheetRows; _i < _a.length; _i++) {
+                var oneRow = _a[_i];
+                this.strMap[oneRow.ID] = oneRow;
             }
-            console.log('[unity-i18n]读入翻译记录：%d', this.sheetJson.length);
+            console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
         }
         else {
             console.log('[unity-i18n]找不到旧的翻译记录：%s', xlsxPath);
-            this.sheetJson = [];
+            this.sheetRows = [];
         }
-        var rootStat = fs.statSync(root);
-        if (rootStat.isFile()) {
-            this.searchZhInFile(root, option);
+        console.log('start....');
+        if (typeof (tasks) == 'string') {
+            // 单个路径
+            this.runTask(tasks, option);
         }
         else {
-            this.searchZhInDir(root, option);
+            var tasksAlias = tasks;
+            for (var _b = 0, tasksAlias_1 = tasksAlias; _b < tasksAlias_1.length; _b++) {
+                var oneTask = tasksAlias_1[_b];
+                this.runTask(oneTask, option);
+            }
         }
-        if (this.sheetJson.length == 0) {
+        if (this.sheetRows.length == 0) {
             console.log('[unity-i18n]No zh strings found.');
             return;
         }
+        // 排序，没翻译的放前面
+        var sortedRows = [];
+        for (var _c = 0, _d = this.sheetRows; _c < _d.length; _c++) {
+            var oneRow = _d[_c];
+            if (!oneRow.LOCAL) {
+                sortedRows.push(oneRow);
+            }
+        }
+        for (var _e = 0, _f = this.sheetRows; _e < _f.length; _e++) {
+            var oneRow = _f[_e];
+            if (oneRow.LOCAL) {
+                sortedRows.push(oneRow);
+            }
+        }
         var txtContent = '';
-        for (var i = 0, len = this.sheetJson.length; i < len; i++) {
-            var row = this.sheetJson[i];
-            txtContent += this.TagID + row.ID + '\n';
-            txtContent += this.TagCN + row.CN + '\n';
-            txtContent += this.TagLOCAL + row.LOCAL + '\n\n';
+        for (var id in this.strMap) {
+            var oneRow = this.strMap[id];
+            txtContent += this.TagID + oneRow.ID + '\n';
+            txtContent += this.TagCN + oneRow.CN + '\n';
+            txtContent += this.TagLOCAL + oneRow.LOCAL + '\n\n';
+            // txtContent += 'FROM=' + (oneRow as any).FROM + '\n\n';
         }
         fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
         var newBook = xlsx.utils.book_new();
-        var newSheet = xlsx.utils.json_to_sheet(this.sheetJson);
+        var newSheet = xlsx.utils.json_to_sheet(sortedRows);
         if (xlsxSheet) {
             newSheet["!cols"] = xlsxSheet["!cols"];
         }
@@ -95,16 +114,52 @@ var Localizer = /** @class */ (function () {
         xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
         fs.writeFileSync('log.txt', this.fileLog + this.skipLogs.join('\n'), 'utf-8');
         var endAt = (new Date()).getTime();
-        console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0m s costed. Total: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m', ((endAt - startAt) / 1000).toFixed(), this.sheetJson.length, this.newCnt);
+        console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Total: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), sortedRows.length, this.newCnt);
+    };
+    Localizer.prototype.runTask = function (oneTask, option) {
+        if (typeof (oneTask) == 'string') {
+            oneTask = {
+                "roots": [oneTask],
+                "option": option
+            };
+        }
+        oneTask.option = this.mergeOption(oneTask.option, option);
+        for (var _i = 0, _a = oneTask.roots; _i < _a.length; _i++) {
+            var oneRoot = _a[_i];
+            if (option.inputRoot && !path.isAbsolute(oneRoot)) {
+                oneRoot = path.join(option.inputRoot, oneRoot);
+            }
+            var rootStat = fs.statSync(oneRoot);
+            if (rootStat.isFile()) {
+                this.searchZhInFile(oneRoot, oneTask.option);
+            }
+            else {
+                this.searchZhInDir(oneRoot, oneTask.option);
+            }
+        }
+    };
+    Localizer.prototype.mergeOption = function (local, global) {
+        if (!local)
+            local = {};
+        if (global) {
+            for (var globalKey in global) {
+                if (!local[globalKey]) {
+                    local[globalKey] = global[globalKey];
+                }
+            }
+        }
+        return local;
     };
     Localizer.prototype.searchZhInDir = function (dirPath, option) {
         var _a, _b;
         if (path.basename(dirPath).charAt(0) == '.') {
+            this.skipLogs.push('--: ' + dirPath);
             return;
         }
         if ((_a = option === null || option === void 0 ? void 0 : option.excludes) === null || _a === void 0 ? void 0 : _a.dirs) {
             for (var i = 0, len = option.excludes.dirs.length; i < len; i++) {
                 if (dirPath.search(option.excludes.dirs[i]) >= 0) {
+                    this.skipLogs.push('--: ' + dirPath);
                     return;
                 }
             }
@@ -145,15 +200,25 @@ var Localizer = /** @class */ (function () {
         }
     };
     Localizer.prototype.searchZhInFile = function (filePath, option) {
-        var _a, _b;
-        if ((_a = option === null || option === void 0 ? void 0 : option.excludes) === null || _a === void 0 ? void 0 : _a.files) {
+        var _a, _b, _c, _d;
+        var fileExt = path.extname(filePath).toLowerCase();
+        if (((_a = option === null || option === void 0 ? void 0 : option.excludes) === null || _a === void 0 ? void 0 : _a.exts) && option.excludes.exts.indexOf(fileExt) >= 0) {
+            this.skipLogs.push('--: ' + filePath);
+            return;
+        }
+        if (((_b = option === null || option === void 0 ? void 0 : option.includes) === null || _b === void 0 ? void 0 : _b.exts) && option.includes.exts.indexOf(fileExt) < 0) {
+            this.skipLogs.push('--: ' + filePath);
+            return;
+        }
+        if ((_c = option === null || option === void 0 ? void 0 : option.excludes) === null || _c === void 0 ? void 0 : _c.files) {
             for (var i = 0, len = option.excludes.files.length; i < len; i++) {
                 if (filePath.search(option.excludes.files[i]) >= 0) {
+                    this.skipLogs.push('--: ' + filePath);
                     return;
                 }
             }
         }
-        if ((_b = option === null || option === void 0 ? void 0 : option.includes) === null || _b === void 0 ? void 0 : _b.files) {
+        if ((_d = option === null || option === void 0 ? void 0 : option.includes) === null || _d === void 0 ? void 0 : _d.files) {
             var isIncluded = false;
             for (var i = 0, len = option.includes.files.length; i < len; i++) {
                 if (filePath.search(option.includes.files[i]) >= 0) {
@@ -162,13 +227,12 @@ var Localizer = /** @class */ (function () {
                 }
             }
             if (!isIncluded) {
+                this.skipLogs.push('--: ' + filePath);
                 return;
             }
         }
-        var fileExt = path.extname(filePath).toLowerCase();
-        if ('.svn' == fileExt)
-            return;
-        // console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
+        this.crtFile = filePath;
+        console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
         this.fileLog += '++' + filePath + '\n';
         if ('.prefab' == fileExt) {
             this.searchZnInPrefab(filePath, option);
@@ -190,18 +254,17 @@ var Localizer = /** @class */ (function () {
             var oneLine = lines[i];
             var ret = oneLine.match(this.XmlZhPattern);
             if (ret) {
-                for (var j = 0, jlen = ret.length; j < jlen; j++) {
-                    var rawContent = ret[j];
-                    if (rawContent.search(this.HanPattern) >= 0) {
-                        this.insertString(rawContent);
-                        ret = oneLine.match(this.CodeZhPattern);
-                    }
+                var rawContent = ret[2];
+                if (!rawContent.startsWith('0') && rawContent.search(this.HanPattern) >= 0) {
+                    this.insertString(rawContent);
                 }
             }
         }
     };
     Localizer.prototype.searchZnInCodeFile = function (filePath, option) {
         var fileContent = fs.readFileSync(filePath, 'utf-8');
+        // 去掉跨行注释
+        fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, '');
         var lines = fileContent.split(/[\r|\n]+/);
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
@@ -238,7 +301,7 @@ var Localizer = /** @class */ (function () {
             for (var i = 0, len = ret.length; i < len; i++) {
                 var rawContent = ret[i];
                 if (rawContent.search(this.HanPattern) >= 0) {
-                    this.insertString(rawContent);
+                    this.insertString(rawContent.substr(1, rawContent.length - 2));
                 }
             }
         }
@@ -251,22 +314,23 @@ var Localizer = /** @class */ (function () {
             // 过滤掉注释行
             var ret = oneLine.match(this.PrefabZhPattern);
             if (ret) {
-                var rawContent = ret[0];
+                var rawContent = ret[1];
                 if (rawContent.search(this.HanPattern) >= 0) {
                     this.insertString(rawContent);
-                    ret = oneLine.match(this.CodeZhPattern);
                 }
             }
         }
     };
     Localizer.prototype.insertString = function (cn) {
         cn = this.formatString(cn);
+        // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');
         var id = this.getStringMd5(cn);
         if (this.strMap[id])
             return;
         var node = { ID: id, CN: cn, LOCAL: '' };
         this.strMap[id] = node;
-        this.sheetJson.unshift(node);
+        node.FROM = this.crtFile;
+        this.sheetRows.push(node);
         this.newCnt++;
     };
     Localizer.prototype.getLocal = function (cn) {
