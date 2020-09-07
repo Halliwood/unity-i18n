@@ -24,6 +24,7 @@ var fs = __importStar(require("fs"));
 var path = require("path");
 var md5 = require("md5");
 var xlsx = require("xlsx");
+var LocalizeOption_1 = require("./LocalizeOption");
 var Localizer = /** @class */ (function () {
     function Localizer() {
         this.HanPattern = /[\u4e00-\u9fa5]+/;
@@ -36,11 +37,21 @@ var Localizer = /** @class */ (function () {
         this.OutXlsx = 'language.xlsx';
         this.OutTxt = 'languages_mid.txt';
         this.strMap = {};
+        this.totalCnt = 0;
         this.newCnt = 0;
-        this.fileLog = '';
-        this.skipLogs = [];
+        this.modifiedFileCnt = 0;
+        this.noLocalCnt = 0;
+        this.logContent = '';
     }
     Localizer.prototype.searchZhInFiles = function (tasks, option) {
+        this.mode = LocalizeOption_1.LocalizeMode.Search;
+        this.processTasks(tasks, option);
+    };
+    Localizer.prototype.replaceZhInFiles = function (tasks, option) {
+        this.mode = LocalizeOption_1.LocalizeMode.Replace;
+        this.processTasks(tasks, option);
+    };
+    Localizer.prototype.processTasks = function (tasks, option) {
         var startAt = (new Date()).getTime();
         this.newCnt = 0;
         var outputRoot = (option === null || option === void 0 ? void 0 : option.outputRoot) || 'output/';
@@ -112,9 +123,14 @@ var Localizer = /** @class */ (function () {
         }
         xlsx.utils.book_append_sheet(newBook, newSheet);
         xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
-        fs.writeFileSync('log.txt', this.fileLog + this.skipLogs.join('\n'), 'utf-8');
+        fs.writeFileSync('log.txt', this.logContent, 'utf-8');
         var endAt = (new Date()).getTime();
-        console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Total: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), sortedRows.length, this.newCnt);
+        if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+            console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, this.newCnt);
+        }
+        else {
+            console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
+        }
     };
     Localizer.prototype.runTask = function (oneTask, option) {
         if (typeof (oneTask) == 'string') {
@@ -153,13 +169,13 @@ var Localizer = /** @class */ (function () {
     Localizer.prototype.searchZhInDir = function (dirPath, option) {
         var _a, _b;
         if (path.basename(dirPath).charAt(0) == '.') {
-            this.skipLogs.push('--: ' + dirPath);
+            this.addLog('SKIP', dirPath);
             return;
         }
         if ((_a = option === null || option === void 0 ? void 0 : option.excludes) === null || _a === void 0 ? void 0 : _a.dirs) {
             for (var i = 0, len = option.excludes.dirs.length; i < len; i++) {
                 if (dirPath.search(option.excludes.dirs[i]) >= 0) {
-                    this.skipLogs.push('--: ' + dirPath);
+                    this.addLog('SKIP', dirPath);
                     return;
                 }
             }
@@ -189,7 +205,7 @@ var Localizer = /** @class */ (function () {
                 }
                 else {
                     if (!r) {
-                        this.skipLogs.push('--: ' + dirPath);
+                        this.addLog('SKIP', dirPath);
                         r = true;
                     }
                 }
@@ -203,17 +219,17 @@ var Localizer = /** @class */ (function () {
         var _a, _b, _c, _d;
         var fileExt = path.extname(filePath).toLowerCase();
         if (((_a = option === null || option === void 0 ? void 0 : option.excludes) === null || _a === void 0 ? void 0 : _a.exts) && option.excludes.exts.indexOf(fileExt) >= 0) {
-            this.skipLogs.push('--: ' + filePath);
+            this.addLog('SKIP', filePath);
             return;
         }
         if (((_b = option === null || option === void 0 ? void 0 : option.includes) === null || _b === void 0 ? void 0 : _b.exts) && option.includes.exts.indexOf(fileExt) < 0) {
-            this.skipLogs.push('--: ' + filePath);
+            this.addLog('SKIP', filePath);
             return;
         }
         if ((_c = option === null || option === void 0 ? void 0 : option.excludes) === null || _c === void 0 ? void 0 : _c.files) {
             for (var i = 0, len = option.excludes.files.length; i < len; i++) {
                 if (filePath.search(option.excludes.files[i]) >= 0) {
-                    this.skipLogs.push('--: ' + filePath);
+                    this.addLog('SKIP', filePath);
                     return;
                 }
             }
@@ -227,28 +243,54 @@ var Localizer = /** @class */ (function () {
                 }
             }
             if (!isIncluded) {
-                this.skipLogs.push('--: ' + filePath);
+                this.addLog('SKIP', filePath);
                 return;
             }
         }
         this.crtFile = filePath;
         console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
-        this.fileLog += '++' + filePath + '\n';
+        var fileContent = fs.readFileSync(filePath, 'utf-8');
+        var zhs;
         if ('.prefab' == fileExt) {
-            this.searchZnInPrefab(filePath, option);
+            zhs = this.processZnInPrefab(fileContent, option);
         }
         else if ('.xml' == fileExt) {
-            this.searchZnInXml(filePath, option);
+            zhs = this.processZnInXml(fileContent, option);
         }
         else if ('.json' == fileExt) {
-            this.searchZnInJSON(filePath, option);
+            zhs = this.processZnInJSON(fileContent, option);
         }
         else {
-            this.searchZnInCodeFile(filePath, option);
+            zhs = this.processZnInCodeFile(fileContent, option);
+        }
+        if (zhs.length > 0) {
+            if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+                this.addLog('SEARCH', filePath);
+                for (var _i = 0, zhs_1 = zhs; _i < zhs_1.length; _i++) {
+                    var zh = zhs_1[_i];
+                    this.insertString(zh);
+                }
+            }
+            else {
+                var modified = false;
+                for (var _e = 0, zhs_2 = zhs; _e < zhs_2.length; _e++) {
+                    var zh = zhs_2[_e];
+                    var local = this.getLocal(zh);
+                    if (local) {
+                        fileContent = fileContent.replace(zh, local);
+                        modified = true;
+                    }
+                }
+                if (modified) {
+                    this.addLog('REPLACE', filePath);
+                    fs.writeFileSync(filePath, fileContent, 'utf-8');
+                    this.modifiedFileCnt++;
+                }
+            }
         }
     };
-    Localizer.prototype.searchZnInXml = function (filePath, option) {
-        var fileContent = fs.readFileSync(filePath, 'utf-8');
+    Localizer.prototype.processZnInXml = function (fileContent, option) {
+        var zhs = [];
         var lines = fileContent.split(/[\r\n]+/);
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
@@ -256,13 +298,14 @@ var Localizer = /** @class */ (function () {
             if (ret) {
                 var rawContent = ret[2];
                 if (!rawContent.startsWith('0') && rawContent.search(this.HanPattern) >= 0) {
-                    this.insertString(rawContent);
+                    zhs.push(rawContent);
                 }
             }
         }
+        return zhs;
     };
-    Localizer.prototype.searchZnInCodeFile = function (filePath, option) {
-        var fileContent = fs.readFileSync(filePath, 'utf-8');
+    Localizer.prototype.processZnInCodeFile = function (fileContent, option) {
+        var zhs = [];
         // 去掉跨行注释
         fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, '');
         var lines = fileContent.split(/[\r|\n]+/);
@@ -288,26 +331,28 @@ var Localizer = /** @class */ (function () {
                 for (var j = 0, jlen = ret.length; j < jlen; j++) {
                     var rawContent = ret[j];
                     if (rawContent.search(this.HanPattern) >= 0) {
-                        this.insertString(rawContent.substr(1, rawContent.length - 2));
+                        zhs.push(rawContent.substr(1, rawContent.length - 2));
                     }
                 }
             }
         }
+        return zhs;
     };
-    Localizer.prototype.searchZnInJSON = function (filePath, option) {
-        var fileContent = fs.readFileSync(filePath, 'utf-8');
+    Localizer.prototype.processZnInJSON = function (fileContent, option) {
+        var zhs = [];
         var ret = fileContent.match(this.CodeZhPattern);
         if (ret) {
             for (var i = 0, len = ret.length; i < len; i++) {
                 var rawContent = ret[i];
                 if (rawContent.search(this.HanPattern) >= 0) {
-                    this.insertString(rawContent.substr(1, rawContent.length - 2));
+                    zhs.push(rawContent.substr(1, rawContent.length - 2));
                 }
             }
         }
+        return zhs;
     };
-    Localizer.prototype.searchZnInPrefab = function (filePath, option) {
-        var fileContent = fs.readFileSync(filePath, 'utf-8');
+    Localizer.prototype.processZnInPrefab = function (fileContent, option) {
+        var zhs = [];
         var lines = fileContent.split(/[\r\n]+/);
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
@@ -316,12 +361,14 @@ var Localizer = /** @class */ (function () {
             if (ret) {
                 var rawContent = ret[1];
                 if (rawContent.search(this.HanPattern) >= 0) {
-                    this.insertString(rawContent);
+                    zhs.push(rawContent);
                 }
             }
         }
+        return zhs;
     };
     Localizer.prototype.insertString = function (cn) {
+        this.totalCnt++;
         cn = this.formatString(cn);
         // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');
         var id = this.getStringMd5(cn);
@@ -334,11 +381,13 @@ var Localizer = /** @class */ (function () {
         this.newCnt++;
     };
     Localizer.prototype.getLocal = function (cn) {
-        var id = this.getStringMd5(this.formatString(cn));
+        cn = this.formatString(cn);
+        var id = this.getStringMd5(cn);
         var node = this.strMap[id];
         if (!node || !node.LOCAL) {
-            console.warn("not find Local:" + cn);
-            return cn;
+            this.noLocalCnt++;
+            this.addLog('NOLOCAL', cn);
+            return null;
         }
         return node.LOCAL;
     };
@@ -347,6 +396,9 @@ var Localizer = /** @class */ (function () {
     };
     Localizer.prototype.getStringMd5 = function (s) {
         return md5(s).replace(/-/g, '').toLowerCase();
+    };
+    Localizer.prototype.addLog = function (tag, text) {
+        this.logContent += '[' + tag + ']' + text + '\n';
     };
     return Localizer;
 }());

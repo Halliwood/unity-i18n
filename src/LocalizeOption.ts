@@ -23,3 +23,8 @@ export interface LocalizeOption {
 }
 
 export type LocalizeTask = string | TaskWithOption;
+
+export enum LocalizeMode {
+    Search, 
+    Replace
+}
