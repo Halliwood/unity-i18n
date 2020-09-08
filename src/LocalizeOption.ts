@@ -2,6 +2,7 @@ export interface GlobalOption extends LocalizeOption {
     inputRoot?: string;
     outputRoot?: string;
     noLog?: boolean;
+    silent?: boolean;
 }
 
 export interface TaskWithOption {

@@ -41,6 +41,7 @@ program
     .option("-d, --default", "Execute default tasks defined in the ExampleTasks.ts.")
     .option("-S, --search", "Search mode.")
     .option("-R, --replace", "Replace mode.")
+    .option("--silent", "Silent mode.")
     .parse(process.argv);
 if (!program.src && !program.tasks) {
     console.warn("The --src option is MUST.");
@@ -52,6 +53,9 @@ if (!program.output && !program.tasks) {
 }
 var localizer = new Localizer_1.Localizer();
 var globalOption = { "inputRoot": program.src, "outputRoot": program.output };
+if (program.silent) {
+    globalOption.silent = program.silent;
+}
 if (program.default) {
     if (program.search) {
         localizer.searchZhInFiles(DefaultTasks.searchTasks, globalOption);

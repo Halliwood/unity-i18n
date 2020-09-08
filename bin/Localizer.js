@@ -273,7 +273,9 @@ var Localizer = /** @class */ (function () {
             }
         }
         this.crtFile = filePath;
-        console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
+        if (!option.silent) {
+            console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
+        }
         var fileContent = fs.readFileSync(filePath, 'utf-8');
         var newContent;
         if ('.prefab' == fileExt) {

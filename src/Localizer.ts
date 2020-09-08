@@ -276,7 +276,9 @@ export class Localizer {
         }
 
         this.crtFile = filePath;
-        console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
+        if(!option.silent) {
+            console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
+        }
 
         let fileContent = fs.readFileSync(filePath, 'utf-8');
         let newContent: string;

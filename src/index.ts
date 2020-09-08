@@ -24,6 +24,7 @@ program
 	.option("-d, --default", "Execute default tasks defined in the ExampleTasks.ts.")
 	.option("-S, --search", "Search mode.")
 	.option("-R, --replace", "Replace mode.")
+	.option("--silent", "Silent mode.")
     .parse(process.argv);
 
 if(!(<any>program).src && !(<any>program).tasks) {
@@ -37,6 +38,9 @@ if(!(<any>program).output && !(<any>program).tasks) {
 
 let localizer = new Localizer();
 let globalOption: GlobalOption = {"inputRoot": (<any>program).src, "outputRoot": (<any>program).output};
+if((<any>program).silent) {
+    globalOption.silent = (<any>program).silent;
+}
 
 if((<any>program).default) {
     if((<any>program).search) {
