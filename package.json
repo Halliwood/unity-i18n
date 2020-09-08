@@ -1,10 +1,16 @@
 {
   "name": "i18n",
   "version": "1.0.0",
-  "description": "i18n",
-  "main": "index.js",
+  "description": "i18n tool for unity game project",
+  "main": "bin/index.js",
   "scripts": {
-    "test": "tsc && node bin/index.js"
+    "test": "tsc && node bin/index.js",
+    "build": "tsc",
+    "release": "tsc && npm config set registry=http://registry.npmjs.org && npm version patch && npm publish && npm config set registry=https://registry.npm.taobao.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Halliwood/unity-i18n.git"
   },
   "keywords": [
     "i18n",
@@ -12,7 +18,12 @@
     "localization"
   ],
   "author": "teppei",
+  "bin": "bin/unity-i18n",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Halliwood/unity-i18n/issues"
+  },
+  "homepage": "https://github.com/Halliwood/unity-i18n#readme",
   "dependencies": {
     "md5": "^2.3.0",
     "xlsx": "^0.16.6"
@@ -21,6 +32,7 @@
     "@types/md5": "^2.2.0",
     "@types/node": "^14.6.3",
     "@types/typescript": "^2.0.0",
-    "@types/xlsx": "0.0.36"
+    "@types/xlsx": "0.0.36",
+    "commander": "^6.1.0"
   }
 }

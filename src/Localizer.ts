@@ -12,18 +12,21 @@ interface LanguageRow {
 
 export class Localizer {
     private readonly HanPattern = /[\u4e00-\u9fa5]+/;
-    private readonly CodeZhPattern = /(?<!\\)(["|']{1})(.*?)(?<!\\)\1/g;
+    private readonly CodeZhPattern = /(?<!\\)(["']{1})(.*?)(?<!\\)\1/;
     private readonly XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
-    private readonly PrefabZhPattern = /^\s+m_Text: "(.*)"/;
+    private readonly PrefabZhPattern = /(?<=\s)m_Text: (["']{1})(.*)\1/;
 
     private readonly TagID = 'ID=';
     private readonly TagCN = 'CN=';
     private readonly TagLOCAL= 'LOCAL=';
     private readonly OutXlsx = 'language.xlsx';
     private readonly OutTxt = 'languages_mid.txt';
+    private readonly OutNewTxt = 'languages_new.txt';
 
     private sheetRows: LanguageRow[];
-    private strMap: {[zh: string]: LanguageRow} = {};
+    private strMap: {[id: string]: LanguageRow} = {};
+    private fromMap: {[id: string]: string} = {};
+    private newMap: {[id: string]: boolean} = {};
 
     private crtFile: string;
 
@@ -50,7 +53,16 @@ export class Localizer {
     private processTasks(tasks: string | LocalizeTask[], option?: GlobalOption) {
         let startAt = (new Date()).getTime();
 
+        this.strMap = {};
+        this.fromMap = {};
+        this.newMap = {};
+
+        this.totalCnt = 0;
         this.newCnt = 0;
+        this.modifiedFileCnt = 0;
+        this.noLocalCnt = 0;
+
+        this.logContent = '';
 
         let outputRoot = option?.outputRoot || 'output/';
         // 先读入xlsx
@@ -70,7 +82,11 @@ export class Localizer {
             console.log('[unity-i18n]找不到旧的翻译记录：%s', xlsxPath);
             this.sheetRows = [];
         }
-        console.log('start....');
+        if(this.mode == LocalizeMode.Search) {
+            console.log('开始搜索中文串...\n');
+        } else {
+            console.log('开始替换中文串...\n')
+        }
 
         if(typeof(tasks) == 'string') {
             // 单个路径
@@ -101,14 +117,21 @@ export class Localizer {
         }
 
         let txtContent = '';
+        let txtNewContent = '';
         for(let id in this.strMap) {
             let oneRow = this.strMap[id];
-            txtContent += this.TagID + oneRow.ID + '\n';
-            txtContent += this.TagCN + oneRow.CN + '\n';
-            txtContent += this.TagLOCAL + oneRow.LOCAL + '\n\n';
-            // txtContent += 'FROM=' + (oneRow as any).FROM + '\n\n';
+            let infos = this.TagID + oneRow.ID + '\n';
+            infos += this.TagCN + oneRow.CN + '\n';
+            infos += this.TagLOCAL + oneRow.LOCAL + '\n';
+            txtContent += infos + '\n';
+
+            if(this.newMap[oneRow.ID]) {
+                infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
+                txtNewContent += infos + '\n';
+            }
         }
         fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
+        fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
         let newBook = xlsx.utils.book_new();
         let newSheet = xlsx.utils.json_to_sheet(sortedRows);
         if(xlsxSheet) {
@@ -119,15 +142,15 @@ export class Localizer {
         xlsx.utils.book_append_sheet(newBook, newSheet);
         xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
 
-        fs.writeFileSync('log.txt', this.logContent, 'utf-8');
+        fs.writeFileSync('log.' + LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
 
         let endAt = (new Date()).getTime();
 
         if(this.mode == LocalizeMode.Search) {
-            console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', 
+            console.log('[unity-i18n]搜索结束! 耗时: \x1B[36m%d\x1B[0m秒. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', 
             ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, this.newCnt);
         } else {
-            console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', 
+            console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', 
             ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
         }
     }
@@ -251,123 +274,192 @@ export class Localizer {
         console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
 
         let fileContent = fs.readFileSync(filePath, 'utf-8');
-        let zhs: string[];
+        let newContent: string;
         if('.prefab' == fileExt) {
-            zhs = this.processZnInPrefab(fileContent, option);
+            newContent = this.processZnInPrefab(fileContent, option);
         } else if('.xml' == fileExt) {
-            zhs = this.processZnInXml(fileContent, option);
+            newContent = this.processZnInXml(fileContent, option);
         } else if('.json' == fileExt) {
-            zhs = this.processZnInJSON(fileContent, option);
+            newContent = this.processZnInJSON(fileContent, option);
         } else {
-            zhs = this.processZnInCodeFile(fileContent, option);
+            newContent = this.processZnInCodeFile(fileContent, option);
         }
 
-        if(zhs.length > 0) {
-            if(this.mode == LocalizeMode.Search) {
-                this.addLog('SEARCH', filePath);
-                for(let zh of zhs) {
-                    this.insertString(zh);
-                }
+        if(this.mode == LocalizeMode.Replace) {
+            if(newContent) {
+                this.addLog('REPLACE', filePath);
+                fs.writeFileSync(filePath, newContent, 'utf-8');
+                this.modifiedFileCnt++;
             } else {
-                let modified = false;
-                for(let zh of zhs) {
-                    let local = this.getLocal(zh);
-                    if(local) {
-                        fileContent = fileContent.replace(zh, local);
-                        modified = true;
-                    }
-                }
-                if(modified) {
-                    this.addLog('REPLACE', filePath);
-                    fs.writeFileSync(filePath, fileContent, 'utf-8');
-                    this.modifiedFileCnt++;
-                }
+                this.addLog('NOREPLACE', filePath);
             }
         }
     }
 
-    private processZnInXml(fileContent: string, option?: GlobalOption): string[] {
-        let zhs: string[] = [];
+    private processZnInXml(fileContent: string, option?: GlobalOption): string {
+        let modified = false;
+        let newContent = '';
         let lines = fileContent.split(/[\r\n]+/);
         for(let i = 0, len = lines.length; i < len; i++) {
             let oneLine = lines[i];
+            let zh = '';
             let ret = oneLine.match(this.XmlZhPattern);
 			if(ret)
 			{
                 let rawContent = ret[2];
-                if(!rawContent.startsWith('0') && rawContent.search(this.HanPattern) >= 0) {
-                    zhs.push(rawContent);
+                if(!rawContent.startsWith('0') && this.containsZh(rawContent)) {
+                    zh = rawContent;
+                }                
+            }
+            if(this.mode == LocalizeMode.Search) {
+                if(zh) {
+                    this.insertString(zh);
                 }
-			}
+            } else {
+                let local: string;
+                if(zh) {
+                    local = this.getLocal(zh);
+                }
+                if(local) {
+                    modified = true;
+                    newContent += oneLine.substr(0, ret.index) + '<' + ret[0] + '>' + local + '<' + ret[0] + '/>' + '\n';
+                } else {
+                    newContent += oneLine + '\n';
+                }
+            }
         }
-        return zhs;
+        return modified ? newContent : null;
     }
 
-    private processZnInCodeFile(fileContent: string, option?: GlobalOption): string[] {
-        let zhs: string[] = [];
+    private processZnInCodeFile(fileContent: string, option?: GlobalOption): string {
+        let modified = false;
+        let newContent = '';
         // 去掉跨行注释
         fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, '');
-        let lines = fileContent.split(/[\r|\n]+/);
+        let lines = fileContent.split(/[\r\n]+/);
         for(let i = 0, len = lines.length; i < len; i++) {
             let oneLine = lines[i];
             // 过滤掉注释行
-            if(oneLine.match(/^\s*\/\*/) || oneLine.match(/^\s*\/{2}/) || oneLine.match(/^\s*\*+/)) continue;
+            let skip = oneLine.match(/^\s*\/\*/) != null;
             // 过滤掉log语句
-            if(option?.skipPatterns) {
-                let skip = false;
+            if(!skip && option?.skipPatterns) {
                 for(let j = 0, jlen = option.skipPatterns.length; j < jlen; j++) {
                     if(oneLine.match(option.skipPatterns[j])) {
                         skip = true;
                         break;
                     }
                 }
-                if(skip) continue;
             }
-            let ret = oneLine.match(this.CodeZhPattern);
-			if(ret)
-			{
-                for(let j = 0, jlen = ret.length; j < jlen; j++) {
-                    let rawContent = ret[j];
-                    if(rawContent.search(this.HanPattern) >= 0) {
-                        zhs.push(rawContent.substr(1, rawContent.length - 2));
+            if(!skip) {
+                let ret = oneLine.match(this.CodeZhPattern);
+                while(ret)
+                {
+                    let zh = '';
+                    let rawContent = ret[2];
+                    if(this.containsZh(rawContent)) {
+                        zh = rawContent;
                     }
+                    if(this.mode == LocalizeMode.Search) {
+                        if(zh) {
+                            this.insertString(zh);
+                        }
+                    } else {
+                        let local: string;
+                        if(zh) {
+                            local = this.getLocal(zh);
+                        }
+                        if(local) {
+                            modified = true;
+                            newContent += oneLine.substr(0, ret.index) + ret[1] + local + ret[1];
+                        } else {
+                            newContent += oneLine.substr(0, ret.index + ret[0].length);
+                        }
+                    }
+                    oneLine = oneLine.substr(ret.index + ret[0].length);
+                    ret = oneLine.match(this.CodeZhPattern);
                 }
-			}
-        }
-        return zhs;
-    }
-
-    private processZnInJSON(fileContent: string, option?: GlobalOption): string[] {
-        let zhs: string[] = [];
-        let ret = fileContent.match(this.CodeZhPattern);
-        if(ret)
-        {
-            for(let i = 0, len = ret.length; i < len; i++) {
-                let rawContent = ret[i];
-                if(rawContent.search(this.HanPattern) >= 0) {
-                    zhs.push(rawContent.substr(1, rawContent.length - 2));
-                }
+                newContent += oneLine + '\n';
+            } else {
+                newContent += oneLine + '\n';
             }
         }
-        return zhs;
+        return modified ? newContent : null;
     }
 
-    private processZnInPrefab(fileContent: string, option?: GlobalOption): string[] {
-        let zhs: string[] = [];
+    private processZnInJSON(fileContent: string, option?: GlobalOption): string {
+        let modified = false;
+        let newContent = '';
+        let ret = fileContent.match(this.CodeZhPattern);
+        while(ret)
+        {
+            let zh = '';
+            let rawContent = ret[2];
+            if(this.containsZh(rawContent)) {
+                zh = rawContent;
+            }
+            if(this.mode == LocalizeMode.Search) {
+                if(zh) {
+                    this.insertString(zh);
+                }
+            } else {
+                let local: string;
+                if(zh) {
+                    local = this.getLocal(zh);
+                }
+                if(local) {
+                    modified = true;
+                    newContent += fileContent.substr(0, ret.index) + ret[1] + local + ret[1];
+                } else {
+                    newContent += fileContent.substr(0, ret.index + ret[0].length);
+                }
+            }
+            fileContent = fileContent.substr(ret.index + ret[0].length);
+            ret = fileContent.match(this.CodeZhPattern);
+        }
+        newContent += fileContent;
+        return modified ? newContent : null;
+    }
+
+    private processZnInPrefab(fileContent: string, option?: GlobalOption): string {
+        let modified = false;
+        let newContent = '';
         let lines = fileContent.split(/[\r\n]+/);
         for(let i = 0, len = lines.length; i < len; i++) {
             let oneLine = lines[i];
-            // 过滤掉注释行
+            let zh = '';
             let ret = oneLine.match(this.PrefabZhPattern);
 			if(ret)
 			{
-                let rawContent = ret[1];
-                if(rawContent.search(this.HanPattern) >= 0) {
-                    zhs.push(rawContent);
+                let rawContent = this.unicode2utf8(ret[2]);
+                if(this.containsZh(rawContent)) {
+                    zh = rawContent;
                 }
 			}
+            if(this.mode == LocalizeMode.Search) {
+                if(zh) {
+                    this.insertString(zh);
+                }
+            } else {
+                let local: string;
+                if(zh) {
+                    local = this.getLocal(zh);
+                }
+                if(local) {
+                    modified = true;
+                    newContent += oneLine.substr(0, ret.index) + 'm_Text: ' + ret[1] + this.utf82unicode(local) + ret[1] + '\n';
+                } else {
+                    newContent += oneLine + '\n';
+                }
+            }
         }
-        return zhs;
+        return modified ? newContent : null;
+    }
+
+    private containsZh(str: string) {
+        if(str.search(this.HanPattern) >= 0) {
+            return true;
+        }
+        return false;
     }
 
     private insertString(cn: string)
@@ -379,7 +471,8 @@ export class Localizer {
         if (this.strMap[id]) return;
         let node: LanguageRow = {ID: id, CN: cn, LOCAL: ''};
         this.strMap[id] = node;
-        (node as any).FROM = this.crtFile;
+        this.fromMap[id] = this.crtFile;
+        this.newMap[id] = true;
         this.sheetRows.push(node);
         this.newCnt++;
     }
@@ -407,7 +500,15 @@ export class Localizer {
         return md5(s).replace(/-/g, '').toLowerCase();
     }
 
-    private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOLOCAL', text: string) {
+    private unicode2utf8(ustr): string {
+        return ustr.replace(/&#x([\da-f]{1,4});|\\u([\da-f]{1,4})|&#(\d+);|\\([\da-f]{1,4})/gi, function (t, e, n, o, r) { if (o) return String.fromCodePoint(o); var c = e || n || r; return /^\d+$/.test(c) && (c = parseInt(c, 10), !isNaN(c) && c < 256) ? unescape("%" + c) : unescape("%u" + c) })
+    }
+
+    private utf82unicode(ustr): string {
+        return ustr.replace(/[^\u0000-\u00FF]/g, function (t) { return escape(t).replace(/^%/, "\\") });
+    }
+
+    private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {
         this.logContent += '[' + tag + ']' + text + '\n';
     }
 }

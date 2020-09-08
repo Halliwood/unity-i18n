@@ -28,15 +28,18 @@ var LocalizeOption_1 = require("./LocalizeOption");
 var Localizer = /** @class */ (function () {
     function Localizer() {
         this.HanPattern = /[\u4e00-\u9fa5]+/;
-        this.CodeZhPattern = /(?<!\\)(["|']{1})(.*?)(?<!\\)\1/g;
+        this.CodeZhPattern = /(?<!\\)(["']{1})(.*?)(?<!\\)\1/;
         this.XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
-        this.PrefabZhPattern = /^\s+m_Text: "(.*)"/;
+        this.PrefabZhPattern = /(?<=\s)m_Text: (["']{1})(.*)\1/;
         this.TagID = 'ID=';
         this.TagCN = 'CN=';
         this.TagLOCAL = 'LOCAL=';
         this.OutXlsx = 'language.xlsx';
         this.OutTxt = 'languages_mid.txt';
+        this.OutNewTxt = 'languages_new.txt';
         this.strMap = {};
+        this.fromMap = {};
+        this.newMap = {};
         this.totalCnt = 0;
         this.newCnt = 0;
         this.modifiedFileCnt = 0;
@@ -53,7 +56,14 @@ var Localizer = /** @class */ (function () {
     };
     Localizer.prototype.processTasks = function (tasks, option) {
         var startAt = (new Date()).getTime();
+        this.strMap = {};
+        this.fromMap = {};
+        this.newMap = {};
+        this.totalCnt = 0;
         this.newCnt = 0;
+        this.modifiedFileCnt = 0;
+        this.noLocalCnt = 0;
+        this.logContent = '';
         var outputRoot = (option === null || option === void 0 ? void 0 : option.outputRoot) || 'output/';
         // 先读入xlsx
         var xlsxPath = path.join(outputRoot, this.OutXlsx);
@@ -74,7 +84,12 @@ var Localizer = /** @class */ (function () {
             console.log('[unity-i18n]找不到旧的翻译记录：%s', xlsxPath);
             this.sheetRows = [];
         }
-        console.log('start....');
+        if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+            console.log('开始搜索中文串...\n');
+        }
+        else {
+            console.log('开始替换中文串...\n');
+        }
         if (typeof (tasks) == 'string') {
             // 单个路径
             this.runTask(tasks, option);
@@ -105,14 +120,20 @@ var Localizer = /** @class */ (function () {
             }
         }
         var txtContent = '';
+        var txtNewContent = '';
         for (var id in this.strMap) {
             var oneRow = this.strMap[id];
-            txtContent += this.TagID + oneRow.ID + '\n';
-            txtContent += this.TagCN + oneRow.CN + '\n';
-            txtContent += this.TagLOCAL + oneRow.LOCAL + '\n\n';
-            // txtContent += 'FROM=' + (oneRow as any).FROM + '\n\n';
+            var infos = this.TagID + oneRow.ID + '\n';
+            infos += this.TagCN + oneRow.CN + '\n';
+            infos += this.TagLOCAL + oneRow.LOCAL + '\n';
+            txtContent += infos + '\n';
+            if (this.newMap[oneRow.ID]) {
+                infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
+                txtNewContent += infos + '\n';
+            }
         }
         fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
+        fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
         var newBook = xlsx.utils.book_new();
         var newSheet = xlsx.utils.json_to_sheet(sortedRows);
         if (xlsxSheet) {
@@ -123,13 +144,13 @@ var Localizer = /** @class */ (function () {
         }
         xlsx.utils.book_append_sheet(newBook, newSheet);
         xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
-        fs.writeFileSync('log.txt', this.logContent, 'utf-8');
+        fs.writeFileSync('log.' + LocalizeOption_1.LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
         var endAt = (new Date()).getTime();
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
-            console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, this.newCnt);
+            console.log('[unity-i18n]搜索结束! 耗时: \x1B[36m%d\x1B[0m秒. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, this.newCnt);
         }
         else {
-            console.log('[unity-i18n]Done! \x1B[36m%d\x1B[0ms costed. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
+            console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
         }
     };
     Localizer.prototype.runTask = function (oneTask, option) {
@@ -250,122 +271,195 @@ var Localizer = /** @class */ (function () {
         this.crtFile = filePath;
         console.log('\x1B[1A\x1B[Kprocessing: %s', filePath);
         var fileContent = fs.readFileSync(filePath, 'utf-8');
-        var zhs;
+        var newContent;
         if ('.prefab' == fileExt) {
-            zhs = this.processZnInPrefab(fileContent, option);
+            newContent = this.processZnInPrefab(fileContent, option);
         }
         else if ('.xml' == fileExt) {
-            zhs = this.processZnInXml(fileContent, option);
+            newContent = this.processZnInXml(fileContent, option);
         }
         else if ('.json' == fileExt) {
-            zhs = this.processZnInJSON(fileContent, option);
+            newContent = this.processZnInJSON(fileContent, option);
         }
         else {
-            zhs = this.processZnInCodeFile(fileContent, option);
+            newContent = this.processZnInCodeFile(fileContent, option);
         }
-        if (zhs.length > 0) {
-            if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
-                this.addLog('SEARCH', filePath);
-                for (var _i = 0, zhs_1 = zhs; _i < zhs_1.length; _i++) {
-                    var zh = zhs_1[_i];
-                    this.insertString(zh);
-                }
+        if (this.mode == LocalizeOption_1.LocalizeMode.Replace) {
+            if (newContent) {
+                this.addLog('REPLACE', filePath);
+                fs.writeFileSync(filePath, newContent, 'utf-8');
+                this.modifiedFileCnt++;
             }
             else {
-                var modified = false;
-                for (var _e = 0, zhs_2 = zhs; _e < zhs_2.length; _e++) {
-                    var zh = zhs_2[_e];
-                    var local = this.getLocal(zh);
-                    if (local) {
-                        fileContent = fileContent.replace(zh, local);
-                        modified = true;
-                    }
-                }
-                if (modified) {
-                    this.addLog('REPLACE', filePath);
-                    fs.writeFileSync(filePath, fileContent, 'utf-8');
-                    this.modifiedFileCnt++;
-                }
+                this.addLog('NOREPLACE', filePath);
             }
         }
     };
     Localizer.prototype.processZnInXml = function (fileContent, option) {
-        var zhs = [];
+        var modified = false;
+        var newContent = '';
         var lines = fileContent.split(/[\r\n]+/);
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
+            var zh = '';
             var ret = oneLine.match(this.XmlZhPattern);
             if (ret) {
                 var rawContent = ret[2];
-                if (!rawContent.startsWith('0') && rawContent.search(this.HanPattern) >= 0) {
-                    zhs.push(rawContent);
+                if (!rawContent.startsWith('0') && this.containsZh(rawContent)) {
+                    zh = rawContent;
+                }
+            }
+            if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+                if (zh) {
+                    this.insertString(zh);
+                }
+            }
+            else {
+                var local = void 0;
+                if (zh) {
+                    local = this.getLocal(zh);
+                }
+                if (local) {
+                    modified = true;
+                    newContent += oneLine.substr(0, ret.index) + '<' + ret[0] + '>' + local + '<' + ret[0] + '/>' + '\n';
+                }
+                else {
+                    newContent += oneLine + '\n';
                 }
             }
         }
-        return zhs;
+        return modified ? newContent : null;
     };
     Localizer.prototype.processZnInCodeFile = function (fileContent, option) {
-        var zhs = [];
+        var modified = false;
+        var newContent = '';
         // 去掉跨行注释
         fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, '');
-        var lines = fileContent.split(/[\r|\n]+/);
+        var lines = fileContent.split(/[\r\n]+/);
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
             // 过滤掉注释行
-            if (oneLine.match(/^\s*\/\*/) || oneLine.match(/^\s*\/{2}/) || oneLine.match(/^\s*\*+/))
-                continue;
+            var skip = oneLine.match(/^\s*\/\*/) != null;
             // 过滤掉log语句
-            if (option === null || option === void 0 ? void 0 : option.skipPatterns) {
-                var skip = false;
+            if (!skip && (option === null || option === void 0 ? void 0 : option.skipPatterns)) {
                 for (var j = 0, jlen = option.skipPatterns.length; j < jlen; j++) {
                     if (oneLine.match(option.skipPatterns[j])) {
                         skip = true;
                         break;
                     }
                 }
-                if (skip)
-                    continue;
             }
-            var ret = oneLine.match(this.CodeZhPattern);
-            if (ret) {
-                for (var j = 0, jlen = ret.length; j < jlen; j++) {
-                    var rawContent = ret[j];
-                    if (rawContent.search(this.HanPattern) >= 0) {
-                        zhs.push(rawContent.substr(1, rawContent.length - 2));
+            if (!skip) {
+                var ret = oneLine.match(this.CodeZhPattern);
+                while (ret) {
+                    var zh = '';
+                    var rawContent = ret[2];
+                    if (this.containsZh(rawContent)) {
+                        zh = rawContent;
                     }
+                    if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+                        if (zh) {
+                            this.insertString(zh);
+                        }
+                    }
+                    else {
+                        var local = void 0;
+                        if (zh) {
+                            local = this.getLocal(zh);
+                        }
+                        if (local) {
+                            modified = true;
+                            newContent += oneLine.substr(0, ret.index) + ret[1] + local + ret[1];
+                        }
+                        else {
+                            newContent += oneLine.substr(0, ret.index + ret[0].length);
+                        }
+                    }
+                    oneLine = oneLine.substr(ret.index + ret[0].length);
+                    ret = oneLine.match(this.CodeZhPattern);
                 }
+                newContent += oneLine + '\n';
+            }
+            else {
+                newContent += oneLine + '\n';
             }
         }
-        return zhs;
+        return modified ? newContent : null;
     };
     Localizer.prototype.processZnInJSON = function (fileContent, option) {
-        var zhs = [];
+        var modified = false;
+        var newContent = '';
         var ret = fileContent.match(this.CodeZhPattern);
-        if (ret) {
-            for (var i = 0, len = ret.length; i < len; i++) {
-                var rawContent = ret[i];
-                if (rawContent.search(this.HanPattern) >= 0) {
-                    zhs.push(rawContent.substr(1, rawContent.length - 2));
+        while (ret) {
+            var zh = '';
+            var rawContent = ret[2];
+            if (this.containsZh(rawContent)) {
+                zh = rawContent;
+            }
+            if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+                if (zh) {
+                    this.insertString(zh);
                 }
             }
+            else {
+                var local = void 0;
+                if (zh) {
+                    local = this.getLocal(zh);
+                }
+                if (local) {
+                    modified = true;
+                    newContent += fileContent.substr(0, ret.index) + ret[1] + local + ret[1];
+                }
+                else {
+                    newContent += fileContent.substr(0, ret.index + ret[0].length);
+                }
+            }
+            fileContent = fileContent.substr(ret.index + ret[0].length);
+            ret = fileContent.match(this.CodeZhPattern);
         }
-        return zhs;
+        newContent += fileContent;
+        return modified ? newContent : null;
     };
     Localizer.prototype.processZnInPrefab = function (fileContent, option) {
-        var zhs = [];
+        var modified = false;
+        var newContent = '';
         var lines = fileContent.split(/[\r\n]+/);
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
-            // 过滤掉注释行
+            var zh = '';
             var ret = oneLine.match(this.PrefabZhPattern);
             if (ret) {
-                var rawContent = ret[1];
-                if (rawContent.search(this.HanPattern) >= 0) {
-                    zhs.push(rawContent);
+                var rawContent = this.unicode2utf8(ret[2]);
+                if (this.containsZh(rawContent)) {
+                    zh = rawContent;
+                }
+            }
+            if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+                if (zh) {
+                    this.insertString(zh);
+                }
+            }
+            else {
+                var local = void 0;
+                if (zh) {
+                    local = this.getLocal(zh);
+                }
+                if (local) {
+                    modified = true;
+                    newContent += oneLine.substr(0, ret.index) + 'm_Text: ' + ret[1] + this.utf82unicode(local) + ret[1] + '\n';
+                }
+                else {
+                    newContent += oneLine + '\n';
                 }
             }
         }
-        return zhs;
+        return modified ? newContent : null;
+    };
+    Localizer.prototype.containsZh = function (str) {
+        if (str.search(this.HanPattern) >= 0) {
+            return true;
+        }
+        return false;
     };
     Localizer.prototype.insertString = function (cn) {
         this.totalCnt++;
@@ -376,7 +470,8 @@ var Localizer = /** @class */ (function () {
             return;
         var node = { ID: id, CN: cn, LOCAL: '' };
         this.strMap[id] = node;
-        node.FROM = this.crtFile;
+        this.fromMap[id] = this.crtFile;
+        this.newMap[id] = true;
         this.sheetRows.push(node);
         this.newCnt++;
     };
@@ -396,6 +491,13 @@ var Localizer = /** @class */ (function () {
     };
     Localizer.prototype.getStringMd5 = function (s) {
         return md5(s).replace(/-/g, '').toLowerCase();
+    };
+    Localizer.prototype.unicode2utf8 = function (ustr) {
+        return ustr.replace(/&#x([\da-f]{1,4});|\\u([\da-f]{1,4})|&#(\d+);|\\([\da-f]{1,4})/gi, function (t, e, n, o, r) { if (o)
+            return String.fromCodePoint(o); var c = e || n || r; return /^\d+$/.test(c) && (c = parseInt(c, 10), !isNaN(c) && c < 256) ? unescape("%" + c) : unescape("%u" + c); });
+    };
+    Localizer.prototype.utf82unicode = function (ustr) {
+        return ustr.replace(/[^\u0000-\u00FF]/g, function (t) { return escape(t).replace(/^%/, "\\"); });
     };
     Localizer.prototype.addLog = function (tag, text) {
         this.logContent += '[' + tag + ']' + text + '\n';
