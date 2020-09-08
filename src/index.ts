@@ -24,7 +24,6 @@ program
 	.option("-d, --default", "Execute default tasks defined in the ExampleTasks.ts.")
 	.option("-S, --search", "Search mode.")
 	.option("-R, --replace", "Replace mode.")
-	.option("-L, --no-log", "Donot generate log file.")
     .parse(process.argv);
 
 if(!(<any>program).src && !(<any>program).tasks) {

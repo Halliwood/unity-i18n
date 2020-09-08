@@ -41,7 +41,6 @@ program
     .option("-d, --default", "Execute default tasks defined in the ExampleTasks.ts.")
     .option("-S, --search", "Search mode.")
     .option("-R, --replace", "Replace mode.")
-    .option("-L, --no-log", "Donot generate log file.")
     .parse(process.argv);
 if (!program.src && !program.tasks) {
     console.warn("The --src option is MUST.");

@@ -119,31 +119,33 @@ var Localizer = /** @class */ (function () {
                 sortedRows.push(oneRow);
             }
         }
-        var txtContent = '';
-        var txtNewContent = '';
-        for (var id in this.strMap) {
-            var oneRow = this.strMap[id];
-            var infos = this.TagID + oneRow.ID + '\n';
-            infos += this.TagCN + oneRow.CN + '\n';
-            infos += this.TagLOCAL + oneRow.LOCAL + '\n';
-            txtContent += infos + '\n';
-            if (this.newMap[oneRow.ID]) {
-                infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
-                txtNewContent += infos + '\n';
+        if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+            var txtContent = '';
+            var txtNewContent = '';
+            for (var id in this.strMap) {
+                var oneRow = this.strMap[id];
+                var infos = this.TagID + oneRow.ID + '\n';
+                infos += this.TagCN + oneRow.CN + '\n';
+                infos += this.TagLOCAL + oneRow.LOCAL + '\n';
+                txtContent += infos + '\n';
+                if (this.newMap[oneRow.ID]) {
+                    infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
+                    txtNewContent += infos + '\n';
+                }
             }
+            fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
+            fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
+            var newBook = xlsx.utils.book_new();
+            var newSheet = xlsx.utils.json_to_sheet(sortedRows);
+            if (xlsxSheet) {
+                newSheet["!cols"] = xlsxSheet["!cols"];
+            }
+            else {
+                newSheet["!cols"] = [{ wch: 20 }, { wch: 110 }, { wch: 110 }];
+            }
+            xlsx.utils.book_append_sheet(newBook, newSheet);
+            xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
         }
-        fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
-        fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
-        var newBook = xlsx.utils.book_new();
-        var newSheet = xlsx.utils.json_to_sheet(sortedRows);
-        if (xlsxSheet) {
-            newSheet["!cols"] = xlsxSheet["!cols"];
-        }
-        else {
-            newSheet["!cols"] = [{ wch: 20 }, { wch: 110 }, { wch: 110 }];
-        }
-        xlsx.utils.book_append_sheet(newBook, newSheet);
-        xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
         if (!(option === null || option === void 0 ? void 0 : option.noLog)) {
             fs.writeFileSync('log.' + LocalizeOption_1.LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
         }
