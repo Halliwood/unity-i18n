@@ -144,7 +144,9 @@ var Localizer = /** @class */ (function () {
         }
         xlsx.utils.book_append_sheet(newBook, newSheet);
         xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
-        fs.writeFileSync('log.' + LocalizeOption_1.LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
+        if (!(option === null || option === void 0 ? void 0 : option.noLog)) {
+            fs.writeFileSync('log.' + LocalizeOption_1.LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
+        }
         var endAt = (new Date()).getTime();
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
             console.log('[unity-i18n]搜索结束! 耗时: \x1B[36m%d\x1B[0m秒. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, this.newCnt);

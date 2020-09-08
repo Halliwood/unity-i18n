@@ -142,7 +142,9 @@ export class Localizer {
         xlsx.utils.book_append_sheet(newBook, newSheet);
         xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
 
-        fs.writeFileSync('log.' + LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
+        if(!option?.noLog) {
+            fs.writeFileSync('log.' + LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
+        }
 
         let endAt = (new Date()).getTime();
 

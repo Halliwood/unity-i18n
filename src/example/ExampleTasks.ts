@@ -1,16 +1,6 @@
-const exampleOption = {
-    "excludes": {
-        "dirs": ['Editor\\\\', 'uts\\\\Wraps', 'protocol\\\\new', 'uts\\\\StaticWrap\\\\\Wraps']
-    }, 
-    "includes": {
-        "dirs": ['Assets\\\\AssetSources\\\\ui', 'Assets\\\\AssetSources\\\\data', 'servercfg', 'serverscript', 'TsScripts', 'Assets\\\\Scripts'], 
-        "files": [/\.ts$/, /\.cs$/, /\.json$/, /\.cxx$/, /\.prefab$/, /\.xml$/]
-    }, 
-    "skipPatterns": [/^\s*uts\.log/, /^\s*uts\.assert\(/], 
-    "outputRoot": 'G:\\dldlweb_kr\\trunk\\project\\tools\\i18n\\dictionary\\tw'
-};
+import { LocalizeTask } from "../LocalizeOption";
 
-const prefabTask = {
+let prefabTask: LocalizeTask = {
     "roots": ['Assets\\AssetSources\\ui\\delaySystem', 'Assets\\AssetSources\\ui\\subitem', 'Assets\\AssetSources\\ui\\system'], 
     "option": {
         "includes": {
@@ -18,7 +8,7 @@ const prefabTask = {
         }
     }
 };
-const jsonTask = {
+let jsonTask: LocalizeTask = {
     "roots": ['Assets\\AssetSources\\data'], 
     "option": {
         "includes": {
@@ -26,7 +16,7 @@ const jsonTask = {
         }
     }
 };
-const tsTask = {
+let tsTask: LocalizeTask = {
     "roots": ['TsScripts'], 
     "option": {
         "excludes": {
@@ -39,7 +29,7 @@ const tsTask = {
         "skipPatterns": [/^\s*uts\.log/, /^\s*uts\.assert\(/]
     }
 };
-const csTask = {
+let csTask: LocalizeTask = {
     "roots": ['Assets\\Scripts'], 
     "option": {
         "excludes": {
@@ -51,7 +41,7 @@ const csTask = {
         "skipPatterns": [/^\s*Debug\.Log/], 
     }
 };
-const svrScriptTask = {
+let svrScriptTask = {
     "roots": ['serverscript'], 
     "option": {
         "includes": {
@@ -60,7 +50,7 @@ const svrScriptTask = {
         "skipPatterns": [/^\s*ATM_DebugSystemMessage\(/]
     }
 };
-const svrCfgTask = {
+let svrCfgTask = {
     "roots": ['servercfg'], 
     "option": {
         "includes": {
@@ -72,7 +62,7 @@ const svrCfgTask = {
     }
 };
 
-const searchTasks = [prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask];
-const replaceTasks = [prefabTask, jsonTask, tsTask, csTask];
-
-export default {'searchTasks': searchTasks, 'replaceTasks': replaceTasks};
+let searchTasks: LocalizeTask[] = [prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask];
+let replaceTasks: LocalizeTask[] = [prefabTask, jsonTask, tsTask, csTask];
+let DefaultTasks = {searchTasks: searchTasks, replaceTasks: replaceTasks};
+export = DefaultTasks;

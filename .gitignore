@@ -1,3 +1,4 @@
 **/node_modules/
 **/output/
-log.txt
+log.Replace.txt
+log.Search.txt
