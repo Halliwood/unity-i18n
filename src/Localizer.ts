@@ -105,15 +105,21 @@ export class Localizer {
 
         // 排序，没翻译的放前面
         let sortedRows: LanguageRow[] = [];
-        for(let oneRow of this.sheetRows) {
-            if(!oneRow.LOCAL) {
-                sortedRows.push(oneRow);
+        if(option?.xlsxStyle == 'prepend') {
+            for(let oneRow of this.sheetRows) {
+                if(!oneRow.LOCAL) {
+                    sortedRows.push(oneRow);
+                }
             }
-        }
-        for(let oneRow of this.sheetRows) {
-            if(oneRow.LOCAL) {
-                sortedRows.push(oneRow);
+            for(let oneRow of this.sheetRows) {
+                if(oneRow.LOCAL) {
+                    sortedRows.push(oneRow);
+                }
             }
+        } else if(option?.xlsxStyle == 'sort-by-id') {
+            sortedRows = this.sheetRows.sort((a: LanguageRow, b: LanguageRow): number=>{
+                return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
+            })
         }
 
         if(this.mode == LocalizeMode.Search) {

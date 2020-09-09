@@ -3,6 +3,7 @@ export interface GlobalOption extends LocalizeOption {
     outputRoot?: string;
     needLog?: boolean;
     silent?: boolean;
+    xlsxStyle?: 'prepend' | 'append' | 'sort-by-id';
 }
 
 export interface TaskWithOption {

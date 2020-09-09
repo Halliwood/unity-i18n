@@ -107,17 +107,24 @@ var Localizer = /** @class */ (function () {
         }
         // 排序，没翻译的放前面
         var sortedRows = [];
-        for (var _c = 0, _d = this.sheetRows; _c < _d.length; _c++) {
-            var oneRow = _d[_c];
-            if (!oneRow.LOCAL) {
-                sortedRows.push(oneRow);
+        if ((option === null || option === void 0 ? void 0 : option.xlsxStyle) == 'prepend') {
+            for (var _c = 0, _d = this.sheetRows; _c < _d.length; _c++) {
+                var oneRow = _d[_c];
+                if (!oneRow.LOCAL) {
+                    sortedRows.push(oneRow);
+                }
+            }
+            for (var _e = 0, _f = this.sheetRows; _e < _f.length; _e++) {
+                var oneRow = _f[_e];
+                if (oneRow.LOCAL) {
+                    sortedRows.push(oneRow);
+                }
             }
         }
-        for (var _e = 0, _f = this.sheetRows; _e < _f.length; _e++) {
-            var oneRow = _f[_e];
-            if (oneRow.LOCAL) {
-                sortedRows.push(oneRow);
-            }
+        else if ((option === null || option === void 0 ? void 0 : option.xlsxStyle) == 'sort-by-id') {
+            sortedRows = this.sheetRows.sort(function (a, b) {
+                return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
+            });
         }
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
             var txtContent = '';

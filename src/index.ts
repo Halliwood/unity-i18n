@@ -25,6 +25,7 @@ program
 	.option("-S, --search", "Search mode.")
 	.option("-R, --replace", "Replace mode.")
 	.option("--silent", "Silent mode.")
+	.option("-x, --xlsxstyle <prepend|append|sort-by-id>", "Xlsx sort rule.", 'prepend')
 	.option("-l, --log", "Generate log file.")
     .parse(process.argv);
 
@@ -44,6 +45,9 @@ if((<any>program).silent) {
 }
 if((<any>program).log) {
     globalOption.needLog = (<any>program).log;
+}
+if((<any>program).xlsxstyle) {
+    globalOption.xlsxStyle = (<any>program).xlsxstyle;
 }
 
 if((<any>program).default) {
