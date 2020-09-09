@@ -41,7 +41,7 @@ var csTask = {
     }
 };
 var svrScriptTask = {
-    "roots": ['serverscript'],
+    "roots": ['..\\serverscript'],
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
@@ -50,7 +50,7 @@ var svrScriptTask = {
     }
 };
 var svrCfgTask = {
-    "roots": ['servercfg'],
+    "roots": ['..\\servercfg'],
     "option": {
         "includes": {
             "exts": ['.xml']

@@ -42,7 +42,7 @@ let csTask: LocalizeTask = {
     }
 };
 let svrScriptTask = {
-    "roots": ['serverscript'], 
+    "roots": ['..\\serverscript'], 
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
@@ -51,7 +51,7 @@ let svrScriptTask = {
     }
 };
 let svrCfgTask = {
-    "roots": ['servercfg'], 
+    "roots": ['..\\servercfg'], 
     "option": {
         "includes": {
             "exts": ['.xml']
