@@ -145,7 +145,7 @@ export class Localizer {
             xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
         }
 
-        if(!option?.noLog) {
+        if(option?.needLog) {
             fs.writeFileSync('log.' + LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
         }
 

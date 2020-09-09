@@ -146,7 +146,7 @@ var Localizer = /** @class */ (function () {
             xlsx.utils.book_append_sheet(newBook, newSheet);
             xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
         }
-        if (!(option === null || option === void 0 ? void 0 : option.noLog)) {
+        if (option === null || option === void 0 ? void 0 : option.needLog) {
             fs.writeFileSync('log.' + LocalizeOption_1.LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
         }
         var endAt = (new Date()).getTime();

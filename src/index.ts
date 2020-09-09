@@ -25,6 +25,7 @@ program
 	.option("-S, --search", "Search mode.")
 	.option("-R, --replace", "Replace mode.")
 	.option("--silent", "Silent mode.")
+	.option("-l, --log", "Generate log file.")
     .parse(process.argv);
 
 if(!(<any>program).src && !(<any>program).tasks) {
@@ -40,6 +41,9 @@ let localizer = new Localizer();
 let globalOption: GlobalOption = {"inputRoot": (<any>program).src, "outputRoot": (<any>program).output};
 if((<any>program).silent) {
     globalOption.silent = (<any>program).silent;
+}
+if((<any>program).log) {
+    globalOption.needLog = (<any>program).log;
 }
 
 if((<any>program).default) {

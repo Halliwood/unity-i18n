@@ -1,7 +1,7 @@
 export interface GlobalOption extends LocalizeOption {
     inputRoot?: string;
     outputRoot?: string;
-    noLog?: boolean;
+    needLog?: boolean;
     silent?: boolean;
 }
 

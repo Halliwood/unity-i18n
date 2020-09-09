@@ -42,6 +42,7 @@ program
     .option("-S, --search", "Search mode.")
     .option("-R, --replace", "Replace mode.")
     .option("--silent", "Silent mode.")
+    .option("-l, --log", "Generate log file.")
     .parse(process.argv);
 if (!program.src && !program.tasks) {
     console.warn("The --src option is MUST.");
@@ -55,6 +56,9 @@ var localizer = new Localizer_1.Localizer();
 var globalOption = { "inputRoot": program.src, "outputRoot": program.output };
 if (program.silent) {
     globalOption.silent = program.silent;
+}
+if (program.log) {
+    globalOption.needLog = program.log;
 }
 if (program.default) {
     if (program.search) {
