@@ -106,8 +106,9 @@ var Localizer = /** @class */ (function () {
             return;
         }
         // 排序，没翻译的放前面
-        var sortedRows = [];
+        var sortedRows;
         if ((option === null || option === void 0 ? void 0 : option.xlsxStyle) == 'prepend') {
+            sortedRows = [];
             for (var _c = 0, _d = this.sheetRows; _c < _d.length; _c++) {
                 var oneRow = _d[_c];
                 if (!oneRow.LOCAL) {
@@ -125,6 +126,9 @@ var Localizer = /** @class */ (function () {
             sortedRows = this.sheetRows.sort(function (a, b) {
                 return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
             });
+        }
+        else {
+            sortedRows = this.sheetRows;
         }
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
             var txtContent = '';

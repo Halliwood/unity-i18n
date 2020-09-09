@@ -104,8 +104,9 @@ export class Localizer {
         }
 
         // 排序，没翻译的放前面
-        let sortedRows: LanguageRow[] = [];
+        let sortedRows: LanguageRow[];
         if(option?.xlsxStyle == 'prepend') {
+            sortedRows = [];
             for(let oneRow of this.sheetRows) {
                 if(!oneRow.LOCAL) {
                     sortedRows.push(oneRow);
@@ -120,6 +121,8 @@ export class Localizer {
             sortedRows = this.sheetRows.sort((a: LanguageRow, b: LanguageRow): number=>{
                 return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
             })
+        } else {
+            sortedRows = this.sheetRows;
         }
 
         if(this.mode == LocalizeMode.Search) {
