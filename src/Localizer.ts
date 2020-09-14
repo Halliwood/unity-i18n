@@ -179,6 +179,7 @@ export class Localizer {
         oneTask.option = this.mergeOption(oneTask.option, option);
 
         for(let oneRoot of oneTask.roots) {
+            oneRoot = this.normalizePath(oneRoot);
             if(option.inputRoot && !path.isAbsolute(oneRoot)) {
                 oneRoot = path.join(option.inputRoot, oneRoot);
             }
@@ -211,7 +212,11 @@ export class Localizer {
         
         if(option?.excludes?.dirs) {
             for(let i = 0, len = option.excludes.dirs.length; i < len; i++) {
-                if(dirPath.search(option.excludes.dirs[i]) >= 0) {
+                let ed = option.excludes.dirs[i];
+                if(typeof(ed) == 'string') {
+                    ed = this.normalizePath(ed);
+                }
+                if(dirPath.search(ed) >= 0) {
                     this.addLog('SKIP', dirPath);
                     return;
                 }
@@ -221,6 +226,10 @@ export class Localizer {
         if(option?.includes?.dirs) {
             let isIncluded = false;
             for(let i = 0, len = option.includes.dirs.length; i < len; i++) {
+                let id = option.excludes.dirs[i];
+                if(typeof(id) == 'string') {
+                    id = this.normalizePath(id);
+                }
                 if(dirPath.search(option.includes.dirs[i]) >= 0) {
                     isIncluded = true;
                     break;
@@ -516,12 +525,20 @@ export class Localizer {
         return md5(s).replace(/-/g, '').toLowerCase();
     }
 
-    private unicode2utf8(ustr): string {
+    private unicode2utf8(ustr: string): string {
         return ustr.replace(/&#x([\da-f]{1,4});|\\u([\da-f]{1,4})|&#(\d+);|\\([\da-f]{1,4})/gi, function (t, e, n, o, r) { if (o) return String.fromCodePoint(o); var c = e || n || r; return /^\d+$/.test(c) && (c = parseInt(c, 10), !isNaN(c) && c < 256) ? unescape("%" + c) : unescape("%u" + c) })
     }
 
-    private utf82unicode(ustr): string {
+    private utf82unicode(ustr: string): string {
         return ustr.replace(/[^\u0000-\u00FF]/g, function (t) { return escape(t).replace(/^%/, "\\") });
+    }
+
+    private normalizePath(p: string): string {
+        // MAC机上normalize不会把'a\\b'改成'a/b'
+        if(!/^win/.test(process.platform)) {
+            p = p.replace(/\\+/g, '/');
+        }
+        return path.normalize(p);        
     }
 
     private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {

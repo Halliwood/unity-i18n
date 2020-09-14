@@ -178,6 +178,7 @@ var Localizer = /** @class */ (function () {
         oneTask.option = this.mergeOption(oneTask.option, option);
         for (var _i = 0, _a = oneTask.roots; _i < _a.length; _i++) {
             var oneRoot = _a[_i];
+            oneRoot = this.normalizePath(oneRoot);
             if (option.inputRoot && !path.isAbsolute(oneRoot)) {
                 oneRoot = path.join(option.inputRoot, oneRoot);
             }
@@ -210,7 +211,11 @@ var Localizer = /** @class */ (function () {
         }
         if ((_a = option === null || option === void 0 ? void 0 : option.excludes) === null || _a === void 0 ? void 0 : _a.dirs) {
             for (var i = 0, len = option.excludes.dirs.length; i < len; i++) {
-                if (dirPath.search(option.excludes.dirs[i]) >= 0) {
+                var ed = option.excludes.dirs[i];
+                if (typeof (ed) == 'string') {
+                    ed = this.normalizePath(ed);
+                }
+                if (dirPath.search(ed) >= 0) {
                     this.addLog('SKIP', dirPath);
                     return;
                 }
@@ -220,6 +225,10 @@ var Localizer = /** @class */ (function () {
         if ((_b = option === null || option === void 0 ? void 0 : option.includes) === null || _b === void 0 ? void 0 : _b.dirs) {
             var isIncluded = false;
             for (var i = 0, len = option.includes.dirs.length; i < len; i++) {
+                var id = option.excludes.dirs[i];
+                if (typeof (id) == 'string') {
+                    id = this.normalizePath(id);
+                }
                 if (dirPath.search(option.includes.dirs[i]) >= 0) {
                     isIncluded = true;
                     break;
@@ -515,6 +524,13 @@ var Localizer = /** @class */ (function () {
     };
     Localizer.prototype.utf82unicode = function (ustr) {
         return ustr.replace(/[^\u0000-\u00FF]/g, function (t) { return escape(t).replace(/^%/, "\\"); });
+    };
+    Localizer.prototype.normalizePath = function (p) {
+        // MAC机上normalize不会把'a\\b'改成'a/b'
+        if (!/^win/.test(process.platform)) {
+            p = p.replace(/\\+/g, '/');
+        }
+        return path.normalize(p);
     };
     Localizer.prototype.addLog = function (tag, text) {
         this.logContent += '[' + tag + ']' + text + '\n';
