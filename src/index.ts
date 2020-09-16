@@ -73,12 +73,17 @@ if((<any>program).default) {
         tasksObj = JSON.parse(tasksContent) as LocalizeTask[];
     }
     if(tasksObj) {
-        if((<any>program).search) {
-            localizer.searchZhInFiles(tasksObj, globalOption);
-        }
-        if((<any>program).replace) {
-            localizer.replaceZhInFiles(tasksObj, globalOption);
-        }        
+        try {
+            if((<any>program).search) {
+                localizer.searchZhInFiles(tasksObj, globalOption);
+            }
+            if((<any>program).replace) {
+                localizer.replaceZhInFiles(tasksObj, globalOption);
+            } 
+        } catch(e) {
+            console.log(e);
+            process.exit(1);
+        }       
     }
 }
 

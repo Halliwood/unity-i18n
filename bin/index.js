@@ -89,11 +89,17 @@ else if (program.tasks) {
         tasksObj = JSON.parse(tasksContent);
     }
     if (tasksObj) {
-        if (program.search) {
-            localizer.searchZhInFiles(tasksObj, globalOption);
+        try {
+            if (program.search) {
+                localizer.searchZhInFiles(tasksObj, globalOption);
+            }
+            if (program.replace) {
+                localizer.replaceZhInFiles(tasksObj, globalOption);
+            }
         }
-        if (program.replace) {
-            localizer.replaceZhInFiles(tasksObj, globalOption);
+        catch (e) {
+            console.log(e);
+            process.exit(1);
         }
     }
 }
