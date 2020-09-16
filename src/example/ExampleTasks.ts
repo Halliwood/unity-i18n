@@ -1,7 +1,7 @@
 import { LocalizeTask } from "../LocalizeOption";
 
 let prefabTask: LocalizeTask = {
-    "roots": ['Assets\\AssetSources\\ui\\delaySystem', 'Assets\\AssetSources\\ui\\subitem', 'Assets\\AssetSources\\ui\\system'], 
+    "roots": ['Assets/AssetSources/ui/delaySystem', 'Assets/AssetSources/ui/subitem', 'Assets/AssetSources/ui/system'], 
     "option": {
         "includes": {
             "exts": ['.prefab']
@@ -9,7 +9,7 @@ let prefabTask: LocalizeTask = {
     }
 };
 let jsonTask: LocalizeTask = {
-    "roots": ['Assets\\AssetSources\\data'], 
+    "roots": ['Assets/AssetSources/data'], 
     "option": {
         "includes": {
             "exts": ['.json']
@@ -20,7 +20,7 @@ let tsTask: LocalizeTask = {
     "roots": ['TsScripts'], 
     "option": {
         "excludes": {
-            "dirs": ['protocol\\\\new'], 
+            "dirs": ['protocol/new'], 
             "files": ['TestView.ts', 'Macros.ts', 'ErrorId.ts', 'SendMsgUtil.ts', 'GameConfig.d.ts']
         }, 
         "includes": {
@@ -30,10 +30,10 @@ let tsTask: LocalizeTask = {
     }
 };
 let csTask: LocalizeTask = {
-    "roots": ['Assets\\Scripts'], 
+    "roots": ['Assets/Scripts'], 
     "option": {
         "excludes": {
-            "dirs": ['uts\\\\StaticWrap\\\\\Wraps', '\\\\Editor\\\\']
+            "dirs": ['uts/StaticWrap/Wraps', '\\bEditor\\b']
         }, 
         "includes": {
             "exts": ['.cs']
@@ -42,7 +42,7 @@ let csTask: LocalizeTask = {
     }
 };
 let svrScriptTask = {
-    "roots": ['..\\serverscript'], 
+    "roots": ['../serverscript'], 
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
@@ -51,7 +51,7 @@ let svrScriptTask = {
     }
 };
 let svrCfgTask = {
-    "roots": ['..\\servercfg'], 
+    "roots": ['../servercfg'], 
     "option": {
         "includes": {
             "exts": ['.xml']

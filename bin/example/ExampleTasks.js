@@ -1,6 +1,6 @@
 "use strict";
 var prefabTask = {
-    "roots": ['Assets\\AssetSources\\ui\\delaySystem', 'Assets\\AssetSources\\ui\\subitem', 'Assets\\AssetSources\\ui\\system'],
+    "roots": ['Assets/AssetSources/ui/delaySystem', 'Assets/AssetSources/ui/subitem', 'Assets/AssetSources/ui/system'],
     "option": {
         "includes": {
             "exts": ['.prefab']
@@ -8,7 +8,7 @@ var prefabTask = {
     }
 };
 var jsonTask = {
-    "roots": ['Assets\\AssetSources\\data'],
+    "roots": ['Assets/AssetSources/data'],
     "option": {
         "includes": {
             "exts": ['.json']
@@ -19,7 +19,7 @@ var tsTask = {
     "roots": ['TsScripts'],
     "option": {
         "excludes": {
-            "dirs": ['protocol\\\\new'],
+            "dirs": ['protocol/new'],
             "files": ['TestView.ts', 'Macros.ts', 'ErrorId.ts', 'SendMsgUtil.ts', 'GameConfig.d.ts']
         },
         "includes": {
@@ -29,10 +29,10 @@ var tsTask = {
     }
 };
 var csTask = {
-    "roots": ['Assets\\Scripts'],
+    "roots": ['Assets/Scripts'],
     "option": {
         "excludes": {
-            "dirs": ['uts\\\\StaticWrap\\\\\Wraps', '\\\\Editor\\\\']
+            "dirs": ['uts/StaticWrap/Wraps', '\\bEditor\\b']
         },
         "includes": {
             "exts": ['.cs']
@@ -41,7 +41,7 @@ var csTask = {
     }
 };
 var svrScriptTask = {
-    "roots": ['..\\serverscript'],
+    "roots": ['../serverscript'],
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
@@ -50,7 +50,7 @@ var svrScriptTask = {
     }
 };
 var svrCfgTask = {
-    "roots": ['..\\servercfg'],
+    "roots": ['../servercfg'],
     "option": {
         "includes": {
             "exts": ['.xml']

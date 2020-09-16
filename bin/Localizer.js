@@ -528,11 +528,12 @@ var Localizer = /** @class */ (function () {
         return ustr.replace(/[^\u0000-\u00FF]/g, function (t) { return escape(t).replace(/^%/, "\\"); });
     };
     Localizer.prototype.normalizePath = function (p) {
-        // MAC机上normalize不会把'a\\b'改成'a/b'
-        if (!/^win/.test(process.platform)) {
-            p = p.replace(/\\+/g, '/');
+        // p是已linux风格的路径，需要转换成windows的
+        if (/win/.test(process.platform)) {
+            // a/b/c 换成 a\\\\b\\\\c
+            p = path.normalize(p).replace(/\\+/g, '\\\\');
         }
-        return path.normalize(p);
+        return p;
     };
     Localizer.prototype.eunsureString = function (s) {
         if (typeof (s) != 'string') {
