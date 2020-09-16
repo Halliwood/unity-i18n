@@ -434,7 +434,7 @@ export class Localizer {
                     local = this.getLocal(zh);
                 }
                 if(local) {
-                    local = local.replace(/(?<!\\)"/g, '\"');
+                    local = local.replace(/(?<!\\)"/g, '\\"');
                     modified = true;
                     newContent += fileContent.substr(0, ret.index) + ret[1] + local + ret[1];
                 } else {
