@@ -471,6 +471,12 @@ var Localizer = /** @class */ (function () {
                     local = this.getLocal(zh);
                 }
                 if (local) {
+                    if (typeof (local) != 'string') {
+                        console.error('local is not string!');
+                        console.log(zh);
+                        console.log(local);
+                        process.exit(1);
+                    }
                     modified = true;
                     newContent += oneLine.substr(0, ret.index) + 'm_Text: ' + ret[1] + this.utf82unicode(local) + ret[1] + '\n';
                 }
