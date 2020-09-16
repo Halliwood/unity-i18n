@@ -4,7 +4,7 @@
   "description": "i18n tool for unity game project",
   "main": "bin/index.js",
   "scripts": {
-    "test": "tsc && node bin/index.js",
+    "test": "tsc && node bin/index.js -s \"G:/dldlweb_kr/trunk/project\" -o \"G:/dldlweb_kr/trunk/project/tools/i18n/dictionary/tw\" -dR",
     "build": "tsc",
     "release": "npm version patch && npm publish"
   },
