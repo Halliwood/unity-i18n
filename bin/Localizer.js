@@ -76,6 +76,8 @@ var Localizer = /** @class */ (function () {
             this.sheetRows = xlsx.utils.sheet_to_json(xlsxSheet);
             for (var _i = 0, _a = this.sheetRows; _i < _a.length; _i++) {
                 var oneRow = _a[_i];
+                oneRow.CN = this.eunsureString(oneRow.CN);
+                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 this.strMap[oneRow.ID] = oneRow;
             }
             console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
@@ -471,12 +473,6 @@ var Localizer = /** @class */ (function () {
                     local = this.getLocal(zh);
                 }
                 if (local) {
-                    if (typeof (local) != 'string') {
-                        console.error('local is not string!');
-                        console.log(zh);
-                        console.log(local);
-                        process.exit(1);
-                    }
                     modified = true;
                     newContent += oneLine.substr(0, ret.index) + 'm_Text: ' + ret[1] + this.utf82unicode(local) + ret[1] + '\n';
                 }
@@ -537,6 +533,12 @@ var Localizer = /** @class */ (function () {
             p = p.replace(/\\+/g, '/');
         }
         return path.normalize(p);
+    };
+    Localizer.prototype.eunsureString = function (s) {
+        if (typeof (s) != 'string') {
+            return s.toString();
+        }
+        return s;
     };
     Localizer.prototype.addLog = function (tag, text) {
         this.logContent += '[' + tag + ']' + text + '\n';

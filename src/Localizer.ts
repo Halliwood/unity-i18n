@@ -75,6 +75,8 @@ export class Localizer {
             xlsxSheet = xlsxBook.Sheets[sheetName];
             this.sheetRows = xlsx.utils.sheet_to_json<LanguageRow>(xlsxSheet);
             for(let oneRow of this.sheetRows) {
+                oneRow.CN = this.eunsureString(oneRow.CN);
+                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 this.strMap[oneRow.ID] = oneRow;
             }
             console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
@@ -470,12 +472,6 @@ export class Localizer {
                     local = this.getLocal(zh);
                 }
                 if(local) {
-                    if(typeof(local) != 'string') {
-                        console.error('local is not string!');
-                        console.log(zh);
-                        console.log(local);
-                        process.exit(1);
-                    }
                     modified = true;
                     newContent += oneLine.substr(0, ret.index) + 'm_Text: ' + ret[1] + this.utf82unicode(local) + ret[1] + '\n';
                 } else {
@@ -545,6 +541,13 @@ export class Localizer {
             p = p.replace(/\\+/g, '/');
         }
         return path.normalize(p);        
+    }
+
+    private eunsureString(s: any): string {
+        if(typeof(s) != 'string') {
+            return s.toString();
+        }
+        return s;
     }
 
     private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {
