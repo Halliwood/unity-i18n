@@ -14,7 +14,7 @@ export class Localizer {
     private readonly HanPattern = /[\u4e00-\u9fa5]+/;
     private readonly CodeZhPattern = /(?<!\\)(["']{1})(.*?)(?<!\\)\1/;
     private readonly XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
-    private readonly PrefabZhPattern = /(?<=\s)m_Text: (["']{1})(.*)\1/;
+    private readonly PrefabZhPattern = /(?<=\s)m_Text: (["']{1})([\s\S]*)/;
 
     private readonly TagID = 'ID=';
     private readonly TagCN = 'CN=';
@@ -452,17 +452,51 @@ export class Localizer {
         let modified = false;
         let newContent = '';
         let lines = fileContent.split(/[\r\n]+/);
+
+        let indent = '  ';
+        let quoter = '"';
+        let rawLineCache: string;
+        let crossLineCache: string;
         for(let i = 0, len = lines.length; i < len; i++) {
             let oneLine = lines[i];
-            let zh = '';
-            let ret = oneLine.match(this.PrefabZhPattern);
-			if(ret)
-			{
-                let rawContent = this.unicode2utf8(ret[2]);
-                if(this.containsZh(rawContent)) {
-                    zh = rawContent;
+            let quotedContent = '';
+            if(crossLineCache) {
+                rawLineCache += '\n' + oneLine;
+                crossLineCache += ' ';
+                oneLine = oneLine.replace(/^\s+/, '').replace(/^\\(?=\s)/, '');
+                let endRe = new RegExp('(?<!\\\\)' + quoter + '$')
+                if(!endRe.test(oneLine)) {
+                    // 多行继续
+                    crossLineCache += oneLine;
+                    continue;
+                } 
+                // 多行结束
+                quotedContent = crossLineCache + oneLine.substr(0, oneLine.length - 1);
+            } else {
+                rawLineCache = oneLine;
+                let ret = oneLine.match(this.PrefabZhPattern);
+                if(ret)
+                {
+                    indent = oneLine.substr(0, ret.index);
+                    quoter = ret[1];
+                    let rawContent = ret[2];
+                    if(rawContent.charAt(rawContent.length - 1) != quoter) {
+                        // 多行待续
+                        crossLineCache = rawContent;
+                        continue;
+                    }
+                    quotedContent = rawContent.substr(0, rawContent.length - 1);
                 }
-			}
+            }
+
+            let zh = '';
+            if(quotedContent) {
+                quotedContent = this.unicode2utf8(quotedContent);
+                if(this.containsZh(quotedContent)) {
+                    zh = quotedContent;
+                }
+            }
+            crossLineCache = null;
             if(this.mode == LocalizeMode.Search) {
                 if(zh) {
                     this.insertString(zh);
@@ -472,11 +506,12 @@ export class Localizer {
                 if(zh) {
                     local = this.getLocal(zh);
                 }
+                if(newContent) newContent += '\n';
                 if(local) {
                     modified = true;
-                    newContent += oneLine.substr(0, ret.index) + 'm_Text: ' + ret[1] + this.utf82unicode(local) + ret[1] + '\n';
+                    newContent += indent + 'm_Text: ' + quoter + this.utf82unicode(local) + quoter;
                 } else {
-                    newContent += oneLine + '\n';
+                    newContent += rawLineCache;
                 }
             }
         }

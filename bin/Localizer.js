@@ -30,7 +30,7 @@ var Localizer = /** @class */ (function () {
         this.HanPattern = /[\u4e00-\u9fa5]+/;
         this.CodeZhPattern = /(?<!\\)(["']{1})(.*?)(?<!\\)\1/;
         this.XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
-        this.PrefabZhPattern = /(?<=\s)m_Text: (["']{1})(.*)\1/;
+        this.PrefabZhPattern = /(?<=\s)m_Text: (["']{1})([\s\S]*)/;
         this.TagID = 'ID=';
         this.TagCN = 'CN=';
         this.TagLOCAL = 'LOCAL=';
@@ -453,16 +453,49 @@ var Localizer = /** @class */ (function () {
         var modified = false;
         var newContent = '';
         var lines = fileContent.split(/[\r\n]+/);
+        var indent = '  ';
+        var quoter = '"';
+        var rawLineCache;
+        var crossLineCache;
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
-            var zh = '';
-            var ret = oneLine.match(this.PrefabZhPattern);
-            if (ret) {
-                var rawContent = this.unicode2utf8(ret[2]);
-                if (this.containsZh(rawContent)) {
-                    zh = rawContent;
+            var quotedContent = '';
+            if (crossLineCache) {
+                rawLineCache += '\n' + oneLine;
+                crossLineCache += ' ';
+                oneLine = oneLine.replace(/^\s+/, '').replace(/^\\(?=\s)/, '');
+                var endRe = new RegExp('(?<!\\\\)' + quoter + '$');
+                if (!endRe.test(oneLine)) {
+                    // 多行继续
+                    crossLineCache += oneLine;
+                    continue;
+                }
+                // 多行结束
+                quotedContent = crossLineCache + oneLine.substr(0, oneLine.length - 1);
+            }
+            else {
+                rawLineCache = oneLine;
+                var ret = oneLine.match(this.PrefabZhPattern);
+                if (ret) {
+                    indent = oneLine.substr(0, ret.index);
+                    quoter = ret[1];
+                    var rawContent = ret[2];
+                    if (rawContent.charAt(rawContent.length - 1) != quoter) {
+                        // 多行待续
+                        crossLineCache = rawContent;
+                        continue;
+                    }
+                    quotedContent = rawContent.substr(0, rawContent.length - 1);
                 }
             }
+            var zh = '';
+            if (quotedContent) {
+                quotedContent = this.unicode2utf8(quotedContent);
+                if (this.containsZh(quotedContent)) {
+                    zh = quotedContent;
+                }
+            }
+            crossLineCache = null;
             if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
                 if (zh) {
                     this.insertString(zh);
@@ -473,12 +506,14 @@ var Localizer = /** @class */ (function () {
                 if (zh) {
                     local = this.getLocal(zh);
                 }
+                if (newContent)
+                    newContent += '\n';
                 if (local) {
                     modified = true;
-                    newContent += oneLine.substr(0, ret.index) + 'm_Text: ' + ret[1] + this.utf82unicode(local) + ret[1] + '\n';
+                    newContent += indent + 'm_Text: ' + quoter + this.utf82unicode(local) + quoter;
                 }
                 else {
-                    newContent += oneLine + '\n';
+                    newContent += rawLineCache;
                 }
             }
         }

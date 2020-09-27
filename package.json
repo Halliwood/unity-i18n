@@ -25,14 +25,16 @@
   },
   "homepage": "https://github.com/Halliwood/unity-i18n#readme",
   "dependencies": {
+    "commander": "^6.1.0",
     "md5": "^2.3.0",
     "xlsx": "^0.16.6",
-    "commander": "^6.1.0"
+    "yaml": "^1.10.0"
   },
   "devDependencies": {
     "@types/md5": "^2.2.0",
     "@types/node": "^14.6.3",
     "@types/typescript": "^2.0.0",
-    "@types/xlsx": "0.0.36"
+    "@types/xlsx": "0.0.36",
+    "@types/yaml": "^1.9.7"
   }
 }
