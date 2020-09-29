@@ -1,25 +1,12 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Localizer = void 0;
 var fs = __importStar(require("fs"));
 var path = require("path");
 var md5 = require("md5");
@@ -64,7 +51,7 @@ var Localizer = /** @class */ (function () {
         this.modifiedFileCnt = 0;
         this.noLocalCnt = 0;
         this.logContent = '';
-        var outputRoot = (option === null || option === void 0 ? void 0 : option.outputRoot) || 'output/';
+        var outputRoot = option ? .outputRoot || 'output/' : ;
         // 先读入xlsx
         var xlsxPath = path.join(outputRoot, this.OutXlsx);
         var xlsxSheet;
@@ -109,7 +96,7 @@ var Localizer = /** @class */ (function () {
         }
         // 排序，没翻译的放前面
         var sortedRows;
-        if ((option === null || option === void 0 ? void 0 : option.xlsxStyle) == 'prepend') {
+        if (option ? .xlsxStyle == 'prepend' : ) {
             sortedRows = [];
             for (var _c = 0, _d = this.sheetRows; _c < _d.length; _c++) {
                 var oneRow = _d[_c];
@@ -124,7 +111,7 @@ var Localizer = /** @class */ (function () {
                 }
             }
         }
-        else if ((option === null || option === void 0 ? void 0 : option.xlsxStyle) == 'sort-by-id') {
+        else if (option ? .xlsxStyle == 'sort-by-id' : ) {
             sortedRows = this.sheetRows.sort(function (a, b) {
                 return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
             });
@@ -159,7 +146,7 @@ var Localizer = /** @class */ (function () {
             xlsx.utils.book_append_sheet(newBook, newSheet);
             xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
         }
-        if (option === null || option === void 0 ? void 0 : option.needLog) {
+        if (option ? .needLog : ) {
             fs.writeFileSync('log.' + LocalizeOption_1.LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
         }
         var endAt = (new Date()).getTime();
@@ -206,12 +193,11 @@ var Localizer = /** @class */ (function () {
         return local;
     };
     Localizer.prototype.searchZhInDir = function (dirPath, option) {
-        var _a, _b;
         if (path.basename(dirPath).charAt(0) == '.') {
             this.addLog('SKIP', dirPath);
             return;
         }
-        if ((_a = option === null || option === void 0 ? void 0 : option.excludes) === null || _a === void 0 ? void 0 : _a.dirs) {
+        if (option ? .excludes ? .dirs :  : ) {
             for (var i = 0, len = option.excludes.dirs.length; i < len; i++) {
                 var ed = option.excludes.dirs[i];
                 if (typeof (ed) == 'string') {
@@ -224,7 +210,7 @@ var Localizer = /** @class */ (function () {
             }
         }
         var dirIncluded = true;
-        if ((_b = option === null || option === void 0 ? void 0 : option.includes) === null || _b === void 0 ? void 0 : _b.dirs) {
+        if (option ? .includes ? .dirs :  : ) {
             var isIncluded = false;
             for (var i = 0, len = option.includes.dirs.length; i < len; i++) {
                 var id = option.excludes.dirs[i];
@@ -263,17 +249,16 @@ var Localizer = /** @class */ (function () {
         }
     };
     Localizer.prototype.searchZhInFile = function (filePath, option) {
-        var _a, _b, _c, _d;
         var fileExt = path.extname(filePath).toLowerCase();
-        if (((_a = option === null || option === void 0 ? void 0 : option.excludes) === null || _a === void 0 ? void 0 : _a.exts) && option.excludes.exts.indexOf(fileExt) >= 0) {
+        if (option ? .excludes ? .exts && option.excludes.exts.indexOf(fileExt) >= 0 :  : ) {
             this.addLog('SKIP', filePath);
             return;
         }
-        if (((_b = option === null || option === void 0 ? void 0 : option.includes) === null || _b === void 0 ? void 0 : _b.exts) && option.includes.exts.indexOf(fileExt) < 0) {
+        if (option ? .includes ? .exts && option.includes.exts.indexOf(fileExt) < 0 :  : ) {
             this.addLog('SKIP', filePath);
             return;
         }
-        if ((_c = option === null || option === void 0 ? void 0 : option.excludes) === null || _c === void 0 ? void 0 : _c.files) {
+        if (option ? .excludes ? .files :  : ) {
             for (var i = 0, len = option.excludes.files.length; i < len; i++) {
                 if (filePath.search(option.excludes.files[i]) >= 0) {
                     this.addLog('SKIP', filePath);
@@ -281,7 +266,7 @@ var Localizer = /** @class */ (function () {
                 }
             }
         }
-        if ((_d = option === null || option === void 0 ? void 0 : option.includes) === null || _d === void 0 ? void 0 : _d.files) {
+        if (option ? .includes ? .files :  : ) {
             var isIncluded = false;
             for (var i = 0, len = option.includes.files.length; i < len; i++) {
                 if (filePath.search(option.includes.files[i]) >= 0) {
@@ -369,7 +354,7 @@ var Localizer = /** @class */ (function () {
             // 过滤掉注释行
             var skip = oneLine.match(/^\s*\/\*/) != null;
             // 过滤掉log语句
-            if (!skip && (option === null || option === void 0 ? void 0 : option.skipPatterns)) {
+            if (!skip && option ? .skipPatterns : ) {
                 for (var j = 0, jlen = option.skipPatterns.length; j < jlen; j++) {
                     if (oneLine.match(option.skipPatterns[j])) {
                         skip = true;

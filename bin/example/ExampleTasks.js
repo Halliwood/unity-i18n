@@ -56,7 +56,7 @@ var svrCfgTask = {
             "exts": ['.xml']
         },
         "excludes": {
-            "files": ['WorldName.x--ml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
+            "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
         }
     }
 };
