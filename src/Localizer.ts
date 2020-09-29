@@ -367,7 +367,7 @@ export class Localizer {
         for(let i = 0, len = lines.length; i < len; i++) {
             let oneLine = lines[i];
             // 过滤掉注释行
-            let skip = oneLine.match(/^\s*\/\*/) != null;
+            let skip = oneLine.match(/^\s*\/\//) != null || oneLine.match(/^\s*\/\*/) != null;
             // 过滤掉log语句
             if(!skip && option?.skipPatterns) {
                 for(let j = 0, jlen = option.skipPatterns.length; j < jlen; j++) {

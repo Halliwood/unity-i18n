@@ -367,7 +367,7 @@ var Localizer = /** @class */ (function () {
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
             // 过滤掉注释行
-            var skip = oneLine.match(/^\s*\/\*/) != null;
+            var skip = oneLine.match(/^\s*\/\//) != null || oneLine.match(/^\s*\/\*/) != null;
             // 过滤掉log语句
             if (!skip && (option === null || option === void 0 ? void 0 : option.skipPatterns)) {
                 for (var j = 0, jlen = option.skipPatterns.length; j < jlen; j++) {
