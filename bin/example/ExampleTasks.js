@@ -1,6 +1,6 @@
 "use strict";
 var prefabTask = {
-    "roots": ['Assets/AssetSources/ui/delaySystem', 'Assets/AssetSources/ui/subitem', 'Assets/AssetSources/ui/system'],
+    "roots": ['Assets/AssetSources/ui'],
     "option": {
         "includes": {
             "exts": ['.prefab']

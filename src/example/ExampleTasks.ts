@@ -1,7 +1,7 @@
 import { LocalizeTask } from "../LocalizeOption";
 
 let prefabTask: LocalizeTask = {
-    "roots": ['Assets/AssetSources/ui/delaySystem', 'Assets/AssetSources/ui/subitem', 'Assets/AssetSources/ui/system'], 
+    "roots": ['Assets/AssetSources/ui'], 
     "option": {
         "includes": {
             "exts": ['.prefab']
