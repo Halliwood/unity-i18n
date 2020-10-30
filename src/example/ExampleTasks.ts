@@ -30,10 +30,10 @@ let tsTask: LocalizeTask = {
     }
 };
 let csTask: LocalizeTask = {
-    "roots": ['Assets/Scripts'], 
+    "roots": ['Assets/Scripts', 'Assets\\Editor\\XCodeBuilder'], 
     "option": {
         "excludes": {
-            "dirs": ['uts/StaticWrap/Wraps', '\\bEditor\\b']
+            "dirs": ['uts/StaticWrap/Wraps']
         }, 
         "includes": {
             "exts": ['.cs']
