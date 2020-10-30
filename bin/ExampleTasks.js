@@ -44,7 +44,7 @@ var csTask = {
     "roots": ['Assets\\Scripts'],
     "option": {
         "excludes": {
-            "dirs": ['uts\\\\StaticWrap\\\\\Wraps', '\\\\Editor\\\\']
+            "dirs": ['uts\\\\StaticWrap\\\\\Wraps']
         },
         "includes": {
             "exts": ['.cs']
