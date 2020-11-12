@@ -361,10 +361,20 @@ var Localizer = /** @class */ (function () {
     Localizer.prototype.processZnInCodeFile = function (fileContent, option) {
         var modified = false;
         var newContent = '';
-        // 去掉跨行注释
-        fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, '');
-        var lines = fileContent.split(/[\r\n]+/);
+        // 保留跨行注释
+        var commentCaches = [];
+        fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, function (substring) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            commentCaches.push(substring);
+            return '[[[i18n-comment]]]';
+        });
+        var lines = fileContent.split(/\r?\n/); // 保留空行
         for (var i = 0, len = lines.length; i < len; i++) {
+            if (i > 0)
+                newContent += '\n';
             var oneLine = lines[i];
             // 过滤掉注释行
             var skip = oneLine.match(/^\s*\/\//) != null || oneLine.match(/^\s*\/\*/) != null;
@@ -406,11 +416,21 @@ var Localizer = /** @class */ (function () {
                     oneLine = oneLine.substr(ret.index + ret[0].length);
                     ret = oneLine.match(this.CodeZhPattern);
                 }
-                newContent += oneLine + '\n';
+                newContent += oneLine;
             }
             else {
-                newContent += oneLine + '\n';
+                newContent += oneLine;
             }
+        }
+        if (modified && commentCaches.length > 0) {
+            var commentCnt_1 = 0;
+            newContent = newContent.replace(/\[\[\[i18n-comment\]\]\]/g, function (substring) {
+                var args = [];
+                for (var _i = 1; _i < arguments.length; _i++) {
+                    args[_i - 1] = arguments[_i];
+                }
+                return commentCaches[commentCnt_1++];
+            });
         }
         return modified ? newContent : null;
     };

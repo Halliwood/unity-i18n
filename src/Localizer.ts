@@ -361,10 +361,15 @@ export class Localizer {
     private processZnInCodeFile(fileContent: string, option?: GlobalOption): string {
         let modified = false;
         let newContent = '';
-        // 去掉跨行注释
-        fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, '');
-        let lines = fileContent.split(/[\r\n]+/);
+        // 保留跨行注释
+        let commentCaches: string[] = [];
+        fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, (substring: string, ...args: any[]) => {
+            commentCaches.push(substring);
+            return '[[[i18n-comment]]]';
+        });
+        let lines = fileContent.split(/\r?\n/); // 保留空行
         for(let i = 0, len = lines.length; i < len; i++) {
+            if(i > 0) newContent += '\n';
             let oneLine = lines[i];
             // 过滤掉注释行
             let skip = oneLine.match(/^\s*\/\//) != null || oneLine.match(/^\s*\/\*/) != null;
@@ -405,10 +410,16 @@ export class Localizer {
                     oneLine = oneLine.substr(ret.index + ret[0].length);
                     ret = oneLine.match(this.CodeZhPattern);
                 }
-                newContent += oneLine + '\n';
+                newContent += oneLine;
             } else {
-                newContent += oneLine + '\n';
+                newContent += oneLine;
             }
+        }
+        if(modified && commentCaches.length > 0) {
+            let commentCnt = 0;
+            newContent = newContent.replace(/\[\[\[i18n-comment\]\]\]/g, (substring: string, ...args: any[]) => {
+                return commentCaches[commentCnt++];
+            });
         }
         return modified ? newContent : null;
     }
