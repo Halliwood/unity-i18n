@@ -184,6 +184,10 @@ var Localizer = /** @class */ (function () {
             if (option.inputRoot && !path.isAbsolute(oneRoot)) {
                 oneRoot = path.join(option.inputRoot, oneRoot);
             }
+            if (!fs.existsSync(oneRoot)) {
+                console.error('Task root not exists: %s', oneRoot);
+                continue;
+            }
             var rootStat = fs.statSync(oneRoot);
             if (rootStat.isFile()) {
                 this.searchZhInFile(oneRoot, oneTask.option);

@@ -29,7 +29,7 @@ var tsTask = {
     }
 };
 var csTask = {
-    "roots": ['Assets/Scripts', 'Assets\\Editor\\XCodeBuilder'],
+    "roots": ['Assets/Scripts', 'Assets/Editor/XCodeBuilder'],
     "option": {
         "excludes": {
             "dirs": ['uts/StaticWrap/Wraps']
