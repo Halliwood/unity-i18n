@@ -3,6 +3,7 @@ import path = require('path');
 import md5 = require('md5');
 import xlsx = require('xlsx');
 import { GlobalOption, LocalizeTask, LocalizeOption, LocalizeMode } from './LocalizeOption';
+import { assert } from 'console';
 
 interface LanguageRow {
     ID: string;
@@ -466,16 +467,16 @@ export class Localizer {
     private processZnInPrefab(fileContent: string, option?: GlobalOption): string {
         let modified = false;
         let newContent = '';
-        let lines = fileContent.split(/[\r\n]+/);
+        let lines = fileContent.split(/\r?\n/);
 
         let indent = '  ';
         let quoter = '"';
         let rawLineCache: string;
-        let crossLineCache: string;
+        let crossLineCache: string = null;
         for(let i = 0, len = lines.length; i < len; i++) {
             let oneLine = lines[i];
             let quotedContent = '';
-            if(crossLineCache) {
+            if(null != crossLineCache) {
                 rawLineCache += '\n' + oneLine;
                 crossLineCache += ' ';
                 oneLine = oneLine.replace(/^\s+/, '').replace(/^\\(?=\s)/, '');
@@ -530,7 +531,12 @@ export class Localizer {
                 }
             }
         }
-        return modified ? newContent : null;
+        if(modified) {
+            let newLines = newContent.split(/\r?\n/);
+            assert(newLines.length != lines.length, 'prefab line count not equal!');            
+            return newContent;
+        }
+        return null;
     }
 
     private containsZh(str: string) {

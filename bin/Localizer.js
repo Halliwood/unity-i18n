@@ -25,6 +25,7 @@ var path = require("path");
 var md5 = require("md5");
 var xlsx = require("xlsx");
 var LocalizeOption_1 = require("./LocalizeOption");
+var console_1 = require("console");
 var Localizer = /** @class */ (function () {
     function Localizer() {
         this.HanPattern = /[\u4e00-\u9fa5]+/;
@@ -476,15 +477,15 @@ var Localizer = /** @class */ (function () {
     Localizer.prototype.processZnInPrefab = function (fileContent, option) {
         var modified = false;
         var newContent = '';
-        var lines = fileContent.split(/[\r\n]+/);
+        var lines = fileContent.split(/\r?\n/);
         var indent = '  ';
         var quoter = '"';
         var rawLineCache;
-        var crossLineCache;
+        var crossLineCache = null;
         for (var i = 0, len = lines.length; i < len; i++) {
             var oneLine = lines[i];
             var quotedContent = '';
-            if (crossLineCache) {
+            if (null != crossLineCache) {
                 rawLineCache += '\n' + oneLine;
                 crossLineCache += ' ';
                 oneLine = oneLine.replace(/^\s+/, '').replace(/^\\(?=\s)/, '');
@@ -541,7 +542,12 @@ var Localizer = /** @class */ (function () {
                 }
             }
         }
-        return modified ? newContent : null;
+        if (modified) {
+            var newLines = newContent.split(/\r?\n/);
+            console_1.assert(newLines.length != lines.length, 'prefab line count not equal!');
+            return newContent;
+        }
+        return null;
     };
     Localizer.prototype.containsZh = function (str) {
         if (str.search(this.HanPattern) >= 0) {
