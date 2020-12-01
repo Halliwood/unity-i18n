@@ -6,7 +6,7 @@
   "scripts": {
     "test": "tsc && node bin/index.js -s \"G:/dldlwebtw/trunk/project\" -o \"G:/dldlwebtw/trunk/project/tools/i18n/dictionary/tw\" -dRl",
     "build": "tsc",
-    "release": "npm version patch && npm config set registry=http://registry.npmjs.org && npm publish"
+    "release": "npm config set registry=http://registry.npmjs.org && npm version patch && npm publish"
   },
   "repository": {
     "type": "git",
