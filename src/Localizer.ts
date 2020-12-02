@@ -531,12 +531,7 @@ export class Localizer {
                 }
             }
         }
-        if(modified) {
-            let newLines = newContent.split(/\r?\n/);
-            assert(newLines.length == lines.length, 'prefab line count not equal: %s, new len: %d, old len: %d', this.crtFile, newLines.length, lines.length);            
-            return newContent;
-        }
-        return null;
+        return modified ? newContent : null;
     }
 
     private containsZh(str: string) {

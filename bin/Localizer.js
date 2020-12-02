@@ -25,7 +25,6 @@ var path = require("path");
 var md5 = require("md5");
 var xlsx = require("xlsx");
 var LocalizeOption_1 = require("./LocalizeOption");
-var console_1 = require("console");
 var Localizer = /** @class */ (function () {
     function Localizer() {
         this.HanPattern = /[\u4e00-\u9fa5]+/;
@@ -542,12 +541,7 @@ var Localizer = /** @class */ (function () {
                 }
             }
         }
-        if (modified) {
-            var newLines = newContent.split(/\r?\n/);
-            console_1.assert(newLines.length == lines.length, 'prefab line count not equal: %s, new len: %d, old len: %d', this.crtFile, newLines.length, lines.length);
-            return newContent;
-        }
-        return null;
+        return modified ? newContent : null;
     };
     Localizer.prototype.containsZh = function (str) {
         if (str.search(this.HanPattern) >= 0) {
