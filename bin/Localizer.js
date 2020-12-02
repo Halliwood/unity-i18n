@@ -544,7 +544,7 @@ var Localizer = /** @class */ (function () {
         }
         if (modified) {
             var newLines = newContent.split(/\r?\n/);
-            console_1.assert(newLines.length != lines.length, 'prefab line count not equal!');
+            console_1.assert(newLines.length == lines.length, 'prefab line count not equal: %s, new len: %d, old len: %d', this.crtFile, newLines.length, lines.length);
             return newContent;
         }
         return null;
