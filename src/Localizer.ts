@@ -75,7 +75,10 @@ export class Localizer {
             sheetName = xlsxBook.SheetNames[0];
             xlsxSheet = xlsxBook.Sheets[sheetName];
             this.sheetRows = xlsx.utils.sheet_to_json<LanguageRow>(xlsxSheet);
-            for(let oneRow of this.sheetRows) {
+            for(let i = 0, len = this.sheetRows.length; i < len; i++) {
+                let oneRow = this.sheetRows[i];
+                this.assert(oneRow.CN != undefined, 'Row "CN" is undefined in line: ' + (i + 1));
+                this.assert(oneRow.LOCAL != undefined, 'Row "LOCAL" is undefined in line: ' + (i + 1));
                 oneRow.CN = this.eunsureString(oneRow.CN);
                 oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 this.strMap[oneRow.ID] = oneRow;
@@ -605,5 +608,12 @@ export class Localizer {
 
     private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {
         this.logContent += '[' + tag + ']' + text + '\n';
+    }
+
+    private assert(cond: boolean, msg: string) {
+        if(!cond) {
+            throw new Error(msg);
+            process.exit(1);
+        }
     }
 }

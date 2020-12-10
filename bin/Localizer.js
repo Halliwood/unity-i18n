@@ -74,8 +74,10 @@ var Localizer = /** @class */ (function () {
             sheetName = xlsxBook.SheetNames[0];
             xlsxSheet = xlsxBook.Sheets[sheetName];
             this.sheetRows = xlsx.utils.sheet_to_json(xlsxSheet);
-            for (var _i = 0, _a = this.sheetRows; _i < _a.length; _i++) {
-                var oneRow = _a[_i];
+            for (var i = 0, len = this.sheetRows.length; i < len; i++) {
+                var oneRow = this.sheetRows[i];
+                this.assert(oneRow.CN != undefined, 'Row "CN" is undefined in line: ' + (i + 1));
+                this.assert(oneRow.LOCAL != undefined, 'Row "LOCAL" is undefined in line: ' + (i + 1));
                 oneRow.CN = this.eunsureString(oneRow.CN);
                 oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 this.strMap[oneRow.ID] = oneRow;
@@ -98,8 +100,8 @@ var Localizer = /** @class */ (function () {
         }
         else {
             var tasksAlias = tasks;
-            for (var _b = 0, tasksAlias_1 = tasksAlias; _b < tasksAlias_1.length; _b++) {
-                var oneTask = tasksAlias_1[_b];
+            for (var _i = 0, tasksAlias_1 = tasksAlias; _i < tasksAlias_1.length; _i++) {
+                var oneTask = tasksAlias_1[_i];
                 this.runTask(oneTask, option);
             }
         }
@@ -111,14 +113,14 @@ var Localizer = /** @class */ (function () {
         var sortedRows;
         if ((option === null || option === void 0 ? void 0 : option.xlsxStyle) == 'prepend') {
             sortedRows = [];
-            for (var _c = 0, _d = this.sheetRows; _c < _d.length; _c++) {
-                var oneRow = _d[_c];
+            for (var _a = 0, _b = this.sheetRows; _a < _b.length; _a++) {
+                var oneRow = _b[_a];
                 if (!oneRow.LOCAL) {
                     sortedRows.push(oneRow);
                 }
             }
-            for (var _e = 0, _f = this.sheetRows; _e < _f.length; _e++) {
-                var oneRow = _f[_e];
+            for (var _c = 0, _d = this.sheetRows; _c < _d.length; _c++) {
+                var oneRow = _d[_c];
                 if (oneRow.LOCAL) {
                     sortedRows.push(oneRow);
                 }
@@ -603,6 +605,12 @@ var Localizer = /** @class */ (function () {
     };
     Localizer.prototype.addLog = function (tag, text) {
         this.logContent += '[' + tag + ']' + text + '\n';
+    };
+    Localizer.prototype.assert = function (cond, msg) {
+        if (!cond) {
+            throw new Error(msg);
+            process.exit(1);
+        }
     };
     return Localizer;
 }());
