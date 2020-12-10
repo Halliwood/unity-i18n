@@ -74,14 +74,18 @@ var Localizer = /** @class */ (function () {
             sheetName = xlsxBook.SheetNames[0];
             xlsxSheet = xlsxBook.Sheets[sheetName];
             this.sheetRows = xlsx.utils.sheet_to_json(xlsxSheet);
+            var errorRows = [];
             for (var i = 0, len = this.sheetRows.length; i < len; i++) {
                 var oneRow = this.sheetRows[i];
-                this.assert(oneRow.CN != undefined, 'Row "CN" is undefined in line: ' + (i + 1));
-                this.assert(oneRow.LOCAL != undefined, 'Row "LOCAL" is undefined in line: ' + (i + 1));
+                if (oneRow.CN == undefined || oneRow.LOCAL == undefined) {
+                    errorRows.push(i + 2);
+                    continue;
+                }
                 oneRow.CN = this.eunsureString(oneRow.CN);
                 oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 this.strMap[oneRow.ID] = oneRow;
             }
+            this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
             console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
         }
         else {
