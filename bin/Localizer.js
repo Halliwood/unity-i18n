@@ -30,7 +30,7 @@ var Localizer = /** @class */ (function () {
         this.HanPattern = /[\u4e00-\u9fa5]+/;
         this.CodeZhPattern = /(?<!\\)(["']{1})(.*?)(?<!\\)\1/;
         this.XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
-        this.PrefabZhPattern = /(?<=\s)m_Text: (["']{1})([\s\S]*)/;
+        this.PrefabZhPattern = /(?<=\s)(value|m_Text): (["']{1})([\s\S]*)/;
         this.TagID = 'ID=';
         this.TagCN = 'CN=';
         this.TagLOCAL = 'LOCAL=';
@@ -484,6 +484,13 @@ var Localizer = /** @class */ (function () {
         var newContent = '';
         var lines = fileContent.split(/\r?\n/);
         var indent = '  ';
+        // 假如是该节点是预制体实例，则是，如斗罗韩服手游WorldUIElementView.prefab
+        // - target: {fileID: 114479196432416642, guid: 5d66a490e5f6da842a0990a7a99f6bf1,
+        //     type: 3}
+        //   propertyPath: m_Text
+        //   value: "\u51A5\u738B\u9CB2+"
+        //   objectReference: {fileID: 0}
+        var filedName = 'm_Text';
         var quoter = '"';
         var rawLineCache;
         var crossLineCache = null;
@@ -508,8 +515,9 @@ var Localizer = /** @class */ (function () {
                 var ret = oneLine.match(this.PrefabZhPattern);
                 if (ret) {
                     indent = oneLine.substr(0, ret.index);
-                    quoter = ret[1];
-                    var rawContent = ret[2];
+                    filedName = ret[1];
+                    quoter = ret[2];
+                    var rawContent = ret[3];
                     if (rawContent.charAt(rawContent.length - 1) != quoter) {
                         // 多行待续
                         crossLineCache = rawContent;
@@ -540,7 +548,7 @@ var Localizer = /** @class */ (function () {
                     newContent += '\n';
                 if (local) {
                     modified = true;
-                    newContent += indent + 'm_Text: ' + quoter + this.utf82unicode(local) + quoter;
+                    newContent += indent + filedName + ': ' + quoter + this.utf82unicode(local) + quoter;
                 }
                 else {
                     newContent += rawLineCache;

@@ -1,6 +1,6 @@
 "use strict";
 var prefabTask = {
-    "roots": ['Assets/AssetSources/ui'],
+    "roots": ['Assets/AssetSources/ui', 'Assets/Arts/sequenceAnim'],
     "option": {
         "includes": {
             "exts": ['.prefab']
