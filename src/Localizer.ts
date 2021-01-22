@@ -399,6 +399,7 @@ export class Localizer {
                 while(ret)
                 {
                     let zh = '';
+                    let quote = ret[1];
                     let rawContent = ret[2];
                     if(this.containsZh(rawContent)) {
                         zh = rawContent;
@@ -414,7 +415,8 @@ export class Localizer {
                         }
                         if(local) {
                             modified = true;
-                            newContent += oneLine.substr(0, ret.index) + ret[1] + local + ret[1];
+                            local = this.processQuote(local, quote);
+                            newContent += oneLine.substr(0, ret.index) + quote + local + quote;
                         } else {
                             newContent += oneLine.substr(0, ret.index + ret[0].length);
                         }
@@ -614,6 +616,15 @@ export class Localizer {
     private eunsureString(s: any): string {
         if(typeof(s) != 'string') {
             return s.toString();
+        }
+        return s;
+    }
+
+    private processQuote(s: string, quote: string): string {
+        if(quote == '"') {
+            s = s.replace(/(?<!\\)"/g, '\\"');
+        } else {
+            s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
     }

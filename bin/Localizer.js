@@ -401,6 +401,7 @@ var Localizer = /** @class */ (function () {
                 var ret = oneLine.match(this.CodeZhPattern);
                 while (ret) {
                     var zh = '';
+                    var quote = ret[1];
                     var rawContent = ret[2];
                     if (this.containsZh(rawContent)) {
                         zh = rawContent;
@@ -417,7 +418,8 @@ var Localizer = /** @class */ (function () {
                         }
                         if (local) {
                             modified = true;
-                            newContent += oneLine.substr(0, ret.index) + ret[1] + local + ret[1];
+                            local = this.processQuote(local, quote);
+                            newContent += oneLine.substr(0, ret.index) + quote + local + quote;
                         }
                         else {
                             newContent += oneLine.substr(0, ret.index + ret[0].length);
@@ -612,6 +614,15 @@ var Localizer = /** @class */ (function () {
     Localizer.prototype.eunsureString = function (s) {
         if (typeof (s) != 'string') {
             return s.toString();
+        }
+        return s;
+    };
+    Localizer.prototype.processQuote = function (s, quote) {
+        if (quote == '"') {
+            s = s.replace(/(?<!\\)"/g, '\\"');
+        }
+        else {
+            s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
     };
