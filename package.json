@@ -4,7 +4,7 @@
   "description": "i18n tool for unity game project",
   "main": "bin/index.js",
   "scripts": {
-    "test": "tsc && node bin/index.js -s \"G:/dldlwebtw/trunk/project\" -o \"G:/dldlwebtw/trunk/project/tools/i18n/dictionary/tw\" -dRl",
+    "test": "tsc && node bin/index.js -s \"G:/dldl_kr/trunk\" -o \"G:/dldl_kr/trunk/tools/i18n/dictionary/tw\" -dRS",
     "build": "tsc",
     "release": "npm config set registry=http://registry.npmjs.org && npm version patch && npm publish"
   },

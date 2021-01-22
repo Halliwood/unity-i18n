@@ -82,7 +82,8 @@ var Localizer = /** @class */ (function () {
                     continue;
                 }
                 oneRow.CN = this.eunsureString(oneRow.CN);
-                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
+                oneRow.LOCAL = this.processNewline(this.eunsureString(oneRow.LOCAL));
+                // 修复翻译中的换行
                 this.strMap[oneRow.ID] = oneRow;
             }
             this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
@@ -625,6 +626,9 @@ var Localizer = /** @class */ (function () {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
+    };
+    Localizer.prototype.processNewline = function (s) {
+        return s.replace(/\n/g, '\\n');
     };
     Localizer.prototype.addLog = function (tag, text) {
         this.logContent += '[' + tag + ']' + text + '\n';

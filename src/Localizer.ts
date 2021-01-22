@@ -83,7 +83,8 @@ export class Localizer {
                     continue;
                 }
                 oneRow.CN = this.eunsureString(oneRow.CN);
-                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
+                oneRow.LOCAL = this.processNewline(this.eunsureString(oneRow.LOCAL));
+                // 修复翻译中的换行
                 this.strMap[oneRow.ID] = oneRow;
             }
             this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
@@ -627,6 +628,10 @@ export class Localizer {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
+    }
+
+    private processNewline(s: string): string {
+        return s.replace(/\n/g, '\\n');
     }
 
     private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {
