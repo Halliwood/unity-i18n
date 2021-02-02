@@ -75,6 +75,7 @@ var Localizer = /** @class */ (function () {
             xlsxSheet = xlsxBook.Sheets[sheetName];
             this.sheetRows = xlsx.utils.sheet_to_json(xlsxSheet);
             var errorRows = [];
+            var newlineRows = [];
             for (var i = 0, len = this.sheetRows.length; i < len; i++) {
                 var oneRow = this.sheetRows[i];
                 if (oneRow.CN == undefined || oneRow.LOCAL == undefined) {
@@ -82,11 +83,17 @@ var Localizer = /** @class */ (function () {
                     continue;
                 }
                 oneRow.CN = this.eunsureString(oneRow.CN);
-                oneRow.LOCAL = this.processNewline(this.eunsureString(oneRow.LOCAL));
+                // 检查翻译中是否有换行符
+                var idx = oneRow.LOCAL.search(/[\r\n]/g);
+                if (idx >= 0) {
+                    newlineRows.push(i + 2);
+                }
+                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 // 修复翻译中的换行
                 this.strMap[oneRow.ID] = oneRow;
             }
             this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
+            this.assert(newlineRows.length == 0, 'The following rows contains newline char: ' + newlineRows.join(', '));
             console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
         }
         else {
@@ -626,9 +633,6 @@ var Localizer = /** @class */ (function () {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
-    };
-    Localizer.prototype.processNewline = function (s) {
-        return s.replace(/\n/g, '\\n');
     };
     Localizer.prototype.addLog = function (tag, text) {
         this.logContent += '[' + tag + ']' + text + '\n';

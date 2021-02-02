@@ -76,6 +76,7 @@ export class Localizer {
             xlsxSheet = xlsxBook.Sheets[sheetName];
             this.sheetRows = xlsx.utils.sheet_to_json<LanguageRow>(xlsxSheet);
             let errorRows: number[] = [];
+            let newlineRows: number[] = [];
             for(let i = 0, len = this.sheetRows.length; i < len; i++) {
                 let oneRow = this.sheetRows[i];
                 if(oneRow.CN == undefined || oneRow.LOCAL == undefined) {
@@ -83,11 +84,17 @@ export class Localizer {
                     continue;
                 }
                 oneRow.CN = this.eunsureString(oneRow.CN);
-                oneRow.LOCAL = this.processNewline(this.eunsureString(oneRow.LOCAL));
+                // 检查翻译中是否有换行符
+                let idx = oneRow.LOCAL.search(/[\r\n]/g);
+                if(idx >= 0) {
+                    newlineRows.push(i + 2);
+                }
+                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 // 修复翻译中的换行
                 this.strMap[oneRow.ID] = oneRow;
             }
             this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
+            this.assert(newlineRows.length == 0, 'The following rows contains newline char: ' + newlineRows.join(', '));
             console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
         } else {
             console.log('[unity-i18n]找不到旧的翻译记录：%s', xlsxPath);
@@ -628,10 +635,6 @@ export class Localizer {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
-    }
-
-    private processNewline(s: string): string {
-        return s.replace(/\n/g, '\\n');
     }
 
     private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {
