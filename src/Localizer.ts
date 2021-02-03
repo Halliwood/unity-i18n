@@ -84,12 +84,12 @@ export class Localizer {
                     continue;
                 }
                 oneRow.CN = this.eunsureString(oneRow.CN);
+                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 // 检查翻译中是否有换行符
                 let idx = oneRow.LOCAL.search(/[\r\n]/g);
                 if(idx >= 0) {
                     newlineRows.push(i + 2);
                 }
-                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
                 // 修复翻译中的换行
                 this.strMap[oneRow.ID] = oneRow;
             }
