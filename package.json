@@ -1,14 +1,14 @@
 {
   "name": "unity-i18n",
-  "version": "1.0.39",
+  "version": "1.0.40",
   "description": "i18n tool for unity game project",
   "main": "bin/index.js",
   "scripts": {
     "test": "tsc && node bin/index.js -s \"G:/dldl_kr/trunk/\" -o \"G:/dldl_kr/trunk/tools/i18n/dictionary/tw\" -dS",
     "build": "tsc",
-    "release": "npm config set registry=http://registry.npmjs.org && npm version patch && npm publish", 
-    "setproxy": "git config --global http.https://github.com.proxy socks5://127.0.0.1:1080 && git config --global https.https://github.com.proxy socks5://127.0.0.1:1080", 
-    "unsetproxy": "git config --global --unset http.proxy", 
+    "release": "npm config set registry=http://registry.npmjs.org && npm version patch && npm publish",
+    "setproxy": "git config --global http.https://github.com.proxy socks5://127.0.0.1:1080 && git config --global https.https://github.com.proxy socks5://127.0.0.1:1080",
+    "unsetproxy": "git config --global --unset http.proxy",
     "unsetproxy2": "git config --global --unset https.proxy"
   },
   "repository": {
