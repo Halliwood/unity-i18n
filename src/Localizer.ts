@@ -197,6 +197,11 @@ export class Localizer {
         oneTask.option = this.mergeOption(oneTask.option, option);
 
         for(let oneRoot of oneTask.roots) {
+            if(option.replacer) {
+                for(let rk in option.replacer) {
+                    oneRoot = oneRoot.replace(rk, option.replacer[rk]);
+                }
+            }
             oneRoot = this.normalizePath(oneRoot);
             if(option.inputRoot && !path.isAbsolute(oneRoot)) {
                 oneRoot = path.join(option.inputRoot, oneRoot);

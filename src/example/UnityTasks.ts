@@ -42,7 +42,7 @@ let csTask: LocalizeTask = {
     }
 };
 let svrScriptTask = {
-    "roots": ['../serverscript'], 
+    "roots": ['$workspace/serverscript'], 
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
@@ -51,7 +51,7 @@ let svrScriptTask = {
     }
 };
 let svrCfgTask = {
-    "roots": ['../servercfg'], 
+    "roots": ['$workspace/servercfg'], 
     "option": {
         "includes": {
             "exts": ['.xml']
@@ -64,5 +64,6 @@ let svrCfgTask = {
 
 let searchTasks: LocalizeTask[] = [prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask];
 let replaceTasks: LocalizeTask[] = [prefabTask, jsonTask, tsTask, csTask];
-let UnityTasks = {searchTasks: searchTasks, replaceTasks: replaceTasks};
+let replacer = {'$workspace': '..'};
+let UnityTasks = {searchTasks, replaceTasks, replacer};
 export = UnityTasks;

@@ -194,6 +194,11 @@ var Localizer = /** @class */ (function () {
         oneTask.option = this.mergeOption(oneTask.option, option);
         for (var _i = 0, _a = oneTask.roots; _i < _a.length; _i++) {
             var oneRoot = _a[_i];
+            if (option.replacer) {
+                for (var rk in option.replacer) {
+                    oneRoot = oneRoot.replace(rk, option.replacer[rk]);
+                }
+            }
             oneRoot = this.normalizePath(oneRoot);
             if (option.inputRoot && !path.isAbsolute(oneRoot)) {
                 oneRoot = path.join(option.inputRoot, oneRoot);

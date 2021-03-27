@@ -32,75 +32,91 @@ var rmQuotes = function (val) {
         return rst[2];
     return val;
 };
+var parseTaskReplacer = function (val) {
+    val = rmQuotes(val);
+    var r = {};
+    var varr = val.split('&');
+    for (var _i = 0, varr_1 = varr; _i < varr_1.length; _i++) {
+        var v = varr_1[_i];
+        var pair = v.split('=');
+        r[pair[0]] = pair[1];
+    }
+    return r;
+};
 // for exmaple
-// unity-i18n -s 'G:\\dldlweb_kr\\trunk\\project\\'
 program
     .version(myPackage.version, "-v, --version")
     .option("-s, --src <path>", "[MUST] Input files path. Both direction or single file.", rmQuotes)
     .option("-o, --output <path>", "[MUST] Outout path. Both direction or single file.", rmQuotes)
     .option("-t, --tasks <json object/.json path/.js path>", "Task json file.", rmQuotes)
-    .option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya project.", rmQuotes)
+    .option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya/xml2bin project.", rmQuotes)
+    .option("--task-replacer <string>", "Replace variants in default tasks, if not giver, default will be used.", parseTaskReplacer)
     .option("-S, --search", "Search mode.")
     .option("-R, --replace", "Replace mode.")
     .option("--silent", "Silent mode.")
     .option("-x, --xlsxstyle <prepend|append|sort-by-id>", "Xlsx sort rule.", 'append')
     .option("-l, --log", "Generate log file.")
     .parse(process.argv);
-if (!program.src && !program.tasks) {
+var opts = program.opts();
+if (!opts.src && !opts.tasks) {
     console.warn("The --src option is MUST.");
     program.help();
 }
-if (!program.output && !program.tasks) {
+if (!opts.output && !opts.tasks) {
     console.warn("The --output option is MUST.");
     program.help();
 }
+console.log("i18n params: " + JSON.stringify(opts));
 var localizer = new Localizer_1.Localizer();
-var globalOption = { "inputRoot": program.src, "outputRoot": program.output };
-if (program.silent) {
-    globalOption.silent = program.silent;
+var globalOption = { "inputRoot": opts.src, "outputRoot": opts.output, "replacer": {} };
+if (opts.silent) {
+    globalOption.silent = opts.silent;
 }
-if (program.log) {
-    globalOption.needLog = program.log;
+if (opts.log) {
+    globalOption.needLog = opts.log;
 }
-if (program.xlsxstyle) {
-    globalOption.xlsxStyle = program.xlsxstyle;
+if (opts.xlsxstyle) {
+    globalOption.xlsxStyle = opts.xlsxstyle;
 }
-if (program.default) {
-    if (program.default == 'unity') {
-        if (program.search) {
+if (opts.default) {
+    if (opts.default == 'unity') {
+        globalOption.replacer = opts.taskReplacer || UnityTasks.replacer;
+        if (opts.search) {
             localizer.searchZhInFiles(UnityTasks.searchTasks, globalOption);
         }
-        if (program.replace) {
+        if (opts.replace) {
             localizer.replaceZhInFiles(UnityTasks.replaceTasks, globalOption);
         }
     }
-    else if (program.default == 'laya') {
-        if (program.search) {
+    else if (opts.default == 'laya') {
+        globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
+        if (opts.search) {
             localizer.searchZhInFiles(LayaTasks.searchTasks, globalOption);
         }
-        if (program.replace) {
+        if (opts.replace) {
             localizer.replaceZhInFiles(LayaTasks.replaceTasks, globalOption);
         }
     }
-    else if (program.default == 'xml2bin') {
-        if (program.replace) {
+    else if (opts.default == 'xml2bin') {
+        if (opts.replace) {
+            globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
             localizer.replaceZhInFiles(LayaTasks.xml2binReplaceTasks, globalOption);
         }
     }
     else {
-        console.error('Cannot find default tasks for: %s', program.default);
+        console.error('Cannot find default tasks for: %s', opts.default);
         process_1.exit(1);
     }
 }
-else if (program.tasks) {
+else if (opts.tasks) {
     var tasksObj = null;
-    if (typeof (program.tasks) == 'object') {
+    if (typeof (opts.tasks) == 'object') {
         // json
-        tasksObj = program.tasks;
+        tasksObj = opts.tasks;
     }
-    else if (typeof (program.tasks) == 'string') {
+    else if (typeof (opts.tasks) == 'string') {
         // json file
-        var tasksFile = program.tasks;
+        var tasksFile = opts.tasks;
         if (!fs.existsSync(tasksFile)) {
             console.error('Cannot find tasks file: %s', tasksFile);
             process_1.exit(1);
@@ -110,10 +126,10 @@ else if (program.tasks) {
     }
     if (tasksObj) {
         try {
-            if (program.search) {
+            if (opts.search) {
                 localizer.searchZhInFiles(tasksObj, globalOption);
             }
-            if (program.replace) {
+            if (opts.replace) {
                 localizer.replaceZhInFiles(tasksObj, globalOption);
             }
         }

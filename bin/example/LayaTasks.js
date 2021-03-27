@@ -17,11 +17,11 @@ var asTask = {
         "includes": {
             "exts": ['.as']
         },
-        "skipPatterns": [/^\s*console\.log/, /^\s*console\.assert\(/]
+        "skipPatterns": [/^\s*console\.log/, /^\s*FyGame\.log/, /^\s*console\.assert\(/, /^\s*FyGame\.assert\(/]
     }
 };
 var clientCfgTask = {
-    "roots": ['../clientcfg'],
+    "roots": ['$workspace/clientcfg'],
     "option": {
         "includes": {
             "exts": ['.xml']
@@ -32,7 +32,7 @@ var clientCfgTask = {
     }
 };
 var svrScriptTask = {
-    "roots": ['../serverscript'],
+    "roots": ['$workspace./serverscript'],
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
@@ -41,7 +41,7 @@ var svrScriptTask = {
     }
 };
 var svrCfgTask = {
-    "roots": ['../servercfg'],
+    "roots": ['$workspace/servercfg'],
     "option": {
         "includes": {
             "exts": ['.xml']
@@ -54,5 +54,6 @@ var svrCfgTask = {
 var searchTasks = [jsonTask, asTask, clientCfgTask, svrScriptTask, svrCfgTask];
 var replaceTasks = [jsonTask, asTask];
 var xml2binReplaceTasks = [clientCfgTask];
-var LayaTasks = { searchTasks: searchTasks, replaceTasks: replaceTasks, xml2binReplaceTasks: xml2binReplaceTasks };
+var replacer = { '$workspace': '..' };
+var LayaTasks = { searchTasks: searchTasks, replaceTasks: replaceTasks, xml2binReplaceTasks: xml2binReplaceTasks, replacer: replacer };
 module.exports = LayaTasks;

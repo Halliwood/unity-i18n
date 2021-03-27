@@ -5,7 +5,7 @@
   "main": "bin/index.js",
   "scripts": {
     "test": "tsc && node bin/index.js -s \"G:/dldl_kr/trunk/\" -o \"G:/dldl_kr/trunk/tools/i18n/dictionary/tw\" -dS",
-    "testlaya": "tsc && node bin/index.js -s \"G:/qhgame/trunk/project/\" -o \"G:/qhgame/trunk/project/tools/i18n/dictionary/tw\" -d \"laya\" -S",
+    "testlaya": "tsc && node bin/index.js -s \"G:/qhgame/trunk/project/\" -o \"G:/qhgame/trunk/project/tools/i18n/dictionary/tw\" -d \"laya\" --task-replacer \"$workspace=F:/layai18nwork/QHGame\" -S",
     "build": "tsc",
     "release": "npm config set registry=http://registry.npmjs.org && npm version patch && npm publish",
     "setproxy": "git config --global http.https://github.com.proxy socks5://127.0.0.1:1080 && git config --global https.https://github.com.proxy socks5://127.0.0.1:1080",

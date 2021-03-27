@@ -1,6 +1,7 @@
 export interface GlobalOption extends LocalizeOption {
     inputRoot?: string;
     outputRoot?: string;
+    replacer?: {[key: string]: string};
     needLog?: boolean;
     silent?: boolean;
     xlsxStyle?: 'prepend' | 'append' | 'sort-by-id';

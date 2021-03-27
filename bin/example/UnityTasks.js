@@ -41,7 +41,7 @@ var csTask = {
     }
 };
 var svrScriptTask = {
-    "roots": ['../serverscript'],
+    "roots": ['$workspace/serverscript'],
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
@@ -50,7 +50,7 @@ var svrScriptTask = {
     }
 };
 var svrCfgTask = {
-    "roots": ['../servercfg'],
+    "roots": ['$workspace/servercfg'],
     "option": {
         "includes": {
             "exts": ['.xml']
@@ -62,5 +62,6 @@ var svrCfgTask = {
 };
 var searchTasks = [prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask];
 var replaceTasks = [prefabTask, jsonTask, tsTask, csTask];
-var UnityTasks = { searchTasks: searchTasks, replaceTasks: replaceTasks };
+var replacer = { '$workspace': '..' };
+var UnityTasks = { searchTasks: searchTasks, replaceTasks: replaceTasks, replacer: replacer };
 module.exports = UnityTasks;
