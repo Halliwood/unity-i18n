@@ -8,7 +8,7 @@ import LayaTasks = require("./example/LayaTasks");
 
 const myPackage = require('../package.json');
 
-const getPath = (val: string): string => {
+const rmQuotes = (val: string): string => {
     let rst = val.match(/(['"])(.+)\1/);
     if(rst) return rst[2];
 
@@ -19,10 +19,10 @@ const getPath = (val: string): string => {
 // unity-i18n -s 'G:\\dldlweb_kr\\trunk\\project\\'
 program
 	.version(myPackage.version, "-v, --version")
-	.option("-s, --src <path>", "[MUST] Input files path. Both direction or single file.", getPath)
-	.option("-o, --output <path>", "[MUST] Outout path. Both direction or single file.", getPath)
-	.option("-t, --tasks <json object/.json path/.js path>", "Task json file.", getPath)
-	.option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya project.")
+	.option("-s, --src <path>", "[MUST] Input files path. Both direction or single file.", rmQuotes)
+	.option("-o, --output <path>", "[MUST] Outout path. Both direction or single file.", rmQuotes)
+	.option("-t, --tasks <json object/.json path/.js path>", "Task json file.", rmQuotes)
+	.option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya project.", rmQuotes)
 	.option("-S, --search", "Search mode.")
 	.option("-R, --replace", "Replace mode.")
 	.option("--silent", "Silent mode.")

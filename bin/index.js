@@ -26,7 +26,7 @@ var process_1 = require("process");
 var UnityTasks = require("./example/UnityTasks");
 var LayaTasks = require("./example/LayaTasks");
 var myPackage = require('../package.json');
-var getPath = function (val) {
+var rmQuotes = function (val) {
     var rst = val.match(/(['"])(.+)\1/);
     if (rst)
         return rst[2];
@@ -36,10 +36,10 @@ var getPath = function (val) {
 // unity-i18n -s 'G:\\dldlweb_kr\\trunk\\project\\'
 program
     .version(myPackage.version, "-v, --version")
-    .option("-s, --src <path>", "[MUST] Input files path. Both direction or single file.", getPath)
-    .option("-o, --output <path>", "[MUST] Outout path. Both direction or single file.", getPath)
-    .option("-t, --tasks <json object/.json path/.js path>", "Task json file.", getPath)
-    .option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya project.")
+    .option("-s, --src <path>", "[MUST] Input files path. Both direction or single file.", rmQuotes)
+    .option("-o, --output <path>", "[MUST] Outout path. Both direction or single file.", rmQuotes)
+    .option("-t, --tasks <json object/.json path/.js path>", "Task json file.", rmQuotes)
+    .option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya project.", rmQuotes)
     .option("-S, --search", "Search mode.")
     .option("-R, --replace", "Replace mode.")
     .option("--silent", "Silent mode.")
