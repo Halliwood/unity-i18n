@@ -204,7 +204,7 @@ var Localizer = /** @class */ (function () {
                 oneRoot = path.join(option.inputRoot, oneRoot);
             }
             if (!fs.existsSync(oneRoot)) {
-                console.error('Task root not exists: %s', oneRoot);
+                console.error('Task root not exists: %s\n', oneRoot);
                 continue;
             }
             var rootStat = fs.statSync(oneRoot);

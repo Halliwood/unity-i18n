@@ -32,7 +32,7 @@ var clientCfgTask = {
     }
 };
 var svrScriptTask = {
-    "roots": ['$workspace./serverscript'],
+    "roots": ['$workspace/serverscript'],
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']

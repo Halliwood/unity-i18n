@@ -33,7 +33,7 @@ let clientCfgTask = {
     }
 };
 let svrScriptTask = {
-    "roots": ['$workspace./serverscript'], 
+    "roots": ['$workspace/serverscript'], 
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
