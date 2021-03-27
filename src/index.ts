@@ -3,7 +3,8 @@ import * as fs from 'fs';
 import { LocalizeTask, GlobalOption } from "./LocalizeOption";
 import { Localizer } from "./Localizer";
 import { exit } from 'process';
-import DefaultTasks = require("./example/ExampleTasks");
+import UnityTasks = require("./example/UnityTasks");
+import LayaTasks = require("./example/LayaTasks");
 
 const myPackage = require('../package.json');
 
@@ -21,7 +22,7 @@ program
 	.option("-s, --src <path>", "[MUST] Input files path. Both direction or single file.", getPath)
 	.option("-o, --output <path>", "[MUST] Outout path. Both direction or single file.", getPath)
 	.option("-t, --tasks <json object/.json path/.js path>", "Task json file.", getPath)
-	.option("-d, --default", "Execute default tasks defined in the ExampleTasks.ts.")
+	.option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya project.")
 	.option("-S, --search", "Search mode.")
 	.option("-R, --replace", "Replace mode.")
 	.option("--silent", "Silent mode.")
@@ -51,12 +52,28 @@ if((<any>program).xlsxstyle) {
 }
 
 if((<any>program).default) {
-    if((<any>program).search) {
-        localizer.searchZhInFiles(DefaultTasks.searchTasks, globalOption);
+    if((<any>program).default == 'unity') {
+        if((<any>program).search) {
+            localizer.searchZhInFiles(UnityTasks.searchTasks, globalOption);
+        }
+        if((<any>program).replace) {
+            localizer.replaceZhInFiles(UnityTasks.replaceTasks, globalOption);
+        }
+    } else if((<any>program).default == 'laya') {
+        if((<any>program).search) {
+            localizer.searchZhInFiles(LayaTasks.searchTasks, globalOption);
+        }
+        if((<any>program).replace) {
+            localizer.replaceZhInFiles(LayaTasks.replaceTasks, globalOption);
+        }
+    } else if((<any>program).default == 'xml2bin') {
+        if((<any>program).replace) {
+            localizer.replaceZhInFiles(LayaTasks.xml2binReplaceTasks, globalOption);
+        }
+    } else {
+        console.error('Cannot find default tasks for: %s', (<any>program).default);
+        exit(1);
     }
-    if((<any>program).replace) {
-        localizer.replaceZhInFiles(DefaultTasks.replaceTasks, globalOption);
-    }    
 } else if((<any>program).tasks) {
     let tasksObj: LocalizeTask[] = null;
     if(typeof((<any>program).tasks) == 'object') {

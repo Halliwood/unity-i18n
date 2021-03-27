@@ -64,5 +64,5 @@ let svrCfgTask = {
 
 let searchTasks: LocalizeTask[] = [prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask];
 let replaceTasks: LocalizeTask[] = [prefabTask, jsonTask, tsTask, csTask];
-let DefaultTasks = {searchTasks: searchTasks, replaceTasks: replaceTasks};
-export = DefaultTasks;
+let UnityTasks = {searchTasks: searchTasks, replaceTasks: replaceTasks};
+export = UnityTasks;
