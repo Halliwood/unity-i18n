@@ -1,6 +1,6 @@
 "use strict";
 var jsonTask = {
-    "roots": ['bin/h5/view'],
+    "roots": ['bin/view'],
     "option": {
         "includes": {
             "exts": ['.json']
@@ -12,10 +12,10 @@ var asTask = {
     "option": {
         "excludes": {
             "dirs": ['automatic/cfgs', 'automatic/protocol'],
-            "files": ['TestView.as', 'Macros.as', 'ErrorId.as']
+            "files": ['TestView.ts', 'Macros.ts', 'ErrorId.ts']
         },
         "includes": {
-            "exts": ['.as']
+            "exts": ['.ts']
         },
         "skipPatterns": [/^\s*console\.log/, /^\s*FyGame\.log/, /^\s*console\.assert\(/, /^\s*FyGame\.assert\(/]
     }
