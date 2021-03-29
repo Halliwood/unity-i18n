@@ -55,16 +55,16 @@ program
     .parse(process.argv);
 
 let opts = program.opts() as CmdParams;
+console.log(`i18n params: ${JSON.stringify(opts)}`);
+
 if(!opts.src && !opts.tasks) {
     console.warn("The --src option is MUST.");
-    program.help();
+    program.help({error:true});
 }
 if(!opts.output && !opts.tasks) {
     console.warn("The --output option is MUST.");
-    program.help();
+    program.help({error:true});
 }
-
-console.log(`i18n params: ${JSON.stringify(opts)}`);
 
 let localizer = new Localizer();
 let globalOption: GlobalOption = {"inputRoot": opts.src, "outputRoot": opts.output, "replacer": {}};

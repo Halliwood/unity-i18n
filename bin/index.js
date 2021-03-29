@@ -58,15 +58,15 @@ program
     .option("-l, --log", "Generate log file.")
     .parse(process.argv);
 var opts = program.opts();
+console.log("i18n params: " + JSON.stringify(opts));
 if (!opts.src && !opts.tasks) {
     console.warn("The --src option is MUST.");
-    program.help();
+    program.help({ error: true });
 }
 if (!opts.output && !opts.tasks) {
     console.warn("The --output option is MUST.");
-    program.help();
+    program.help({ error: true });
 }
-console.log("i18n params: " + JSON.stringify(opts));
 var localizer = new Localizer_1.Localizer();
 var globalOption = { "inputRoot": opts.src, "outputRoot": opts.output, "replacer": {} };
 if (opts.silent) {

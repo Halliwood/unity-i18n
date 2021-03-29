@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/Halliwood/unity-i18n#readme",
   "dependencies": {
-    "commander": "^6.1.0",
+    "commander": "^7.2.0",
     "md5": "^2.3.0",
     "xlsx": "^0.16.6",
     "yaml": "^1.10.0"
