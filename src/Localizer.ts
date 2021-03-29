@@ -66,6 +66,10 @@ export class Localizer {
         this.logContent = '';
 
         let outputRoot = option?.outputRoot || 'output/';
+        if(!fs.existsSync(outputRoot)) {
+            console.error(`Output root not exists: ${outputRoot}`);
+            process.exit(1);
+        }
         // 先读入xlsx
         let xlsxPath = path.join(outputRoot, this.OutXlsx);
         let xlsxSheet: xlsx.WorkSheet;
