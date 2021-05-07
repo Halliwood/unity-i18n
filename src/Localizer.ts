@@ -13,7 +13,7 @@ interface LanguageRow {
 
 export class Localizer {
     private readonly HanPattern = /[\u4e00-\u9fa5]+/;
-    private readonly CodeZhPattern = /(?<!\\)(["']{1})(.*?)(?<!\\)\1/;
+    private readonly CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
     private readonly XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
     private readonly PrefabZhPattern = /(?<=\s)(value|m_Text): (["']{1})([\s\S]*)/;
 
@@ -640,7 +640,7 @@ export class Localizer {
     private processQuote(s: string, quote: string): string {
         if(quote == '"') {
             s = s.replace(/(?<!\\)"/g, '\\"');
-        } else {
+        } else if(quote == "'") {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;

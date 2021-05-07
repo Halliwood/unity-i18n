@@ -28,7 +28,7 @@ var LocalizeOption_1 = require("./LocalizeOption");
 var Localizer = /** @class */ (function () {
     function Localizer() {
         this.HanPattern = /[\u4e00-\u9fa5]+/;
-        this.CodeZhPattern = /(?<!\\)(["']{1})(.*?)(?<!\\)\1/;
+        this.CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
         this.XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
         this.PrefabZhPattern = /(?<=\s)(value|m_Text): (["']{1})([\s\S]*)/;
         this.TagID = 'ID=';
@@ -638,7 +638,7 @@ var Localizer = /** @class */ (function () {
         if (quote == '"') {
             s = s.replace(/(?<!\\)"/g, '\\"');
         }
-        else {
+        else if (quote == "'") {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
