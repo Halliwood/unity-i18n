@@ -2,13 +2,12 @@ import * as fs from 'fs';
 import path = require('path');
 import md5 = require('md5');
 import xlsx = require('xlsx');
-import { GlobalOption, LocalizeTask, LocalizeOption, LocalizeMode } from './LocalizeOption';
-import { assert } from 'console';
+import { GlobalOption, LocalizeTask, LocalizeOption, LocalizeMode, TaskWithOption } from './LocalizeOption';
 
 interface LanguageRow {
     ID: string;
-    CN: string; 
-    LOCAL: string;
+    CN: string;
+    [lang: string]: string;
 }
 
 export class Localizer {
@@ -19,7 +18,6 @@ export class Localizer {
 
     private readonly TagID = 'ID=';
     private readonly TagCN = 'CN=';
-    private readonly TagLOCAL= 'LOCAL=';
     private readonly OutXlsx = 'language.xlsx';
     private readonly OutTxt = 'languages_mid.txt';
     private readonly OutNewTxt = 'languages_new.txt';
@@ -29,6 +27,7 @@ export class Localizer {
     private fromMap: {[id: string]: string} = {};
     private newMap: {[id: string]: boolean} = {};
 
+    private crtTask: TaskWithOption;
     private crtFile: string;
 
     private totalCnt = 0;
@@ -40,6 +39,9 @@ export class Localizer {
     private logContent: string = '';
 
     private mode: LocalizeMode;
+
+    private md5Cache: { [str: string]: string } = {};
+    private outputJSONMap: { [file: string]: { [cn: string]: true } } = {};
 
     searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
         this.mode = LocalizeMode.Search;
@@ -83,20 +85,30 @@ export class Localizer {
             let newlineRows: number[] = [];
             for(let i = 0, len = this.sheetRows.length; i < len; i++) {
                 let oneRow = this.sheetRows[i];
-                if(oneRow.CN == undefined || oneRow.LOCAL == undefined) {
+                if(oneRow.CN == undefined) {
                     errorRows.push(i + 2);
                     continue;
                 }
+                if (oneRow.ID != this.getStringMd5(oneRow.CN)) {
+                    console.warn(`row ${i + 2} MD5 error, auto corrected!`);
+                    oneRow.ID = this.getStringMd5(oneRow.CN);
+                }
                 oneRow.CN = this.eunsureString(oneRow.CN);
-                oneRow.LOCAL = this.eunsureString(oneRow.LOCAL);
-                // 检查翻译中是否有换行符
-                let idx = oneRow.LOCAL.search(/[\r\n]/g);
-                if(idx >= 0) {
-                    newlineRows.push(i + 2);
+                for (let lang of option.langs) {
+                    let local = oneRow[lang];
+                    if (undefined != local) {
+                        oneRow[lang] = this.eunsureString(local);
+                        // 检查翻译中是否有换行符
+                        let idx = local.search(/[\r\n]/g);
+                        if(idx >= 0) {
+                            newlineRows.push(i + 2);
+                        }
+                    }
                 }
                 // 修复翻译中的换行
                 this.strMap[oneRow.ID] = oneRow;
             }
+            this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
             this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
             this.assert(newlineRows.length == 0, 'The following rows contains newline char: ' + newlineRows.join(', '));
             console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
@@ -130,12 +142,12 @@ export class Localizer {
         if(option?.xlsxStyle == 'prepend') {
             sortedRows = [];
             for(let oneRow of this.sheetRows) {
-                if(!oneRow.LOCAL) {
+                if(!this.isRowTranslated(oneRow, option)) {
                     sortedRows.push(oneRow);
                 }
             }
             for(let oneRow of this.sheetRows) {
-                if(oneRow.LOCAL) {
+                if(this.isRowTranslated(oneRow, option)) {
                     sortedRows.push(oneRow);
                 }
             }
@@ -154,7 +166,9 @@ export class Localizer {
                 let oneRow = this.strMap[id];
                 let infos = this.TagID + oneRow.ID + '\n';
                 infos += this.TagCN + oneRow.CN + '\n';
-                infos += this.TagLOCAL + oneRow.LOCAL + '\n';
+                for (let lang of option.langs) {
+                    infos += lang + '=' + oneRow[lang] + '\n';
+                }
                 txtContent += infos + '\n';
     
                 if(this.newMap[oneRow.ID]) {
@@ -170,10 +184,44 @@ export class Localizer {
             if(xlsxSheet) {
                 newSheet["!cols"] = xlsxSheet["!cols"];
             } else {
-                newSheet["!cols"] = [{wch: 20}, {wch: 110}, {wch: 110}];
+                const cols: xlsx.ColInfo[] = [{wch: 20}, {wch: 110}];
+                for (let lang of option.langs) {
+                    cols.push({wch: 110});
+                }
+                newSheet["!cols"] = cols;
             }
             xlsx.utils.book_append_sheet(newBook, newSheet);
             xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
+        } else if (option?.softReplace) {
+            // 生成各个语言包
+            for (let oj in this.outputJSONMap) {
+                const m = this.outputJSONMap[oj];
+                const cnArr = Object.keys(m);
+                cnArr.sort();
+
+                let ojRoot = this.normalizePath(oj);
+                if(option.inputRoot && !path.isAbsolute(ojRoot)) {
+                    ojRoot = path.join(option.inputRoot, ojRoot);
+                }
+                // 中文包
+                let ojArr: string[] = [];
+                for (let cn of cnArr) {
+                    ojArr.push(this.getStringMd5(cn));
+                    ojArr.push(cn);
+                }
+                fs.writeFileSync(ojRoot.replace('$LANG', 'CN'), JSON.stringify({ strings: ojArr }), 'utf-8');
+                
+                // 外文包
+                for (let lang of option.langs) {
+                    let ojArr: string[] = [];
+                    for (let cn of cnArr) {
+                        ojArr.push(this.getStringMd5(cn));
+                        const local = this.getLocal(cn, option);
+                        ojArr.push(local?.[lang] || cn);
+                    }
+                    fs.writeFileSync(ojRoot.replace('$LANG', lang), JSON.stringify({ strings: ojArr }), 'utf-8');
+                }
+            }
         }
 
         if(option?.needLog) {
@@ -191,6 +239,15 @@ export class Localizer {
         }
     }
 
+    private isRowTranslated(oneRow: LanguageRow, option: GlobalOption): boolean {
+        for (let lang of option.langs) {
+            if (oneRow[lang] == undefined) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private runTask(oneTask: LocalizeTask, option: GlobalOption) {
         if(typeof(oneTask) == 'string') {
             oneTask = {
@@ -198,7 +255,15 @@ export class Localizer {
                 "option": option
             };
         }
-        oneTask.option = this.mergeOption(oneTask.option, option);
+
+        this.crtTask = oneTask;
+
+        const finalOpt = this.mergeOption(oneTask.option, option);
+
+        const oj = oneTask.option?.outputJSON;
+        if (oj) {
+            if (!this.outputJSONMap[oj]) this.outputJSONMap[oj] = {};
+        }
 
         for(let oneRoot of oneTask.roots) {
             if(option.replacer) {
@@ -216,14 +281,14 @@ export class Localizer {
             }
             let rootStat = fs.statSync(oneRoot);
             if(rootStat.isFile()) {
-                this.searchZhInFile(oneRoot, oneTask.option);
+                this.searchZhInFile(oneRoot, finalOpt);
             } else {
-                this.searchZhInDir(oneRoot, oneTask.option);
+                this.searchZhInDir(oneRoot, finalOpt);
             }
         }
     }
 
-    private mergeOption(local: LocalizeOption, global: LocalizeOption) {
+    private mergeOption(local: LocalizeOption, global: GlobalOption): GlobalOption {
         if(!local) local = {};
         if(global) {
             for(let globalKey in global) {
@@ -232,7 +297,7 @@ export class Localizer {
                 }
             }
         }
-        return local;
+        return local as GlobalOption;
     }
 
     searchZhInDir(dirPath: string, option?: GlobalOption) {
@@ -365,20 +430,21 @@ export class Localizer {
                 let rawContent = ret[2];
                 if(!rawContent.startsWith('0') && this.containsZh(rawContent)) {
                     zh = rawContent;
+                    this.markTaskUsed(zh);
                 }                
             }
             if(this.mode == LocalizeMode.Search) {
                 if(zh) {
-                    this.insertString(zh);
+                    this.insertString(zh, option);
                 }
             } else {
-                let local: string;
+                let local: LanguageRow;
                 if(zh) {
-                    local = this.getLocal(zh);
+                    local = this.getLocal(zh, option);
                 }
-                if(local) {
+                if(local?.[option.langs[0]]) {
                     modified = true;
-                    newContent += oneLine.substr(0, ret.index) + '<' + ret[0] + '>' + local + '<' + ret[0] + '/>' + '\n';
+                    newContent += oneLine.substring(0, ret.index) + '<' + ret[0] + '>' + local[option.langs[0]] + '<' + ret[0] + '/>' + '\n';
                 } else {
                     newContent += oneLine + '\n';
                 }
@@ -420,25 +486,33 @@ export class Localizer {
                     let rawContent = ret[2];
                     if(this.containsZh(rawContent)) {
                         zh = rawContent;
+                        this.markTaskUsed(zh);
                     }
                     if(this.mode == LocalizeMode.Search) {
                         if(zh) {
-                            this.insertString(zh);
+                            this.insertString(zh, option);
                         }
                     } else {
-                        let local: string;
-                        if(zh) {
-                            local = this.getLocal(zh);
-                        }
-                        if(local) {
-                            modified = true;
-                            local = this.processQuote(local, quote);
-                            newContent += oneLine.substr(0, ret.index) + quote + local + quote;
+                        if (zh) {
+                            if (option.softReplace && option.softReplacer) {
+                                modified = true;
+                                let localStr = option.softReplacer.replace('$STRINGID', this.getStringMd5(zh));
+                                newContent += oneLine.substring(0, ret.index) + localStr;
+                            } else {
+                                let local = this.getLocal(zh, option);
+                                if(local?.[option.langs[0]]) {
+                                    modified = true;
+                                    let localStr = this.processQuote(local[option.langs[0]], quote);
+                                    newContent += oneLine.substring(0, ret.index) + quote + localStr + quote;
+                                } else {
+                                    newContent += oneLine.substring(0, ret.index + ret[0].length);
+                                }
+                            }
                         } else {
-                            newContent += oneLine.substr(0, ret.index + ret[0].length);
+                            newContent += oneLine.substring(0, ret.index + ret[0].length);
                         }
                     }
-                    oneLine = oneLine.substr(ret.index + ret[0].length);
+                    oneLine = oneLine.substring(ret.index + ret[0].length);
                     ret = oneLine.match(this.CodeZhPattern);
                 }
                 newContent += oneLine;
@@ -465,25 +539,26 @@ export class Localizer {
             let rawContent = ret[2];
             if(this.containsZh(rawContent)) {
                 zh = rawContent;
+                this.markTaskUsed(zh);
             }
             if(this.mode == LocalizeMode.Search) {
                 if(zh) {
-                    this.insertString(zh);
+                    this.insertString(zh, option);
                 }
             } else {
-                let local: string;
+                let local: LanguageRow;
                 if(zh) {
-                    local = this.getLocal(zh);
+                    local = this.getLocal(zh, option);
                 }
-                if(local) {
-                    local = local.replace(/(?<!\\)"/g, '\\"');
+                if(local?.[option.langs[0]]) {
+                    let localStr = local[option.langs[0]].replace(/(?<!\\)"/g, '\\"');
                     modified = true;
-                    newContent += fileContent.substr(0, ret.index) + ret[1] + local + ret[1];
+                    newContent += fileContent.substring(0, ret.index) + ret[1] + localStr + ret[1];
                 } else {
-                    newContent += fileContent.substr(0, ret.index + ret[0].length);
+                    newContent += fileContent.substring(0, ret.index + ret[0].length);
                 }
             }
-            fileContent = fileContent.substr(ret.index + ret[0].length);
+            fileContent = fileContent.substring(ret.index + ret[0].length);
             ret = fileContent.match(this.CodeZhPattern);
         }
         newContent += fileContent;
@@ -520,13 +595,13 @@ export class Localizer {
                     continue;
                 } 
                 // 多行结束
-                quotedContent = crossLineCache + oneLine.substr(0, oneLine.length - 1);
+                quotedContent = crossLineCache + oneLine.substring(0, oneLine.length - 1);
             } else {
                 rawLineCache = oneLine;
                 let ret = oneLine.match(this.PrefabZhPattern);
                 if(ret)
                 {
-                    indent = oneLine.substr(0, ret.index);
+                    indent = oneLine.substring(0, ret.index);
                     filedName = ret[1];
                     quoter = ret[2];
                     let rawContent = ret[3];
@@ -535,7 +610,7 @@ export class Localizer {
                         crossLineCache = rawContent;
                         continue;
                     }
-                    quotedContent = rawContent.substr(0, rawContent.length - 1);
+                    quotedContent = rawContent.substring(0, rawContent.length - 1);
                 }
             }
 
@@ -544,22 +619,23 @@ export class Localizer {
                 quotedContent = this.unicode2utf8(quotedContent);
                 if(this.containsZh(quotedContent)) {
                     zh = quotedContent;
+                    this.markTaskUsed(zh);
                 }
             }
             crossLineCache = null;
             if(this.mode == LocalizeMode.Search) {
                 if(zh) {
-                    this.insertString(zh);
+                    this.insertString(zh, option);
                 }
-            } else {
-                let local: string;
+            } else if (!option.softReplace) {
+                let local: LanguageRow;
                 if(zh) {
-                    local = this.getLocal(zh);
+                    local = this.getLocal(zh, option);
                 }
                 if(newContent) newContent += '\n';
-                if(local) {
+                if(local?.[option.langs[0]]) {
                     modified = true;
-                    newContent += indent + filedName + ': ' + quoter + this.utf82unicode(local) + quoter;
+                    newContent += indent + filedName + ': ' + quoter + this.utf82unicode(local[option.langs[0]]) + quoter;
                 } else {
                     newContent += rawLineCache;
                 }
@@ -568,21 +644,31 @@ export class Localizer {
         return modified ? newContent : null;
     }
 
-    private containsZh(str: string) {
+    private containsZh(str: string): boolean {
         if(str.search(this.HanPattern) >= 0) {
             return true;
         }
         return false;
     }
 
-    private insertString(cn: string)
+    private markTaskUsed(cn: string): void {
+        const oj = this.crtTask.option?.outputJSON;
+        if (oj) {
+            this.outputJSONMap[oj][cn] = true;
+        }
+    }
+
+    private insertString(cn: string, option: GlobalOption): void
     {
         this.totalCnt++;
         cn = this.formatString(cn);
         // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');
         let id = this.getStringMd5(cn);
         if (this.strMap[id]) return;
-        let node: LanguageRow = {ID: id, CN: cn, LOCAL: ''};
+        let node: LanguageRow = {ID: id, CN: cn};
+        for (let lang of option.langs) {
+            node[lang] = '';
+        }
         this.strMap[id] = node;
         this.fromMap[id] = this.crtFile;
         this.newMap[id] = true;
@@ -590,18 +676,17 @@ export class Localizer {
         this.newCnt++;
     }
 
-    private getLocal(cn: string): string
+    private getLocal(cn: string, option: GlobalOption): LanguageRow
     {
         cn = this.formatString(cn);
         let id = this.getStringMd5(cn);
-        let node = this.strMap[id];
-        if (!node || !node.LOCAL)
+        let oneRow = this.strMap[id];
+        if (!oneRow || !oneRow[option.langs[0]])
         {
             this.noLocalCnt++;
             this.addLog('NOLOCAL', cn);
-            return null;
         }
-        return node.LOCAL;
+        return oneRow;
     }
 
     private formatString(s: string): string
@@ -610,7 +695,11 @@ export class Localizer {
     }
 
     private getStringMd5(s: string): string {
-        return md5(s).replace(/-/g, '').toLowerCase();
+        let c = this.md5Cache[s];
+        if (!c) {
+            this.md5Cache[s] = c = md5(s).replace(/-/g, '').toLowerCase();
+        }
+        return c;
     }
 
     private unicode2utf8(ustr: string): string {

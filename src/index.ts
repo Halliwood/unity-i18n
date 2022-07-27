@@ -29,11 +29,13 @@ const parseTaskReplacer = (val: string): {[key: string]: string} => {
 interface CmdParams {
     src: string;
     output: string;
+    langs?: string;
     tasks?: any;
     default?: 'unity' | 'laya' | 'xml2bin';
     taskReplacer?: {[key: string]: string};
     search?: boolean;
     replace?: boolean;
+    softReplace?: boolean;
     silent?: boolean;
     xlsxstyle?: 'prepend' | 'append' | 'sort-by-id';
     log?: boolean;
@@ -44,11 +46,13 @@ program
 	.version(myPackage.version, "-v, --version")
 	.option("-s, --src <path>", "[MUST] Input files path. Both direction or single file.", rmQuotes)
 	.option("-o, --output <path>", "[MUST] Outout path. Both direction or single file.", rmQuotes)
+	.option("--langs <string[]>", "Language codes, seperated by comma. Like EN,FR. LOCAL as defaults")
 	.option("-t, --tasks <json object/.json path/.js path>", "Task json file.", rmQuotes)
 	.option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya/xml2bin project.", rmQuotes)
 	.option("--task-replacer <string>", "Replace variants in default tasks, if not giver, default will be used.", parseTaskReplacer)
 	.option("-S, --search", "Search mode.")
 	.option("-R, --replace", "Replace mode.")
+	.option("--soft-replace", "Soft replace mode.")
 	.option("--silent", "Silent mode.")
 	.option("-x, --xlsxstyle <prepend|append|sort-by-id>", "Xlsx sort rule.", 'append')
 	.option("-l, --log", "Generate log file.")
@@ -58,16 +62,27 @@ let opts = program.opts() as CmdParams;
 console.log(`i18n params: ${JSON.stringify(opts)}`);
 
 if(!opts.src && !opts.tasks) {
-    console.warn("The --src option is MUST.");
+    console.error("The --src option is MUST.");
     program.help({error:true});
 }
 if(!opts.output && !opts.tasks) {
-    console.warn("The --output option is MUST.");
+    console.error("The --output option is MUST.");
+    program.help({error:true});
+}
+if(!opts.softReplace && opts.langs && opts.langs.length > 1) {
+    console.error("Hard replace mode supports only 1 language. If you want to support multiple languages, use --soft-replace.");
     program.help({error:true});
 }
 
 let localizer = new Localizer();
-let globalOption: GlobalOption = {"inputRoot": opts.src, "outputRoot": opts.output, "replacer": {}};
+let globalOption: GlobalOption = { 
+    inputRoot: opts.src, 
+    outputRoot: opts.output, 
+    langs: opts.langs.split(',') || ['LOCAL'], 
+    replacer: {}, 
+    softReplace: opts.softReplace
+};
+
 if(opts.silent) {
     globalOption.silent = opts.silent;
 }

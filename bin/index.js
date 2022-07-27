@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -48,27 +52,39 @@ program
     .version(myPackage.version, "-v, --version")
     .option("-s, --src <path>", "[MUST] Input files path. Both direction or single file.", rmQuotes)
     .option("-o, --output <path>", "[MUST] Outout path. Both direction or single file.", rmQuotes)
+    .option("--langs <string[]>", "Language codes, seperated by comma. Like EN,FR. LOCAL as defaults")
     .option("-t, --tasks <json object/.json path/.js path>", "Task json file.", rmQuotes)
     .option("-d, --default <unity|laya|xml2bin>", "Execute default tasks defined for unity/laya/xml2bin project.", rmQuotes)
     .option("--task-replacer <string>", "Replace variants in default tasks, if not giver, default will be used.", parseTaskReplacer)
     .option("-S, --search", "Search mode.")
     .option("-R, --replace", "Replace mode.")
+    .option("--soft-replace", "Soft replace mode.")
     .option("--silent", "Silent mode.")
     .option("-x, --xlsxstyle <prepend|append|sort-by-id>", "Xlsx sort rule.", 'append')
     .option("-l, --log", "Generate log file.")
     .parse(process.argv);
 var opts = program.opts();
-console.log("i18n params: " + JSON.stringify(opts));
+console.log("i18n params: ".concat(JSON.stringify(opts)));
 if (!opts.src && !opts.tasks) {
-    console.warn("The --src option is MUST.");
+    console.error("The --src option is MUST.");
     program.help({ error: true });
 }
 if (!opts.output && !opts.tasks) {
-    console.warn("The --output option is MUST.");
+    console.error("The --output option is MUST.");
+    program.help({ error: true });
+}
+if (!opts.softReplace && opts.langs && opts.langs.length > 1) {
+    console.error("Hard replace mode supports only 1 language. If you want to support multiple languages, use --soft-replace.");
     program.help({ error: true });
 }
 var localizer = new Localizer_1.Localizer();
-var globalOption = { "inputRoot": opts.src, "outputRoot": opts.output, "replacer": {} };
+var globalOption = {
+    inputRoot: opts.src,
+    outputRoot: opts.output,
+    langs: opts.langs.split(',') || ['LOCAL'],
+    replacer: {},
+    softReplace: opts.softReplace
+};
 if (opts.silent) {
     globalOption.silent = opts.silent;
 }
@@ -105,7 +121,7 @@ if (opts.default) {
     }
     else {
         console.error('Cannot find default tasks for: %s', opts.default);
-        process_1.exit(1);
+        (0, process_1.exit)(1);
     }
 }
 else if (opts.tasks) {
@@ -119,7 +135,7 @@ else if (opts.tasks) {
         var tasksFile = opts.tasks;
         if (!fs.existsSync(tasksFile)) {
             console.error('Cannot find tasks file: %s', tasksFile);
-            process_1.exit(1);
+            (0, process_1.exit)(1);
         }
         var tasksContent = fs.readFileSync(tasksFile, 'utf-8');
         tasksObj = JSON.parse(tasksContent);

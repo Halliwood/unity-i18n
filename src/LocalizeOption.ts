@@ -1,7 +1,9 @@
 export interface GlobalOption extends LocalizeOption {
     inputRoot?: string;
     outputRoot?: string;
+    langs: string[];
     replacer?: {[key: string]: string};
+    softReplace?: boolean;
     needLog?: boolean;
     silent?: boolean;
     xlsxStyle?: 'prepend' | 'append' | 'sort-by-id';
@@ -25,6 +27,15 @@ export interface LocalizeOption {
         files?: (string|RegExp)[]
     };
     skipPatterns?: (string|RegExp)[];
+    /**
+     * 用于同一个apk支持多个语言包的情况，相对应的是hard replace。
+     * hard replace直接将资料中的中文字符串替换成指定的语言，soft replace则替换为指定的代码语句。
+     */
+    softReplacer?: string;
+    /**
+     * 用于将相关文字输出到语言包JSON文件中。
+     */
+    outputJSON?: string;
 }
 
 export type LocalizeTask = string | TaskWithOption;

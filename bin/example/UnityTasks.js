@@ -4,7 +4,8 @@ var prefabTask = {
     "option": {
         "includes": {
             "exts": ['.prefab']
-        }
+        },
+        "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
     }
 };
 var jsonTask = {
@@ -25,19 +26,23 @@ var tsTask = {
         "includes": {
             "exts": ['.ts']
         },
-        "skipPatterns": [/^\s*uts\.log/, /^\s*uts\.assert\(/]
+        "skipPatterns": [/^\s*uts\.log/, /^\s*uts\.assert\(/],
+        "softReplacer": "I18N.I18NMgr.Get(\"$STRINGID\")",
+        "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
     }
 };
 var csTask = {
     "roots": ['Assets/Scripts', 'Assets/Editor/XCodeBuilder'],
     "option": {
         "excludes": {
-            "dirs": ['uts/StaticWrap/Wraps']
+            "dirs": ['uts/StaticWrap/Wraps', 'i18n']
         },
         "includes": {
             "exts": ['.cs']
         },
         "skipPatterns": [/^\s*Debug\.Log/],
+        "softReplacer": "I18N.I18NMgr.Get(\"$STRINGID\")",
+        "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
     }
 };
 var svrScriptTask = {
