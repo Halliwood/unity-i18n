@@ -407,6 +407,30 @@ export class Localizer {
         }
 
         if(this.mode == LocalizeMode.Replace) {
+            if (option.replaceOutput) {
+                const filename = path.basename(filePath, fileExt);
+                for (let lang of option.langs) {
+                    const newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
+                    const newFileDir = path.dirname(newFilePath);
+                    fs.ensureDirSync(newFileDir);
+                    let outContent: string;
+                    if (newContent) {
+                        outContent = newContent.replace(/\$i18n-(\w+)\$/g, (substring: string, ...args: any[]) => {
+                            const local = this.strMap[args[0]];
+                            return local[lang] || local.CN;
+                        });
+                    } else {
+                        outContent = fileContent;
+                    }                    
+                    this.addLog('REPLACE', newFilePath);
+                    fs.writeFileSync(newFilePath, outContent, 'utf-8');
+                }                    
+            } else {
+                if(newContent) {
+                    this.addLog('REPLACE', filePath);
+                    fs.writeFileSync(filePath, newContent, 'utf-8');
+                }
+            }
             if(newContent) {
                 if (option.replaceOutput) {
                     const filename = path.basename(filePath, fileExt);

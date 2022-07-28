@@ -413,10 +413,45 @@ var Localizer = /** @class */ (function () {
             newContent = this.processZnInCodeFile(fileContent, option);
         }
         if (this.mode == LocalizeOption_1.LocalizeMode.Replace) {
+            if (option.replaceOutput) {
+                var filename = path.basename(filePath, fileExt);
+                var _loop_1 = function (lang) {
+                    var newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
+                    var newFileDir = path.dirname(newFilePath);
+                    fs.ensureDirSync(newFileDir);
+                    var outContent = void 0;
+                    if (newContent) {
+                        outContent = newContent.replace(/\$i18n-(\w+)\$/g, function (substring) {
+                            var args = [];
+                            for (var _i = 1; _i < arguments.length; _i++) {
+                                args[_i - 1] = arguments[_i];
+                            }
+                            var local = _this.strMap[args[0]];
+                            return local[lang] || local.CN;
+                        });
+                    }
+                    else {
+                        outContent = fileContent;
+                    }
+                    this_1.addLog('REPLACE', newFilePath);
+                    fs.writeFileSync(newFilePath, outContent, 'utf-8');
+                };
+                var this_1 = this;
+                for (var _i = 0, _e = option.langs; _i < _e.length; _i++) {
+                    var lang = _e[_i];
+                    _loop_1(lang);
+                }
+            }
+            else {
+                if (newContent) {
+                    this.addLog('REPLACE', filePath);
+                    fs.writeFileSync(filePath, newContent, 'utf-8');
+                }
+            }
             if (newContent) {
                 if (option.replaceOutput) {
                     var filename = path.basename(filePath, fileExt);
-                    var _loop_1 = function (lang) {
+                    var _loop_2 = function (lang) {
                         var newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
                         var newFileDir = path.dirname(newFilePath);
                         fs.ensureDirSync(newFileDir);
@@ -428,13 +463,13 @@ var Localizer = /** @class */ (function () {
                             var local = _this.strMap[args[0]];
                             return local[lang] || local.CN;
                         });
-                        this_1.addLog('REPLACE', newFilePath);
+                        this_2.addLog('REPLACE', newFilePath);
                         fs.writeFileSync(newFilePath, outContent, 'utf-8');
                     };
-                    var this_1 = this;
-                    for (var _i = 0, _e = option.langs; _i < _e.length; _i++) {
-                        var lang = _e[_i];
-                        _loop_1(lang);
+                    var this_2 = this;
+                    for (var _f = 0, _g = option.langs; _f < _g.length; _f++) {
+                        var lang = _g[_f];
+                        _loop_2(lang);
                     }
                 }
                 else {
