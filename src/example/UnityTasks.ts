@@ -14,7 +14,9 @@ let jsonTask: LocalizeTask = {
     "option": {
         "includes": {
             "exts": ['.json']
-        }
+        }, 
+        "softReplacer": "$LOCAL", 
+        "replaceOutput": "Assets/AssetSources/data$LANG/$FILENAME.json"
     }
 };
 let tsTask: LocalizeTask = {

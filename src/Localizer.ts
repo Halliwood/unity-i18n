@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import path = require('path');
 import md5 = require('md5');
 import xlsx = require('xlsx');
@@ -408,8 +408,23 @@ export class Localizer {
 
         if(this.mode == LocalizeMode.Replace) {
             if(newContent) {
-                this.addLog('REPLACE', filePath);
-                fs.writeFileSync(filePath, newContent, 'utf-8');
+                if (option.replaceOutput) {
+                    const filename = path.basename(filePath, fileExt);
+                    for (let lang of option.langs) {
+                        const newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
+                        const newFileDir = path.dirname(newFilePath);
+                        fs.ensureDirSync(newFileDir);
+                        const outContent = newContent.replace(/\$i18n-(\w+)\$/g, (substring: string, ...args: any[]) => {
+                            const local = this.strMap[args[0]];
+                            return local[lang] || local.CN;
+                        });
+                        this.addLog('REPLACE', newFilePath);
+                        fs.writeFileSync(newFilePath, outContent, 'utf-8');
+                    }                    
+                } else {
+                    this.addLog('REPLACE', filePath);
+                    fs.writeFileSync(filePath, newContent, 'utf-8');
+                }
                 this.modifiedFileCnt++;
             } else {
                 this.addLog('NOREPLACE', filePath);
@@ -546,12 +561,19 @@ export class Localizer {
                     this.insertString(zh, option);
                 }
             } else {
-                let local: LanguageRow;
+                let localStr: string;
                 if(zh) {
-                    local = this.getLocal(zh, option);
+                    if (option.replaceOutput) {
+                        modified = true;
+                        localStr = `$i18n-${this.getStringMd5(zh)}$`;
+                    } else {
+                        let local = this.getLocal(zh, option);
+                        if(local?.[option.langs[0]]) {
+                            localStr = local[option.langs[0]].replace(/(?<!\\)"/g, '\\"');
+                        }
+                    } 
                 }
-                if(local?.[option.langs[0]]) {
-                    let localStr = local[option.langs[0]].replace(/(?<!\\)"/g, '\\"');
+                if(localStr) {
                     modified = true;
                     newContent += fileContent.substring(0, ret.index) + ret[1] + localStr + ret[1];
                 } else {
@@ -658,8 +680,16 @@ export class Localizer {
         }
     }
 
-    private insertString(cn: string, option: GlobalOption): void
-    {
+    private getReplacement(zh: string, option: GlobalOption): string {
+        if (option.softReplace && option.softReplacer) {
+            const id = this.getStringMd5(zh);
+            return option.softReplacer.replace('$STRINGID', id).replace('$LOCAL', `%$${id}$%`);
+        }
+        const local = this.getLocal(zh, option);
+        return local?.[option.langs[0]] || zh;
+    }
+
+    private insertString(cn: string, option: GlobalOption): void {
         this.totalCnt++;
         cn = this.formatString(cn);
         // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');

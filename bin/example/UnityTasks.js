@@ -13,7 +13,9 @@ var jsonTask = {
     "option": {
         "includes": {
             "exts": ['.json']
-        }
+        },
+        "softReplacer": "$LOCAL",
+        "replaceOutput": "Assets/AssetSources/data$LANG/$FILENAME.json"
     }
 };
 var tsTask = {

@@ -28,6 +28,10 @@ export interface LocalizeOption {
     };
     skipPatterns?: (string|RegExp)[];
     /**
+     * 用于替换中文串后生成新文件，而不覆盖源文件。
+     */
+    replaceOutput?: string;
+    /**
      * 用于同一个apk支持多个语言包的情况，相对应的是hard replace。
      * hard replace直接将资料中的中文字符串替换成指定的语言，soft replace则替换为指定的代码语句。
      */
