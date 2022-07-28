@@ -77,11 +77,13 @@ if (!opts.softReplace && opts.langs && opts.langs.length > 1) {
     console.error("Hard replace mode supports only 1 language. If you want to support multiple languages, use --soft-replace.");
     program.help({ error: true });
 }
+if (!opts.langs)
+    opts.langs = 'LOCAL';
 var localizer = new Localizer_1.Localizer();
 var globalOption = {
     inputRoot: opts.src,
     outputRoot: opts.output,
-    langs: opts.langs.split(',') || ['LOCAL'],
+    langs: opts.langs.split(','),
     replacer: {},
     softReplace: opts.softReplace
 };
