@@ -376,7 +376,7 @@ var Localizer = /** @class */ (function () {
         }
         if ((_c = option === null || option === void 0 ? void 0 : option.excludes) === null || _c === void 0 ? void 0 : _c.files) {
             for (var i = 0, len = option.excludes.files.length; i < len; i++) {
-                if (filePath.search(option.excludes.files[i]) >= 0) {
+                if (filePath.search(this.ensureRegExp(option.excludes.files[i])) >= 0) {
                     this.addLog('SKIP', filePath);
                     return;
                 }
@@ -385,7 +385,7 @@ var Localizer = /** @class */ (function () {
         if ((_d = option === null || option === void 0 ? void 0 : option.includes) === null || _d === void 0 ? void 0 : _d.files) {
             var isIncluded = false;
             for (var i = 0, len = option.includes.files.length; i < len; i++) {
-                if (filePath.search(option.includes.files[i]) >= 0) {
+                if (filePath.search(this.ensureRegExp(option.includes.files[i])) >= 0) {
                     isIncluded = true;
                     break;
                 }
@@ -515,7 +515,8 @@ var Localizer = /** @class */ (function () {
             // 过滤掉log语句
             if (!skip && (option === null || option === void 0 ? void 0 : option.skipPatterns)) {
                 for (var j = 0, jlen = option.skipPatterns.length; j < jlen; j++) {
-                    if (oneLine.match(option.skipPatterns[j])) {
+                    var ptn = this.ensureRegExp(option.skipPatterns[j]);
+                    if (oneLine.match(ptn)) {
                         skip = true;
                         break;
                     }
@@ -792,6 +793,11 @@ var Localizer = /** @class */ (function () {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
+    };
+    Localizer.prototype.ensureRegExp = function (r) {
+        if (typeof (r) == 'string')
+            r = new RegExp(r);
+        return r;
     };
     Localizer.prototype.addLog = function (tag, text) {
         this.logContent += '[' + tag + ']' + text + '\n';

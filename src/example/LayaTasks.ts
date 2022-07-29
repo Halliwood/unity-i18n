@@ -1,6 +1,6 @@
 import { LocalizeTask } from "../LocalizeOption";
 
-let jsonTask: LocalizeTask = {
+const jsonTask: LocalizeTask = {
     "roots": ['bin/view'], 
     "option": {
         "includes": {
@@ -8,7 +8,7 @@ let jsonTask: LocalizeTask = {
         }
     }
 };
-let asTask: LocalizeTask = {
+const asTask: LocalizeTask = {
     "roots": ['src'], 
     "option": {
         "excludes": {
@@ -18,10 +18,10 @@ let asTask: LocalizeTask = {
         "includes": {
             "exts": ['.ts']
         }, 
-        "skipPatterns": [/^\s*console\.log/, /^\s*FyGame\.log/, /^\s*console\.assert\(/, /^\s*FyGame\.assert\(/]
+        "skipPatterns": ["^\\s*console\\.log", "^\\s*FyGame\\.log", "^\\s*console\\.assert\(", "^\\s*FyGame\\.assert\\("]
     }
 };
-let clientCfgTask = {
+const clientCfgTask = {
     "roots": ['$workspace/clientcfg'], 
     "option": {
         "includes": {
@@ -32,16 +32,16 @@ let clientCfgTask = {
         }
     }
 };
-let svrScriptTask = {
+const svrScriptTask = {
     "roots": ['$workspace/serverscript'], 
     "option": {
         "includes": {
             "exts": ['.cxx', '.atm']
         }, 
-        "skipPatterns": [/^\s*ATM_DebugSystemMessage\(/]
+        "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
     }
 };
-let svrCfgTask = {
+const svrCfgTask = {
     "roots": ['$workspace/servercfg'], 
     "option": {
         "includes": {
@@ -53,9 +53,9 @@ let svrCfgTask = {
     }
 };
 
-let searchTasks: LocalizeTask[] = [jsonTask, asTask, clientCfgTask, svrScriptTask, svrCfgTask];
-let replaceTasks: LocalizeTask[] = [jsonTask, asTask];
-let xml2binReplaceTasks: LocalizeTask[] = [clientCfgTask];
-let replacer = {'$workspace': '..'};
-let LayaTasks = {searchTasks, replaceTasks, xml2binReplaceTasks, replacer};
-export = LayaTasks;
+const searchTasks: LocalizeTask[] = [jsonTask, asTask, clientCfgTask, svrScriptTask, svrCfgTask];
+const replaceTasks: LocalizeTask[] = [jsonTask, asTask];
+const xml2binReplaceTasks: LocalizeTask[] = [clientCfgTask];
+const replacer = {'$workspace': '..'};
+const LayaTasks = {searchTasks, replaceTasks, xml2binReplaceTasks, replacer};
+export default LayaTasks;

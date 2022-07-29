@@ -22,13 +22,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var program = require("commander");
 var fs = __importStar(require("fs"));
 var Localizer_1 = require("./Localizer");
 var process_1 = require("process");
-var UnityTasks = require("./example/UnityTasks");
-var LayaTasks = require("./example/LayaTasks");
+var UnityHardTasks_1 = __importDefault(require("./example/UnityHardTasks"));
+var LayaTasks_1 = __importDefault(require("./example/LayaTasks"));
+var UnitySoftTasks_1 = __importDefault(require("./example/UnitySoftTasks"));
 var myPackage = require('../package.json');
 var rmQuotes = function (val) {
     var rst = val.match(/(['"])(.+)\1/);
@@ -96,33 +100,36 @@ if (opts.xlsxstyle) {
     globalOption.xlsxStyle = opts.xlsxstyle;
 }
 if (opts.default) {
-    if (opts.default == 'unity') {
-        globalOption.replacer = opts.taskReplacer || UnityTasks.replacer;
-        if (opts.search) {
-            localizer.searchZhInFiles(UnityTasks.searchTasks, globalOption);
-        }
+    if (opts.default == 'xml2bin') {
         if (opts.replace) {
-            localizer.replaceZhInFiles(UnityTasks.replaceTasks, globalOption);
-        }
-    }
-    else if (opts.default == 'laya') {
-        globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
-        if (opts.search) {
-            localizer.searchZhInFiles(LayaTasks.searchTasks, globalOption);
-        }
-        if (opts.replace) {
-            localizer.replaceZhInFiles(LayaTasks.replaceTasks, globalOption);
-        }
-    }
-    else if (opts.default == 'xml2bin') {
-        if (opts.replace) {
-            globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
-            localizer.replaceZhInFiles(LayaTasks.xml2binReplaceTasks, globalOption);
+            globalOption.replacer = opts.taskReplacer || LayaTasks_1.default.replacer;
+            localizer.replaceZhInFiles(LayaTasks_1.default.xml2binReplaceTasks, globalOption);
         }
     }
     else {
-        console.error('Cannot find default tasks for: %s', opts.default);
-        (0, process_1.exit)(1);
+        var tasks = void 0;
+        if (opts.default == 'unity' || opts.default == 'unity_hard') {
+            tasks = UnityHardTasks_1.default;
+        }
+        else if (opts.default == 'unity_soft') {
+            tasks = UnitySoftTasks_1.default;
+        }
+        else if (opts.default == 'laya' || opts.default == 'laya_hard') {
+            tasks = LayaTasks_1.default;
+        }
+        if (tasks) {
+            globalOption.replacer = opts.taskReplacer || tasks.replacer;
+            if (opts.search) {
+                localizer.searchZhInFiles(tasks.searchTasks, globalOption);
+            }
+            if (opts.replace) {
+                localizer.replaceZhInFiles(tasks.replaceTasks, globalOption);
+            }
+        }
+        else {
+            console.error('Cannot find default tasks for: %s', opts.default);
+            (0, process_1.exit)(1);
+        }
     }
 }
 else if (opts.tasks) {

@@ -3,8 +3,9 @@ import * as fs from 'fs';
 import { LocalizeTask, GlobalOption } from "./LocalizeOption";
 import { Localizer } from "./Localizer";
 import { exit } from 'process';
-import UnityTasks = require("./example/UnityTasks");
-import LayaTasks = require("./example/LayaTasks");
+import UnityHardTasks from "./example/UnityHardTasks";
+import LayaTasks from "./example/LayaTasks";
+import UnitySoftTasks from './example/UnitySoftTasks';
 
 const myPackage = require('../package.json');
 
@@ -31,7 +32,7 @@ interface CmdParams {
     output: string;
     langs?: string;
     tasks?: any;
-    default?: 'unity' | 'laya' | 'xml2bin';
+    default?: 'unity' | 'unity_hard' | 'unity_soft' | 'laya' | 'laya_hard' | 'xml2bin';
     taskReplacer?: {[key: string]: string};
     search?: boolean;
     replace?: boolean;
@@ -94,30 +95,32 @@ if(opts.xlsxstyle) {
 }
 
 if(opts.default) {
-    if(opts.default == 'unity') {
-        globalOption.replacer = opts.taskReplacer || UnityTasks.replacer;
-        if(opts.search) {
-            localizer.searchZhInFiles(UnityTasks.searchTasks, globalOption);
-        }
-        if(opts.replace) {
-            localizer.replaceZhInFiles(UnityTasks.replaceTasks, globalOption);
-        }
-    } else if(opts.default == 'laya') {
-        globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
-        if(opts.search) {
-            localizer.searchZhInFiles(LayaTasks.searchTasks, globalOption);
-        }
-        if(opts.replace) {
-            localizer.replaceZhInFiles(LayaTasks.replaceTasks, globalOption);
-        }
-    } else if(opts.default == 'xml2bin') {
+    if(opts.default == 'xml2bin') {
         if(opts.replace) {
             globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
             localizer.replaceZhInFiles(LayaTasks.xml2binReplaceTasks, globalOption);
         }
     } else {
-        console.error('Cannot find default tasks for: %s', opts.default);
-        exit(1);
+        let tasks: { searchTasks: LocalizeTask[], replaceTasks: LocalizeTask[], replacer: {[key: string]: string} };
+        if (opts.default == 'unity' || opts.default == 'unity_hard') {
+            tasks = UnityHardTasks;
+        } else if (opts.default == 'unity_soft') {
+            tasks = UnitySoftTasks;
+        } else if (opts.default == 'laya' || opts.default == 'laya_hard') {
+            tasks = LayaTasks;
+        } 
+        if (tasks) {
+            globalOption.replacer = opts.taskReplacer || tasks.replacer;
+            if(opts.search) {
+                localizer.searchZhInFiles(tasks.searchTasks, globalOption);
+            }
+            if(opts.replace) {
+                localizer.replaceZhInFiles(tasks.replaceTasks, globalOption);
+            }
+        } else {
+            console.error('Cannot find default tasks for: %s', opts.default);
+            exit(1);
+        }
     }
 } else if(opts.tasks) {
     let tasksObj: LocalizeTask[] = null;

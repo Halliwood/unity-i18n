@@ -370,7 +370,7 @@ export class Localizer {
         }
         if(option?.excludes?.files) {
             for(let i = 0, len = option.excludes.files.length; i < len; i++) {
-                if(filePath.search(option.excludes.files[i]) >= 0) {
+                if(filePath.search(this.ensureRegExp(option.excludes.files[i])) >= 0) {
                     this.addLog('SKIP', filePath);
                     return;
                 }
@@ -379,7 +379,7 @@ export class Localizer {
         if(option?.includes?.files) {
             let isIncluded = false;
             for(let i = 0, len = option.includes.files.length; i < len; i++) {
-                if(filePath.search(option.includes.files[i]) >= 0) {
+                if(filePath.search(this.ensureRegExp(option.includes.files[i])) >= 0) {
                     isIncluded = true;
                     break;
                 }
@@ -494,7 +494,8 @@ export class Localizer {
             // 过滤掉log语句
             if(!skip && option?.skipPatterns) {
                 for(let j = 0, jlen = option.skipPatterns.length; j < jlen; j++) {
-                    if(oneLine.match(option.skipPatterns[j])) {
+                    let ptn = this.ensureRegExp(option.skipPatterns[j]);
+                    if(oneLine.match(ptn)) {
                         skip = true;
                         break;
                     }
@@ -772,6 +773,12 @@ export class Localizer {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
+    }
+
+    private ensureRegExp(r: string | RegExp): RegExp {
+        if (typeof(r) == 'string')
+            r = new RegExp(r);
+        return r;
     }
 
     private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {

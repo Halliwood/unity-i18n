@@ -67,13 +67,20 @@ export interface LocalizeOption {
 }
 ```
 
-可参考内置的两个任务模板：
-[LayaTasks](src/example/LayaTasks.ts)
-[UnityTasks](src/example/UnityTasks.ts)
+可参考内置的任务模板：
+* [laya_hard](bin/builtinTasks/laya_hard.json)
+* [unity_hard](bin/builtinTasks/unity_hard.json)
+* [unity_soft](bin/builtinTasks/unity_soft.json)
 
 ## -d, --default
 
-指示按照内置的模板进行处理：`laya|unity`。
+指示按照内置的模板进行处理：`laya|laya_hard|unity|unity_hard|unity_soft`。其中`laya`和`laya_hard`相同，`unity`和`unity_hard`相同。
+
+以下是内置的任务模板的相关定义：
+* [LayaHardTasks](src/example/LayaHardTasks.ts)
+* [UnityHardTasks](src/example/UnityHardTasks.ts)
+* [UnitySoftTasks](src/example/UnitySoftTasks.ts)
+* [UnityTaskBase](src/example/UnityTaskBase.ts)
 
 ## --task-replacer
 
@@ -142,7 +149,7 @@ let tsTask: LocalizeTask = {
         "includes": {
             "exts": ['.ts']
         }, 
-        "skipPatterns": [/^\s*uts\.log/, /^\s*uts\.assert\(/], 
+        "skipPatterns": ["^\\s*uts\\.log", "^\\s*uts\\.assert\\(""], 
         "softReplacer": "I18N.I18NMgr.Translate($RAWSTRING)", 
         "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
     }

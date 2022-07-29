@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var jsonTask = {
     "roots": ['bin/view'],
     "option": {
@@ -17,7 +18,7 @@ var asTask = {
         "includes": {
             "exts": ['.ts']
         },
-        "skipPatterns": [/^\s*console\.log/, /^\s*FyGame\.log/, /^\s*console\.assert\(/, /^\s*FyGame\.assert\(/]
+        "skipPatterns": ["^\\s*console\\.log", "^\\s*FyGame\\.log", "^\\s*console\\.assert\(", "^\\s*FyGame\\.assert\\("]
     }
 };
 var clientCfgTask = {
@@ -37,7 +38,7 @@ var svrScriptTask = {
         "includes": {
             "exts": ['.cxx', '.atm']
         },
-        "skipPatterns": [/^\s*ATM_DebugSystemMessage\(/]
+        "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
     }
 };
 var svrCfgTask = {
@@ -56,4 +57,4 @@ var replaceTasks = [jsonTask, asTask];
 var xml2binReplaceTasks = [clientCfgTask];
 var replacer = { '$workspace': '..' };
 var LayaTasks = { searchTasks: searchTasks, replaceTasks: replaceTasks, xml2binReplaceTasks: xml2binReplaceTasks, replacer: replacer };
-module.exports = LayaTasks;
+exports.default = LayaTasks;
