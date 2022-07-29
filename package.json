@@ -20,8 +20,11 @@
   },
   "keywords": [
     "i18n",
-    "unity",
-    "localization"
+    "unity", 
+    "laya", 
+    "localization", 
+    "chinese", 
+    "translation"
   ],
   "author": "teppei",
   "bin": "bin/unity-i18n",

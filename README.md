@@ -1,5 +1,5 @@
 # unity-i18n
-unity项目国际化工具。
+unity/laya项目国际化工具。
 
 ## 安装
 
