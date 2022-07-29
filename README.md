@@ -67,20 +67,25 @@ export interface LocalizeOption {
 }
 ```
 
+配置文件中支持以下通配符：
+* `$LANG` - `--langs`选项指定的语言代码，适用于`outputJSON`和`replaceOutput`字段。
+* `$FILENAME` - 正在处理的文件名，适用于`replaceOutput`字段。
+* `$RAWSTRING` - 原本的中文文本，包括围合的单引号或双引号，适用于`softReplacer`字段。
+
 可参考内置的任务模板：
-* [laya_hard](bin/builtinTasks/laya_hard.json)
-* [unity_hard](bin/builtinTasks/unity_hard.json)
-* [unity_soft](bin/builtinTasks/unity_soft.json)
+* [laya_hard.json](bin/builtinTasks/laya_hard.json)
+* [unity_hard.json](bin/builtinTasks/unity_hard.json)
+* [unity_soft.json](bin/builtinTasks/unity_soft.json)
 
 ## -d, --default
 
 指示按照内置的模板进行处理：`laya|laya_hard|unity|unity_hard|unity_soft`。其中`laya`和`laya_hard`相同，`unity`和`unity_hard`相同。
 
 以下是内置的任务模板的相关定义：
-* [LayaHardTasks](src/example/LayaHardTasks.ts)
-* [UnityHardTasks](src/example/UnityHardTasks.ts)
-* [UnitySoftTasks](src/example/UnitySoftTasks.ts)
-* [UnityTaskBase](src/example/UnityTaskBase.ts)
+* [LayaHardTasks.ts](src/example/LayaHardTasks.ts)
+* [UnityHardTasks.ts](src/example/UnityHardTasks.ts)
+* [UnitySoftTasks.ts](src/example/UnitySoftTasks.ts)
+* [UnityTaskBase.ts](src/example/UnityTaskBase.ts)
 
 ## --task-replacer
 
@@ -192,10 +197,10 @@ TW.JSON
 
 使用内置unity任务配置+Soft模式+指定多国语言为简体中文、繁体中午、英文。
 ```
-unity-i18n -s "F:/dp/trunk/" -o "F:/dp/trunk/tools/i18n/dictionary" -d "unity" -S --soft-replace --langs TW,EN
+unity-i18n -s "F:/dp/trunk/" -o "F:/dp/trunk/tools/i18n/dictionary" -d "unity_soft" -S --soft-replace --langs TW,EN
 ```
 
 ## 替换中文文本
 ```
-unity-i18n -s "F:/dp/trunk/" -o "F:/dp/trunk/tools/i18n/dictionary" -d "unity" -R --soft-replace --langs TW,EN
+unity-i18n -s "F:/dp/trunk/" -o "F:/dp/trunk/tools/i18n/dictionary" -d "unity_soft" -R --soft-replace --langs TW,EN
 ```

@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var UnityTaskBase_1 = __importDefault(require("./UnityTaskBase"));
 UnityTaskBase_1.default.prefabTask.option.outputJSON = "Assets/AssetSources/i18n/$LANG.json";
-UnityTaskBase_1.default.jsonTask.option.softReplacer = "$LOCAL";
 UnityTaskBase_1.default.jsonTask.option.replaceOutput = "Assets/AssetSources/data$LANG/$FILENAME.json";
 UnityTaskBase_1.default.tsTask.option.softReplacer = "I18N.I18NMgr.Translate($RAWSTRING)";
 UnityTaskBase_1.default.tsTask.option.outputJSON = "Assets/AssetSources/i18n/$LANG.json";

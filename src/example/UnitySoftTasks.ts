@@ -3,7 +3,6 @@ import utb from "./UnityTaskBase";
 
 (utb.prefabTask as TaskWithOption).option.outputJSON = "Assets/AssetSources/i18n/$LANG.json";
 
-(utb.jsonTask as TaskWithOption).option.softReplacer = "$LOCAL";
 (utb.jsonTask as TaskWithOption).option.replaceOutput = "Assets/AssetSources/data$LANG/$FILENAME.json";
 
 (utb.tsTask as TaskWithOption).option.softReplacer = "I18N.I18NMgr.Translate($RAWSTRING)";
