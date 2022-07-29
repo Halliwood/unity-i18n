@@ -29,7 +29,7 @@ var tsTask = {
             "exts": ['.ts']
         },
         "skipPatterns": [/^\s*uts\.log/, /^\s*uts\.assert\(/],
-        "softReplacer": "I18N.I18NMgr.Get($RAWSTRING)",
+        "softReplacer": "I18N.I18NMgr.Translate($RAWSTRING)",
         "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
     }
 };
@@ -43,7 +43,7 @@ var csTask = {
             "exts": ['.cs']
         },
         "skipPatterns": [/^\s*Debug\.Log/],
-        "softReplacer": "I18N.I18NMgr.Get($RAWSTRING)",
+        "softReplacer": "I18N.I18NMgr.Translate($RAWSTRING)",
         "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
     }
 };
