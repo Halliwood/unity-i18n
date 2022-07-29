@@ -49,6 +49,7 @@ var Localizer = /** @class */ (function () {
         this.noLocalCnt = 0;
         this.logContent = '';
         this.md5Cache = {};
+        this.md52rawStr = {};
         this.outputJSONMap = {};
     }
     Localizer.prototype.searchZhInFiles = function (tasks, option) {
@@ -413,10 +414,10 @@ var Localizer = /** @class */ (function () {
             newContent = this.processZnInCodeFile(fileContent, option);
         }
         if (this.mode == LocalizeOption_1.LocalizeMode.Replace) {
-            if (option.replaceOutput) {
-                var filename = path.basename(filePath, fileExt);
+            if (option.softReplace && option.replaceOutput) {
+                var filename_1 = path.basename(filePath, fileExt);
                 var _loop_1 = function (lang) {
-                    var newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
+                    var newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename_1);
                     var newFileDir = path.dirname(newFilePath);
                     fs.ensureDirSync(newFileDir);
                     var outContent = void 0;
@@ -427,7 +428,12 @@ var Localizer = /** @class */ (function () {
                                 args[_i - 1] = arguments[_i];
                             }
                             var local = _this.strMap[args[0]];
-                            return local[lang] || local.CN;
+                            if (local) {
+                                return local[lang] || local.CN;
+                            }
+                            var raw = _this.md52rawStr[args[0]];
+                            _this.assert(raw != undefined, "No local and raw found when process ".concat(filename_1));
+                            return raw;
                         });
                     }
                     else {
@@ -447,39 +453,6 @@ var Localizer = /** @class */ (function () {
                     this.addLog('REPLACE', filePath);
                     fs.writeFileSync(filePath, newContent, 'utf-8');
                 }
-            }
-            if (newContent) {
-                if (option.replaceOutput) {
-                    var filename = path.basename(filePath, fileExt);
-                    var _loop_2 = function (lang) {
-                        var newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
-                        var newFileDir = path.dirname(newFilePath);
-                        fs.ensureDirSync(newFileDir);
-                        var outContent = newContent.replace(/\$i18n-(\w+)\$/g, function (substring) {
-                            var args = [];
-                            for (var _i = 1; _i < arguments.length; _i++) {
-                                args[_i - 1] = arguments[_i];
-                            }
-                            var local = _this.strMap[args[0]];
-                            return local[lang] || local.CN;
-                        });
-                        this_2.addLog('REPLACE', newFilePath);
-                        fs.writeFileSync(newFilePath, outContent, 'utf-8');
-                    };
-                    var this_2 = this;
-                    for (var _f = 0, _g = option.langs; _f < _g.length; _f++) {
-                        var lang = _g[_f];
-                        _loop_2(lang);
-                    }
-                }
-                else {
-                    this.addLog('REPLACE', filePath);
-                    fs.writeFileSync(filePath, newContent, 'utf-8');
-                }
-                this.modifiedFileCnt++;
-            }
-            else {
-                this.addLog('NOREPLACE', filePath);
             }
         }
     };
@@ -626,7 +599,7 @@ var Localizer = /** @class */ (function () {
             else {
                 var localStr = void 0;
                 if (zh) {
-                    if (option.replaceOutput) {
+                    if (option.softReplace && option.replaceOutput) {
                         modified = true;
                         localStr = "$i18n-".concat(this.getStringMd5(zh), "$");
                     }
@@ -786,6 +759,7 @@ var Localizer = /** @class */ (function () {
         var c = this.md5Cache[s];
         if (!c) {
             this.md5Cache[s] = c = md5(s).replace(/-/g, '').toLowerCase();
+            this.md52rawStr[c] = s;
         }
         return c;
     };

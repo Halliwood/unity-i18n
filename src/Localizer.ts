@@ -41,6 +41,7 @@ export class Localizer {
     private mode: LocalizeMode;
 
     private md5Cache: { [str: string]: string } = {};
+    private md52rawStr: { [str: string]: string } = {};
     private outputJSONMap: { [file: string]: { [cn: string]: true } } = {};
 
     searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
@@ -407,7 +408,7 @@ export class Localizer {
         }
 
         if(this.mode == LocalizeMode.Replace) {
-            if (option.replaceOutput) {
+            if (option.softReplace && option.replaceOutput) {
                 const filename = path.basename(filePath, fileExt);
                 for (let lang of option.langs) {
                     const newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
@@ -417,7 +418,12 @@ export class Localizer {
                     if (newContent) {
                         outContent = newContent.replace(/\$i18n-(\w+)\$/g, (substring: string, ...args: any[]) => {
                             const local = this.strMap[args[0]];
-                            return local[lang] || local.CN;
+                            if (local) {
+                                return local[lang] || local.CN;
+                            }
+                            let raw = this.md52rawStr[args[0]];
+                            this.assert(raw != undefined, `No local and raw found when process ${filename}`);
+                            return raw;
                         });
                     } else {
                         outContent = fileContent;
@@ -430,28 +436,6 @@ export class Localizer {
                     this.addLog('REPLACE', filePath);
                     fs.writeFileSync(filePath, newContent, 'utf-8');
                 }
-            }
-            if(newContent) {
-                if (option.replaceOutput) {
-                    const filename = path.basename(filePath, fileExt);
-                    for (let lang of option.langs) {
-                        const newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
-                        const newFileDir = path.dirname(newFilePath);
-                        fs.ensureDirSync(newFileDir);
-                        const outContent = newContent.replace(/\$i18n-(\w+)\$/g, (substring: string, ...args: any[]) => {
-                            const local = this.strMap[args[0]];
-                            return local[lang] || local.CN;
-                        });
-                        this.addLog('REPLACE', newFilePath);
-                        fs.writeFileSync(newFilePath, outContent, 'utf-8');
-                    }                    
-                } else {
-                    this.addLog('REPLACE', filePath);
-                    fs.writeFileSync(filePath, newContent, 'utf-8');
-                }
-                this.modifiedFileCnt++;
-            } else {
-                this.addLog('NOREPLACE', filePath);
             }
         }
     }
@@ -587,7 +571,7 @@ export class Localizer {
             } else {
                 let localStr: string;
                 if(zh) {
-                    if (option.replaceOutput) {
+                    if (option.softReplace && option.replaceOutput) {
                         modified = true;
                         localStr = `$i18n-${this.getStringMd5(zh)}$`;
                     } else {
@@ -752,6 +736,7 @@ export class Localizer {
         let c = this.md5Cache[s];
         if (!c) {
             this.md5Cache[s] = c = md5(s).replace(/-/g, '').toLowerCase();
+            this.md52rawStr[c] = s;
         }
         return c;
     }
