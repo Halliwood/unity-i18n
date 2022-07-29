@@ -64,7 +64,6 @@ program
     .option("-l, --log", "Generate log file.")
     .parse(process.argv);
 var opts = program.opts();
-console.log("i18n params: ".concat(JSON.stringify(opts)));
 if (!opts.src && !opts.tasks) {
     console.error("The --src option is MUST.");
     program.help({ error: true });

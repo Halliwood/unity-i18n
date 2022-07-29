@@ -59,7 +59,6 @@ program
     .parse(process.argv);
 
 let opts = program.opts() as CmdParams;
-console.log(`i18n params: ${JSON.stringify(opts)}`);
 
 if(!opts.src && !opts.tasks) {
     console.error("The --src option is MUST.");

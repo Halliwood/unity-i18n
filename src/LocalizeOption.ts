@@ -16,29 +16,34 @@ export interface TaskWithOption {
 }
 
 export interface LocalizeOption {
+    /**指定需要处理的文件 */
     includes?: {
+        /**通过文件后缀名进行指定 */
         exts?: string[], 
+        /**通过目录名进行指定，支持正则表达式 */
         dirs?: (string|RegExp)[],
+        /**通过文件路径名进行指定，支持正则表达式 */
         files?: (string|RegExp)[]
     };
+    /**指定需要排除的文件，优先级高于includes */
     excludes?: {
+        /**通过文件后缀名进行排除 */
         exts?: string[], 
+        /**通过目录名进行排除，支持正则表达式 */
         dirs?: (string|RegExp)[], 
+        /**通过文件路径名进行排除，支持正则表达式 */
         files?: (string|RegExp)[]
     };
+    /**指定跳过符合指定规则的语句，比如输出日志中的中文，可以指定不处理 */
     skipPatterns?: (string|RegExp)[];
-    /**
-     * 用于替换中文串后生成新文件，而不覆盖源文件。
-     */
+    /**用于替换中文串后生成新文件，而不覆盖源文件。*/
     replaceOutput?: string;
     /**
-     * 用于同一个apk支持多个语言包的情况，相对应的是hard replace。
-     * hard replace直接将资料中的中文字符串替换成指定的语言，soft replace则替换为指定的代码语句。
+     * 用于同一个Apk支持多个语言包的情况，相对应的是Hard replace。
+     * Hard replace直接将资料中的中文字符串替换成指定的语言，Soft replace则替换为指定的代码语句。
      */
     softReplacer?: string;
-    /**
-     * 用于将相关文字输出到语言包JSON文件中。
-     */
+    /**用于将相关文字输出到指定的语言包JSON文件中。 */
     outputJSON?: string;
 }
 
