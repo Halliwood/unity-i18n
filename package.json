@@ -1,10 +1,10 @@
 {
   "name": "unity-i18n",
-  "version": "1.0.58",
+  "version": "1.0.59",
   "description": "i18n tool for unity game project",
   "main": "bin/index.js",
   "scripts": {
-    "maintain": "node bin/maintain.js", 
+    "maintain": "node bin/maintain.js",
     "test:dp:s": "node bin/index.js -s \"F:/dp/trunk/\" -o \"F:/dp/trunk/tools/i18n/dictionary\" -d \"unity\" -S --soft-replace --langs TW,EN",
     "test:dp:r": "node bin/index.js -s \"F:/dp/trunk/\" -o \"F:/dp/trunk/tools/i18n/dictionary\" -d \"unity\" -R --soft-replace --langs TW,EN",
     "test:dldltw": "node bin/index.js -s \"G:/dldltw/trunk/\" -o \"G:/dldltw/trunk/tools/i18n/dictionary/tw\" -d \"unity\" -R",
