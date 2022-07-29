@@ -567,7 +567,7 @@ var Localizer = /** @class */ (function () {
                         if (zh) {
                             if (option.softReplace && option.softReplacer) {
                                 modified = true;
-                                var localStr = option.softReplacer.replace('$STRINGID', this.getStringMd5(zh));
+                                var localStr = option.softReplacer.replace('$RAWSTRING', quote + zh + quote).replace('$STRINGID', this.getStringMd5(zh));
                                 newContent += oneLine.substring(0, ret.index) + localStr;
                             }
                             else {

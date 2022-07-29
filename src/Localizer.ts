@@ -535,7 +535,7 @@ export class Localizer {
                         if (zh) {
                             if (option.softReplace && option.softReplacer) {
                                 modified = true;
-                                let localStr = option.softReplacer.replace('$STRINGID', this.getStringMd5(zh));
+                                let localStr = option.softReplacer.replace('$RAWSTRING', quote + zh + quote).replace('$STRINGID', this.getStringMd5(zh));
                                 newContent += oneLine.substring(0, ret.index) + localStr;
                             } else {
                                 let local = this.getLocal(zh, option);
