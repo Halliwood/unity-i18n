@@ -1,6 +1,6 @@
 {
   "name": "unity-i18n",
-  "version": "1.0.57",
+  "version": "1.0.58",
   "description": "i18n tool for unity game project",
   "main": "bin/index.js",
   "scripts": {
@@ -20,10 +20,10 @@
   },
   "keywords": [
     "i18n",
-    "unity", 
-    "laya", 
-    "localization", 
-    "chinese", 
+    "unity",
+    "laya",
+    "localization",
+    "chinese",
     "translation"
   ],
   "author": "teppei",
