@@ -21,6 +21,7 @@ export class Localizer {
     private readonly OutXlsx = 'language.xlsx';
     private readonly OutTxt = 'languages_mid.txt';
     private readonly OutNewTxt = 'languages_new.txt';
+    private readonly OutSrcTxt = 'languages_src.txt';
 
     private sheetRows: LanguageRow[];
     private strMap: {[id: string]: LanguageRow} = {};
@@ -163,6 +164,7 @@ export class Localizer {
         if(this.mode == LocalizeMode.Search) {
             let txtContent = '';
             let txtNewContent = '';
+            let txtSrcContent = '';
             for(let id in this.strMap) {
                 let oneRow = this.strMap[id];
                 let infos = this.TagID + oneRow.ID + '\n';
@@ -176,9 +178,13 @@ export class Localizer {
                     infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
                     txtNewContent += infos + '\n';
                 }
+
+                txtSrcContent += oneRow.CN + '\n';
+                txtSrcContent += this.fromMap[oneRow.ID] + '\n\n';
             }
             fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
             fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
+            fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
         
             let newBook = xlsx.utils.book_new();
             let newSheet = xlsx.utils.json_to_sheet(sortedRows);
@@ -703,13 +709,13 @@ export class Localizer {
         cn = this.formatString(cn);
         // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');
         let id = this.getStringMd5(cn);
+        this.fromMap[id] = this.crtFile;
         if (this.strMap[id]) return;
         let node: LanguageRow = {ID: id, CN: cn};
         for (let lang of option.langs) {
             node[lang] = '';
         }
         this.strMap[id] = node;
-        this.fromMap[id] = this.crtFile;
         this.newMap[id] = true;
         this.sheetRows.push(node);
         this.newCnt++;

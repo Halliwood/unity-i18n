@@ -40,6 +40,7 @@ var Localizer = /** @class */ (function () {
         this.OutXlsx = 'language.xlsx';
         this.OutTxt = 'languages_mid.txt';
         this.OutNewTxt = 'languages_new.txt';
+        this.OutSrcTxt = 'languages_src.txt';
         this.strMap = {};
         this.fromMap = {};
         this.newMap = {};
@@ -170,6 +171,7 @@ var Localizer = /** @class */ (function () {
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
             var txtContent = '';
             var txtNewContent = '';
+            var txtSrcContent = '';
             for (var id in this.strMap) {
                 var oneRow = this.strMap[id];
                 var infos = this.TagID + oneRow.ID + '\n';
@@ -183,9 +185,12 @@ var Localizer = /** @class */ (function () {
                     infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
                     txtNewContent += infos + '\n';
                 }
+                txtSrcContent += oneRow.CN + '\n';
+                txtSrcContent += this.fromMap[oneRow.ID] + '\n\n';
             }
             fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
             fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
+            fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
             var newBook = xlsx.utils.book_new();
             var newSheet = xlsx.utils.json_to_sheet(sortedRows);
             if (xlsxSheet) {
@@ -730,6 +735,7 @@ var Localizer = /** @class */ (function () {
         cn = this.formatString(cn);
         // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');
         var id = this.getStringMd5(cn);
+        this.fromMap[id] = this.crtFile;
         if (this.strMap[id])
             return;
         var node = { ID: id, CN: cn };
@@ -738,7 +744,6 @@ var Localizer = /** @class */ (function () {
             node[lang] = '';
         }
         this.strMap[id] = node;
-        this.fromMap[id] = this.crtFile;
         this.newMap[id] = true;
         this.sheetRows.push(node);
         this.newCnt++;
