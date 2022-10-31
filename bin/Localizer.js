@@ -185,8 +185,10 @@ var Localizer = /** @class */ (function () {
                     infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
                     txtNewContent += infos + '\n';
                 }
-                txtSrcContent += oneRow.CN + '\n';
-                txtSrcContent += this.fromMap[oneRow.ID] + '\n\n';
+                if (this.fromMap[oneRow.ID]) {
+                    txtSrcContent += oneRow.CN + '\n';
+                    txtSrcContent += this.fromMap[oneRow.ID] + '\n\n';
+                }
             }
             fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
             fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
