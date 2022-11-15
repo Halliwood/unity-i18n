@@ -38,9 +38,11 @@ var Localizer = /** @class */ (function () {
         this.TagID = 'ID=';
         this.TagCN = 'CN=';
         this.OutXlsx = 'language.xlsx';
+        this.OutFullXlsx = 'language.full.xlsx';
         this.OutTxt = 'languages_mid.txt';
         this.OutNewTxt = 'languages_new.txt';
         this.OutSrcTxt = 'languages_src.txt';
+        this.BlacklistTxt = 'blacklist.txt';
         this.strMap = {};
         this.fromMap = {};
         this.newMap = {};
@@ -193,21 +195,34 @@ var Localizer = /** @class */ (function () {
             fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
             fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
             fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
-            var newBook = xlsx.utils.book_new();
-            var newSheet = xlsx.utils.json_to_sheet(sortedRows);
-            if (xlsxSheet) {
-                newSheet["!cols"] = xlsxSheet["!cols"];
-            }
-            else {
-                var cols = [{ wch: 20 }, { wch: 110 }];
+            var cols = xlsxSheet["!cols"];
+            if (!cols) {
+                cols = [{ wch: 20 }, { wch: 110 }];
                 for (var _j = 0, _k = option.langs; _j < _k.length; _j++) {
                     var lang = _k[_j];
                     cols.push({ wch: 110 });
                 }
-                newSheet["!cols"] = cols;
             }
-            xlsx.utils.book_append_sheet(newBook, newSheet);
-            xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
+            this.writeXlsx(sortedRows, cols, path.join(outputRoot, this.OutFullXlsx));
+            // 再写一个过滤掉黑名单的
+            var blackMap = {};
+            var blackFile = path.join(outputRoot, this.BlacklistTxt);
+            if (fs.existsSync(blackFile)) {
+                var blackContent = fs.readFileSync(blackFile, 'utf-8');
+                var blackLines = blackContent.split(/\r?\n/);
+                for (var _l = 0, blackLines_1 = blackLines; _l < blackLines_1.length; _l++) {
+                    var bl = blackLines_1[_l];
+                    blackMap[bl] = true;
+                }
+            }
+            var filteredRows = [];
+            for (var _m = 0, sortedRows_1 = sortedRows; _m < sortedRows_1.length; _m++) {
+                var row = sortedRows_1[_m];
+                if (!blackMap[row.CN]) {
+                    filteredRows.push(row);
+                }
+            }
+            this.writeXlsx(filteredRows, cols, path.join(outputRoot, this.OutXlsx));
         }
         else if (option === null || option === void 0 ? void 0 : option.softReplace) {
             // 生成各个语言包
@@ -221,18 +236,18 @@ var Localizer = /** @class */ (function () {
                 }
                 // 中文包
                 var ojArr = [];
-                for (var _l = 0, cnArr_1 = cnArr; _l < cnArr_1.length; _l++) {
-                    var cn = cnArr_1[_l];
+                for (var _o = 0, cnArr_1 = cnArr; _o < cnArr_1.length; _o++) {
+                    var cn = cnArr_1[_o];
                     ojArr.push(this.getStringMd5(cn));
                     ojArr.push(cn);
                 }
                 fs.writeFileSync(ojRoot.replace('$LANG', 'CN'), JSON.stringify({ strings: ojArr }), 'utf-8');
                 // 外文包
-                for (var _m = 0, _o = option.langs; _m < _o.length; _m++) {
-                    var lang = _o[_m];
+                for (var _p = 0, _q = option.langs; _p < _q.length; _p++) {
+                    var lang = _q[_p];
                     var ojArr_1 = [];
-                    for (var _p = 0, cnArr_2 = cnArr; _p < cnArr_2.length; _p++) {
-                        var cn = cnArr_2[_p];
+                    for (var _r = 0, cnArr_2 = cnArr; _r < cnArr_2.length; _r++) {
+                        var cn = cnArr_2[_r];
                         ojArr_1.push(this.getStringMd5(cn));
                         var local = this.getLocal(cn, option);
                         ojArr_1.push((local === null || local === void 0 ? void 0 : local[lang]) || cn);
@@ -251,6 +266,13 @@ var Localizer = /** @class */ (function () {
         else {
             console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
         }
+    };
+    Localizer.prototype.writeXlsx = function (sortedRows, cols, outputXlsx) {
+        var newBook = xlsx.utils.book_new();
+        var newSheet = xlsx.utils.json_to_sheet(sortedRows);
+        newSheet["!cols"] = cols;
+        xlsx.utils.book_append_sheet(newBook, newSheet);
+        xlsx.writeFile(newBook, outputXlsx);
     };
     Localizer.prototype.isRowTranslated = function (oneRow, option) {
         for (var _i = 0, _a = option.langs; _i < _a.length; _i++) {

@@ -19,9 +19,11 @@ export class Localizer {
     private readonly TagID = 'ID=';
     private readonly TagCN = 'CN=';
     private readonly OutXlsx = 'language.xlsx';
+    private readonly OutFullXlsx = 'language.full.xlsx';
     private readonly OutTxt = 'languages_mid.txt';
     private readonly OutNewTxt = 'languages_new.txt';
     private readonly OutSrcTxt = 'languages_src.txt';
+    private readonly BlacklistTxt = 'blacklist.txt';
 
     private sheetRows: LanguageRow[];
     private strMap: {[id: string]: LanguageRow} = {};
@@ -188,19 +190,31 @@ export class Localizer {
             fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
             fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
         
-            let newBook = xlsx.utils.book_new();
-            let newSheet = xlsx.utils.json_to_sheet(sortedRows);
-            if(xlsxSheet) {
-                newSheet["!cols"] = xlsxSheet["!cols"];
-            } else {
-                const cols: xlsx.ColInfo[] = [{wch: 20}, {wch: 110}];
-                for (let lang of option.langs) {
+            let cols = xlsxSheet["!cols"];
+            if(!cols) {
+                cols = [{wch: 20}, {wch: 110}];
+                for (const lang of option.langs) {
                     cols.push({wch: 110});
                 }
-                newSheet["!cols"] = cols;
             }
-            xlsx.utils.book_append_sheet(newBook, newSheet);
-            xlsx.writeFile(newBook, path.join(outputRoot, this.OutXlsx));
+            this.writeXlsx(sortedRows, cols, path.join(outputRoot, this.OutFullXlsx));
+            // 再写一个过滤掉黑名单的
+            const blackMap: { [cn: string]: true } = {};
+            const blackFile = path.join(outputRoot, this.BlacklistTxt);
+            if (fs.existsSync(blackFile)) {
+                const blackContent = fs.readFileSync(blackFile, 'utf-8');
+                const blackLines = blackContent.split(/\r?\n/);
+                for (const bl of blackLines) {
+                    blackMap[bl] = true;
+                }
+            }
+            const filteredRows: LanguageRow[] = [];
+            for (const row of sortedRows) {
+                if (!blackMap[row.CN]) {
+                    filteredRows.push(row);
+                }
+            }
+            this.writeXlsx(filteredRows, cols, path.join(outputRoot, this.OutXlsx));
         } else if (option?.softReplace) {
             // 生成各个语言包
             for (let oj in this.outputJSONMap) {
@@ -246,6 +260,14 @@ export class Localizer {
             console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', 
             ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
         }
+    }
+
+    private writeXlsx(sortedRows: LanguageRow[], cols: xlsx.ColInfo[], outputXlsx: string): void {
+        const newBook = xlsx.utils.book_new();
+        let newSheet = xlsx.utils.json_to_sheet(sortedRows);
+        newSheet["!cols"] = cols;
+        xlsx.utils.book_append_sheet(newBook, newSheet);
+        xlsx.writeFile(newBook, outputXlsx);
     }
 
     private isRowTranslated(oneRow: LanguageRow, option: GlobalOption): boolean {
