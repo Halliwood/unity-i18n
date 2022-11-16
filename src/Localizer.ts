@@ -5,9 +5,19 @@ import xlsx = require('xlsx');
 import { GlobalOption, LocalizeTask, LocalizeOption, LocalizeMode, TaskWithOption } from './LocalizeOption';
 
 interface LanguageRow {
-    ID: string;
-    CN: string;
-    [lang: string]: string;
+    ID: string
+    CN: string
+    [lang: string]: string
+}
+
+interface LangSheetInfo {
+    name?: string
+    rows: LanguageRow[]
+}
+
+interface CfgSetting {
+    grouped?: boolean
+    groups?: string[]
 }
 
 export class Localizer {
@@ -24,9 +34,11 @@ export class Localizer {
     private readonly OutNewTxt = 'languages_new.txt';
     private readonly OutSrcTxt = 'languages_src.txt';
     private readonly BlacklistTxt = 'blacklist.txt';
+    private readonly SettingJson = 'setting.json';
 
     private sheetRows: LanguageRow[];
     private strMap: {[id: string]: LanguageRow} = {};
+    private groupMap: {[id: string]: string} = {};
     private fromMap: {[id: string]: string} = {};
     private newMap: {[id: string]: boolean} = {};
 
@@ -75,6 +87,12 @@ export class Localizer {
         if(!fs.existsSync(outputRoot)) {
             console.error(`Output root not exists: ${outputRoot}`);
             process.exit(1);
+        }
+        // 读入配置文件
+        let setting: CfgSetting = undefined;
+        const settingFile = path.join(outputRoot, this.SettingJson);
+        if (fs.existsSync(settingFile)) {
+            setting = JSON.parse(fs.readFileSync(settingFile, 'utf-8'));
         }
         // 先读入xlsx
         let xlsxPath = path.join(outputRoot, this.OutXlsx);
@@ -197,7 +215,7 @@ export class Localizer {
                     cols.push({wch: 110});
                 }
             }
-            this.writeXlsx(sortedRows, cols, path.join(outputRoot, this.OutFullXlsx));
+            this.writeXlsx(sortedRows, cols, path.join(outputRoot, this.OutFullXlsx), setting);
             // 再写一个过滤掉黑名单的
             const blackMap: { [cn: string]: true } = {};
             const blackFile = path.join(outputRoot, this.BlacklistTxt);
@@ -214,7 +232,7 @@ export class Localizer {
                     filteredRows.push(row);
                 }
             }
-            this.writeXlsx(filteredRows, cols, path.join(outputRoot, this.OutXlsx));
+            this.writeXlsx(filteredRows, cols, path.join(outputRoot, this.OutXlsx), setting);
         } else if (option?.softReplace) {
             // 生成各个语言包
             for (let oj in this.outputJSONMap) {
@@ -262,11 +280,33 @@ export class Localizer {
         }
     }
 
-    private writeXlsx(sortedRows: LanguageRow[], cols: xlsx.ColInfo[], outputXlsx: string): void {
+    private writeXlsx(sortedRows: LanguageRow[], cols: xlsx.ColInfo[], outputXlsx: string, setting?: CfgSetting): void {
+        const sheetInfos: LangSheetInfo[] = [];
+        if (setting?.grouped) {
+            const sheetMap: { [group: string]: LangSheetInfo } = {};
+            const otherSheet: LangSheetInfo = { name: '其它', rows: [] };
+            for (const row of sortedRows) {
+                const group = this.groupMap[row.ID];
+                if (group) {
+                    let info = sheetMap[group];
+                    if (!info) {
+                        sheetMap[group] = info = { name: group, rows: [] };
+                        sheetInfos.push(info);
+                    }
+                    info.rows.push(row);
+                } else {
+                    otherSheet.rows.push(row);
+                }
+            }
+        } else {
+            sheetInfos.push({ rows: sortedRows });
+        }
         const newBook = xlsx.utils.book_new();
-        let newSheet = xlsx.utils.json_to_sheet(sortedRows);
-        newSheet["!cols"] = cols;
-        xlsx.utils.book_append_sheet(newBook, newSheet);
+        for (const info of sheetInfos) {
+            let newSheet = xlsx.utils.json_to_sheet(info.rows);
+            newSheet["!cols"] = cols;
+            xlsx.utils.book_append_sheet(newBook, newSheet, info.name);
+        }
         xlsx.writeFile(newBook, outputXlsx);
     }
 
@@ -734,6 +774,9 @@ export class Localizer {
         // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');
         let id = this.getStringMd5(cn);
         this.fromMap[id] = this.crtFile;
+        if (this.crtTask.group) {
+            this.groupMap[id] = this.crtTask.group;
+        }
         if (this.strMap[id]) return;
         let node: LanguageRow = {ID: id, CN: cn};
         for (let lang of option.langs) {

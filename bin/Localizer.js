@@ -43,7 +43,9 @@ var Localizer = /** @class */ (function () {
         this.OutNewTxt = 'languages_new.txt';
         this.OutSrcTxt = 'languages_src.txt';
         this.BlacklistTxt = 'blacklist.txt';
+        this.SettingJson = 'setting.json';
         this.strMap = {};
+        this.groupMap = {};
         this.fromMap = {};
         this.newMap = {};
         this.totalCnt = 0;
@@ -77,6 +79,12 @@ var Localizer = /** @class */ (function () {
         if (!fs.existsSync(outputRoot)) {
             console.error("Output root not exists: ".concat(outputRoot));
             process.exit(1);
+        }
+        // 读入配置文件
+        var setting = undefined;
+        var settingFile = path.join(outputRoot, this.SettingJson);
+        if (fs.existsSync(settingFile)) {
+            setting = JSON.parse(fs.readFileSync(settingFile, 'utf-8'));
         }
         // 先读入xlsx
         var xlsxPath = path.join(outputRoot, this.OutXlsx);
@@ -203,7 +211,7 @@ var Localizer = /** @class */ (function () {
                     cols.push({ wch: 110 });
                 }
             }
-            this.writeXlsx(sortedRows, cols, path.join(outputRoot, this.OutFullXlsx));
+            this.writeXlsx(sortedRows, cols, path.join(outputRoot, this.OutFullXlsx), setting);
             // 再写一个过滤掉黑名单的
             var blackMap = {};
             var blackFile = path.join(outputRoot, this.BlacklistTxt);
@@ -222,7 +230,7 @@ var Localizer = /** @class */ (function () {
                     filteredRows.push(row);
                 }
             }
-            this.writeXlsx(filteredRows, cols, path.join(outputRoot, this.OutXlsx));
+            this.writeXlsx(filteredRows, cols, path.join(outputRoot, this.OutXlsx), setting);
         }
         else if (option === null || option === void 0 ? void 0 : option.softReplace) {
             // 生成各个语言包
@@ -267,11 +275,37 @@ var Localizer = /** @class */ (function () {
             console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
         }
     };
-    Localizer.prototype.writeXlsx = function (sortedRows, cols, outputXlsx) {
+    Localizer.prototype.writeXlsx = function (sortedRows, cols, outputXlsx, setting) {
+        var sheetInfos = [];
+        if (setting === null || setting === void 0 ? void 0 : setting.grouped) {
+            var sheetMap = {};
+            var otherSheet = { name: '其它', rows: [] };
+            for (var _i = 0, sortedRows_2 = sortedRows; _i < sortedRows_2.length; _i++) {
+                var row = sortedRows_2[_i];
+                var group = this.groupMap[row.ID];
+                if (group) {
+                    var info = sheetMap[group];
+                    if (!info) {
+                        sheetMap[group] = info = { name: group, rows: [] };
+                        sheetInfos.push(info);
+                    }
+                    info.rows.push(row);
+                }
+                else {
+                    otherSheet.rows.push(row);
+                }
+            }
+        }
+        else {
+            sheetInfos.push({ rows: sortedRows });
+        }
         var newBook = xlsx.utils.book_new();
-        var newSheet = xlsx.utils.json_to_sheet(sortedRows);
-        newSheet["!cols"] = cols;
-        xlsx.utils.book_append_sheet(newBook, newSheet);
+        for (var _a = 0, sheetInfos_1 = sheetInfos; _a < sheetInfos_1.length; _a++) {
+            var info = sheetInfos_1[_a];
+            var newSheet = xlsx.utils.json_to_sheet(info.rows);
+            newSheet["!cols"] = cols;
+            xlsx.utils.book_append_sheet(newBook, newSheet, info.name);
+        }
         xlsx.writeFile(newBook, outputXlsx);
     };
     Localizer.prototype.isRowTranslated = function (oneRow, option) {
@@ -760,6 +794,9 @@ var Localizer = /** @class */ (function () {
         // if(cn.indexOf('{0}绑定钻石') >= 0) throw new Error('!');
         var id = this.getStringMd5(cn);
         this.fromMap[id] = this.crtFile;
+        if (this.crtTask.group) {
+            this.groupMap[id] = this.crtTask.group;
+        }
         if (this.strMap[id])
             return;
         var node = { ID: id, CN: cn };

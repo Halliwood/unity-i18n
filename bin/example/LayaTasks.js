@@ -6,7 +6,8 @@ var jsonTask = {
         "includes": {
             "exts": ['.json']
         }
-    }
+    },
+    "group": "UI"
 };
 var asTask = {
     "roots": ['src'],
@@ -19,7 +20,8 @@ var asTask = {
             "exts": ['.ts']
         },
         "skipPatterns": ["^\\s*console\\.log", "^\\s*FyGame\\.log", "^\\s*console\\.assert\(", "^\\s*FyGame\\.assert\\("]
-    }
+    },
+    "group": "代码"
 };
 var clientCfgTask = {
     "roots": ['$workspace/clientcfg'],
@@ -30,7 +32,8 @@ var clientCfgTask = {
         "excludes": {
             "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
         }
-    }
+    },
+    "group": "表格"
 };
 var svrScriptTask = {
     "roots": ['$workspace/serverscript'],
@@ -39,7 +42,8 @@ var svrScriptTask = {
             "exts": ['.cxx', '.atm']
         },
         "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
-    }
+    },
+    "group": "脚本"
 };
 var svrCfgTask = {
     "roots": ['$workspace/servercfg'],
@@ -50,7 +54,8 @@ var svrCfgTask = {
         "excludes": {
             "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
         }
-    }
+    },
+    "group": "表格"
 };
 var searchTasks = [jsonTask, asTask, clientCfgTask, svrScriptTask, svrCfgTask];
 var replaceTasks = [jsonTask, asTask];

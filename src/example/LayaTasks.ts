@@ -6,7 +6,8 @@ const jsonTask: LocalizeTask = {
         "includes": {
             "exts": ['.json']
         }
-    }
+    },
+    "group": "UI"
 };
 const asTask: LocalizeTask = {
     "roots": ['src'], 
@@ -19,7 +20,8 @@ const asTask: LocalizeTask = {
             "exts": ['.ts']
         }, 
         "skipPatterns": ["^\\s*console\\.log", "^\\s*FyGame\\.log", "^\\s*console\\.assert\(", "^\\s*FyGame\\.assert\\("]
-    }
+    },
+    "group": "代码"
 };
 const clientCfgTask = {
     "roots": ['$workspace/clientcfg'], 
@@ -30,7 +32,8 @@ const clientCfgTask = {
         "excludes" : {
             "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
         }
-    }
+    },
+    "group": "表格"
 };
 const svrScriptTask = {
     "roots": ['$workspace/serverscript'], 
@@ -39,7 +42,8 @@ const svrScriptTask = {
             "exts": ['.cxx', '.atm']
         }, 
         "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
-    }
+    },
+    "group": "脚本"
 };
 const svrCfgTask = {
     "roots": ['$workspace/servercfg'], 
@@ -50,7 +54,8 @@ const svrCfgTask = {
         "excludes" : {
             "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
         }
-    }
+    },
+    "group": "表格"
 };
 
 const searchTasks: LocalizeTask[] = [jsonTask, asTask, clientCfgTask, svrScriptTask, svrCfgTask];

@@ -7,7 +7,8 @@ function makeTasks() {
             "includes": {
                 "exts": ['.prefab']
             }
-        }
+        },
+        "group": "UI"
     };
     const jsonTask: LocalizeTask = {
         "roots": ['Assets/AssetSources/data'], 
@@ -15,7 +16,8 @@ function makeTasks() {
             "includes": {
                 "exts": ['.json']
             }
-        }
+        },
+        "group": "表格"
     };
     const tsTask: LocalizeTask = {
         "roots": ['TsScripts'], 
@@ -28,7 +30,8 @@ function makeTasks() {
                 "exts": ['.ts']
             }, 
             "skipPatterns": ["^\\s*uts\\.log", "^\\s*uts\\.assert\\("]
-        }
+        },
+        "group": "代码"
     };
     const csTask: LocalizeTask = {
         "roots": ['Assets/Scripts', 'Assets/Editor/XCodeBuilder'], 
@@ -40,7 +43,8 @@ function makeTasks() {
                 "exts": ['.cs']
             }, 
             "skipPatterns": ["^\\s*Debug\\.Log"]
-        }
+        },
+        "group": "代码"
     };
     const svrScriptTask = {
         "roots": ['$workspace/serverscript'], 
@@ -49,7 +53,8 @@ function makeTasks() {
                 "exts": ['.cxx', '.atm']
             }, 
             "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
-        }
+        },
+        "group": "脚本"
     };
     const svrCfgTask = {
         "roots": ['$workspace/servercfg'], 
@@ -60,7 +65,8 @@ function makeTasks() {
             "excludes" : {
                 "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
             }
-        }
+        },
+        "group": "表格"
     };
     
     const replacer = {'$workspace': '..'};

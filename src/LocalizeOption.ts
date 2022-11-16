@@ -13,6 +13,8 @@ export interface TaskWithOption {
     /**任务执行路径，需采用linux风格，即以“/”为分隔符。绝对路径或相对路径均可 */
     roots: string[];
     option?: LocalizeOption;
+    /**文字分类 */
+    group?: string;
 }
 
 export interface LocalizeOption {
