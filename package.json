@@ -5,8 +5,8 @@
   "main": "bin/index.js",
   "scripts": {
     "maintain": "node bin/maintain.js",
-    "test:dp:s": "node bin/index.js -s \"F:/dp/trunk/\" -o \"F:/dp/trunk/tools/i18n/dictionary\" -d \"unity\" -S --soft-replace --langs TW,EN",
-    "test:dp:r": "node bin/index.js -s \"F:/dp/trunk/\" -o \"F:/dp/trunk/tools/i18n/dictionary\" -d \"unity\" -R --soft-replace --langs TW,EN",
+    "test:dp:s": "node bin/index.js -s \"F:/dp/trunk/project/\" -o \"F:/dp/trunk/project/tools/i18n/dictionary\" -d \"unity\" -S --soft-replace --langs TW,EN -x prepend",
+    "test:dp:r": "node bin/index.js -s \"F:/dp/trunk/project/\" -o \"F:/dp/trunk/project/tools/i18n/dictionary\" -d \"unity\" -R --soft-replace --langs TW,EN -x prepend",
     "test:dldltw": "node bin/index.js -s \"G:/dldltw/trunk/\" -o \"G:/dldltw/trunk/tools/i18n/dictionary/tw\" -d \"unity\" -R",
     "test:laya": "node bin/index.js -s \"G:/qhgame/trunk/project/\" -o \"G:/qhgame/trunk/project/tools/i18n/dictionary/tw\" -d \"laya\" --task-replacer \"$workspace=F:/layai18nwork/QHGame\" -S",
     "build": "tsc",

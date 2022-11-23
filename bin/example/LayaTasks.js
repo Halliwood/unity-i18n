@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonTask = {
+const jsonTask = {
     "roots": ['bin/view'],
     "option": {
         "includes": {
@@ -9,7 +9,7 @@ var jsonTask = {
     },
     "group": "UI"
 };
-var asTask = {
+const asTask = {
     "roots": ['src'],
     "option": {
         "excludes": {
@@ -23,7 +23,7 @@ var asTask = {
     },
     "group": "代码"
 };
-var clientCfgTask = {
+const clientCfgTask = {
     "roots": ['$workspace/clientcfg'],
     "option": {
         "includes": {
@@ -35,7 +35,7 @@ var clientCfgTask = {
     },
     "group": "表格"
 };
-var svrScriptTask = {
+const svrScriptTask = {
     "roots": ['$workspace/serverscript'],
     "option": {
         "includes": {
@@ -45,7 +45,7 @@ var svrScriptTask = {
     },
     "group": "脚本"
 };
-var svrCfgTask = {
+const svrCfgTask = {
     "roots": ['$workspace/servercfg'],
     "option": {
         "includes": {
@@ -57,9 +57,10 @@ var svrCfgTask = {
     },
     "group": "表格"
 };
-var searchTasks = [jsonTask, asTask, clientCfgTask, svrScriptTask, svrCfgTask];
-var replaceTasks = [jsonTask, asTask];
-var xml2binReplaceTasks = [clientCfgTask];
-var replacer = { '$workspace': '..' };
-var LayaTasks = { searchTasks: searchTasks, replaceTasks: replaceTasks, xml2binReplaceTasks: xml2binReplaceTasks, replacer: replacer };
+const searchTasks = [jsonTask, asTask, clientCfgTask, svrScriptTask, svrCfgTask];
+const replaceTasks = [jsonTask, asTask];
+const xml2binReplaceTasks = [clientCfgTask];
+const replacer = { '$workspace': '..' };
+const LayaTasks = { searchTasks, replaceTasks, xml2binReplaceTasks, replacer };
 exports.default = LayaTasks;
+//# sourceMappingURL=LayaTasks.js.map

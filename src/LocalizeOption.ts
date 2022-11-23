@@ -15,6 +15,8 @@ export interface TaskWithOption {
     option?: LocalizeOption;
     /**文字分类 */
     group?: string;
+    /**是否需要对拼接字符串%s进行安全处理 */
+    safeprintf?: boolean
 }
 
 export interface LocalizeOption {

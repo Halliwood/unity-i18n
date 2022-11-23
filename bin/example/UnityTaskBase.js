@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function makeTasks() {
-    var prefabTask = {
+    const prefabTask = {
         "roots": ['Assets/AssetSources/ui', 'Assets/Arts/sequenceAnim'],
         "option": {
             "includes": {
@@ -10,7 +10,7 @@ function makeTasks() {
         },
         "group": "UI"
     };
-    var jsonTask = {
+    const jsonTask = {
         "roots": ['Assets/AssetSources/data'],
         "option": {
             "includes": {
@@ -19,7 +19,7 @@ function makeTasks() {
         },
         "group": "表格"
     };
-    var tsTask = {
+    const tsTask = {
         "roots": ['TsScripts'],
         "option": {
             "excludes": {
@@ -33,7 +33,7 @@ function makeTasks() {
         },
         "group": "代码"
     };
-    var csTask = {
+    const csTask = {
         "roots": ['Assets/Scripts', 'Assets/Editor/XCodeBuilder'],
         "option": {
             "excludes": {
@@ -46,7 +46,7 @@ function makeTasks() {
         },
         "group": "代码"
     };
-    var svrScriptTask = {
+    const svrScriptTask = {
         "roots": ['$workspace/serverscript'],
         "option": {
             "includes": {
@@ -54,9 +54,10 @@ function makeTasks() {
             },
             "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
         },
-        "group": "脚本"
+        "group": "脚本",
+        safeprintf: true
     };
-    var svrCfgTask = {
+    const svrCfgTask = {
         "roots": ['$workspace/servercfg'],
         "option": {
             "includes": {
@@ -66,10 +67,12 @@ function makeTasks() {
                 "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
             }
         },
-        "group": "表格"
+        "group": "表格",
+        safeprintf: true
     };
-    var replacer = { '$workspace': '..' };
-    return { prefabTask: prefabTask, jsonTask: jsonTask, tsTask: tsTask, csTask: csTask, svrScriptTask: svrScriptTask, svrCfgTask: svrCfgTask, replacer: replacer };
+    const replacer = { '$workspace': '..' };
+    return { prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask, replacer };
 }
-var UnityTaskBase = makeTasks();
+const UnityTaskBase = makeTasks();
 exports.default = UnityTaskBase;
+//# sourceMappingURL=UnityTaskBase.js.map

@@ -26,27 +26,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var program = require("commander");
-var fs = __importStar(require("fs"));
-var Localizer_1 = require("./Localizer");
-var process_1 = require("process");
-var UnityHardTasks_1 = __importDefault(require("./example/UnityHardTasks"));
-var LayaTasks_1 = __importDefault(require("./example/LayaTasks"));
-var UnitySoftTasks_1 = __importDefault(require("./example/UnitySoftTasks"));
-var myPackage = require('../package.json');
-var rmQuotes = function (val) {
-    var rst = val.match(/(['"])(.+)\1/);
+const program = require("commander");
+const fs = __importStar(require("fs"));
+const Localizer_1 = require("./Localizer");
+const process_1 = require("process");
+const UnityHardTasks_1 = __importDefault(require("./example/UnityHardTasks"));
+const LayaTasks_1 = __importDefault(require("./example/LayaTasks"));
+const UnitySoftTasks_1 = __importDefault(require("./example/UnitySoftTasks"));
+const myPackage = require('../package.json');
+const rmQuotes = (val) => {
+    let rst = val.match(/(['"])(.+)\1/);
     if (rst)
         return rst[2];
     return val;
 };
-var parseTaskReplacer = function (val) {
+const parseTaskReplacer = (val) => {
     val = rmQuotes(val);
-    var r = {};
-    var varr = val.split('&');
-    for (var _i = 0, varr_1 = varr; _i < varr_1.length; _i++) {
-        var v = varr_1[_i];
-        var pair = v.split('=');
+    let r = {};
+    let varr = val.split('&');
+    for (let v of varr) {
+        let pair = v.split('=');
         r[pair[0]] = pair[1];
     }
     return r;
@@ -67,7 +66,7 @@ program
     .option("-x, --xlsxstyle <prepend|append|sort-by-id>", "Xlsx sort rule.", 'append')
     .option("-l, --log", "Generate log file.")
     .parse(process.argv);
-var opts = program.opts();
+let opts = program.opts();
 if (!opts.src && !opts.tasks) {
     console.error("The --src option is MUST.");
     program.help({ error: true });
@@ -82,8 +81,8 @@ if (!opts.softReplace && opts.langs && opts.langs.length > 1) {
 }
 if (!opts.langs)
     opts.langs = 'LOCAL';
-var localizer = new Localizer_1.Localizer();
-var globalOption = {
+let localizer = new Localizer_1.Localizer();
+let globalOption = {
     inputRoot: opts.src,
     outputRoot: opts.output,
     langs: opts.langs.split(','),
@@ -107,7 +106,7 @@ if (opts.default) {
         }
     }
     else {
-        var tasks = void 0;
+        let tasks;
         if (opts.default == 'unity' || opts.default == 'unity_hard') {
             tasks = UnityHardTasks_1.default;
         }
@@ -133,19 +132,19 @@ if (opts.default) {
     }
 }
 else if (opts.tasks) {
-    var tasksObj = null;
+    let tasksObj = null;
     if (typeof (opts.tasks) == 'object') {
         // json
         tasksObj = opts.tasks;
     }
     else if (typeof (opts.tasks) == 'string') {
         // json file
-        var tasksFile = opts.tasks;
+        let tasksFile = opts.tasks;
         if (!fs.existsSync(tasksFile)) {
             console.error('Cannot find tasks file: %s', tasksFile);
             (0, process_1.exit)(1);
         }
-        var tasksContent = fs.readFileSync(tasksFile, 'utf-8');
+        let tasksContent = fs.readFileSync(tasksFile, 'utf-8');
         tasksObj = JSON.parse(tasksContent);
     }
     if (tasksObj) {
@@ -168,3 +167,4 @@ else if (opts.tasks) {
 // // localizer.searchZhInFiles(searchTasks, {"inputRoot": 'G:\\dldlweb_kr\\trunk\\project\\'});
 // localizer.searchZhInFiles(searchTasks, {"inputRoot": 'G:\\dldlweb_kr\\trunk\\project\\', "outputRoot": 'G:\\dldlweb_kr\\trunk\\project\\tools\\i18n\\dictionary\\tw'});
 // localizer.replaceZhInFiles(replaceTasks, {"inputRoot": 'G:\\dldlweb_kr\\trunk\\project\\', "outputRoot": 'G:\\dldlweb_kr\\trunk\\project\\tools\\i18n\\dictionary\\tw'});
+//# sourceMappingURL=index.js.map

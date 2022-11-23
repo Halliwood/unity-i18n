@@ -16,6 +16,8 @@ interface LangSheetInfo {
 }
 
 interface CfgSetting {
+    /**是否开启对拼接字符串%s进行安全处理（仅针对开启safeprintf的task） */
+    enableSafeprintf?: boolean
     grouped?: boolean
     groups?: string[]
 }
@@ -29,15 +31,21 @@ export class Localizer {
     private readonly TagID = 'ID=';
     private readonly TagCN = 'CN=';
     private readonly OutXlsx = 'language.xlsx';
-    private readonly OutFullXlsx = 'language.full.xlsx';
+    private readonly OutDictXlsx = 'language.dict.xlsx';
     private readonly OutTxt = 'languages_mid.txt';
     private readonly OutNewTxt = 'languages_new.txt';
     private readonly OutSrcTxt = 'languages_src.txt';
     private readonly BlacklistTxt = 'blacklist.txt';
     private readonly SettingJson = 'setting.json';
 
+    /**存储search捕获的文字 */
     private sheetRows: LanguageRow[];
+    /**存储search捕获的文字表 */
+    private capturedMap: {[id: string]: LanguageRow} = {};
+    /**存储所有文字表（包括本次捕获的和历史上捕获的） */
     private strMap: {[id: string]: LanguageRow} = {};
+    /**存储各个sheet对应的文字表（只包含languages.xlsx） */
+    private sheetRowMap: { [sheetName: string]: LanguageRow[] } = {};
     private groupMap: {[id: string]: string} = {};
     private fromMap: {[id: string]: string} = {};
     private newMap: {[id: string]: boolean} = {};
@@ -46,7 +54,6 @@ export class Localizer {
     private crtFile: string;
 
     private totalCnt = 0;
-    private newCnt = 0;
 
     private modifiedFileCnt = 0;
     private noLocalCnt = 0;
@@ -58,6 +65,9 @@ export class Localizer {
     private md5Cache: { [str: string]: string } = {};
     private md52rawStr: { [str: string]: string } = {};
     private outputJSONMap: { [file: string]: { [cn: string]: true } } = {};
+
+    private setting: CfgSetting;
+    private colInfoMap: { [sheetName: string]: xlsx.ColInfo[] } = {};
 
     searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
         this.mode = LocalizeMode.Search;
@@ -77,7 +87,6 @@ export class Localizer {
         this.newMap = {};
 
         this.totalCnt = 0;
-        this.newCnt = 0;
         this.modifiedFileCnt = 0;
         this.noLocalCnt = 0;
 
@@ -85,59 +94,29 @@ export class Localizer {
 
         let outputRoot = option?.outputRoot || 'output/';
         if(!fs.existsSync(outputRoot)) {
-            console.error(`Output root not exists: ${outputRoot}`);
+            console.error(`[unity-i18n]Output root not exists: ${outputRoot}`);
             process.exit(1);
         }
         // 读入配置文件
-        let setting: CfgSetting = undefined;
         const settingFile = path.join(outputRoot, this.SettingJson);
         if (fs.existsSync(settingFile)) {
-            setting = JSON.parse(fs.readFileSync(settingFile, 'utf-8'));
+            this.setting = JSON.parse(fs.readFileSync(settingFile, 'utf-8'));
+            console.log('[unity-i18n]setting: ', this.setting);
         }
         // 先读入xlsx
-        let xlsxPath = path.join(outputRoot, this.OutXlsx);
-        let xlsxSheet: xlsx.WorkSheet;
-        let sheetName: string;
-        if(fs.existsSync(xlsxPath)) {
-            let xlsxBook = xlsx.readFile(xlsxPath);
-            sheetName = xlsxBook.SheetNames[0];
-            xlsxSheet = xlsxBook.Sheets[sheetName];
-            this.sheetRows = xlsx.utils.sheet_to_json<LanguageRow>(xlsxSheet);
-            let errorRows: number[] = [];
-            let newlineRows: number[] = [];
-            for(let i = 0, len = this.sheetRows.length; i < len; i++) {
-                let oneRow = this.sheetRows[i];
-                if(oneRow.CN == undefined) {
-                    errorRows.push(i + 2);
-                    continue;
-                }
-                if (oneRow.ID != this.getStringMd5(oneRow.CN)) {
-                    console.warn(`row ${i + 2} MD5 error, auto corrected!`);
-                    oneRow.ID = this.getStringMd5(oneRow.CN);
-                }
-                oneRow.CN = this.eunsureString(oneRow.CN);
-                for (let lang of option.langs) {
-                    let local = oneRow[lang];
-                    if (undefined != local) {
-                        oneRow[lang] = this.eunsureString(local);
-                        // 检查翻译中是否有换行符
-                        let idx = local.search(/[\r\n]/g);
-                        if(idx >= 0) {
-                            newlineRows.push(i + 2);
-                        }
-                    }
-                }
-                // 修复翻译中的换行
-                this.strMap[oneRow.ID] = oneRow;
-            }
-            this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
-            this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
-            this.assert(newlineRows.length == 0, 'The following rows contains newline char: ' + newlineRows.join(', '));
-            console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', this.sheetRows.length);
-        } else {
-            console.log('[unity-i18n]找不到旧的翻译记录：%s', xlsxPath);
-            this.sheetRows = [];
+        const dictPath = path.join(outputRoot, this.OutDictXlsx);
+        if(fs.existsSync(dictPath)) {
+            console.log('[unity-i18n]读入字典：%s', dictPath);
+            this.readXlsx(dictPath, option);
         }
+        const xlsxPath = path.join(outputRoot, this.OutXlsx);
+        if(fs.existsSync(xlsxPath)) {
+            console.log('[unity-i18n]读入翻译表：%s', xlsxPath);
+            this.sheetRowMap = this.readXlsx(xlsxPath, option);
+        }
+        this.sheetRows = [];
+        console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', Object.keys(this.strMap).length);
+
         if(this.mode == LocalizeMode.Search) {
             console.log('开始搜索中文串...\n');
         } else {
@@ -152,11 +131,6 @@ export class Localizer {
             for(let oneTask of tasksAlias) {
                 this.runTask(oneTask, option);
             }
-        }
-
-        if(this.sheetRows.length == 0) {
-            console.log('[unity-i18n]No zh strings found.');
-            return;
         }
 
         // 排序，没翻译的放前面
@@ -181,6 +155,7 @@ export class Localizer {
             sortedRows = this.sheetRows;
         }
 
+        let newCnt = 0;
         if(this.mode == LocalizeMode.Search) {
             let txtContent = '';
             let txtNewContent = '';
@@ -208,15 +183,7 @@ export class Localizer {
             fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
             fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
         
-            let cols = xlsxSheet["!cols"];
-            if(!cols) {
-                cols = [{wch: 20}, {wch: 110}];
-                for (const lang of option.langs) {
-                    cols.push({wch: 110});
-                }
-            }
-            this.writeXlsx(sortedRows, cols, path.join(outputRoot, this.OutFullXlsx), setting);
-            // 再写一个过滤掉黑名单的
+            // 写一个过滤掉黑名单的
             const blackMap: { [cn: string]: true } = {};
             const blackFile = path.join(outputRoot, this.BlacklistTxt);
             if (fs.existsSync(blackFile)) {
@@ -230,22 +197,54 @@ export class Localizer {
             for (const row of sortedRows) {
                 if (!blackMap[row.CN]) {
                     filteredRows.push(row);
+                    if (this.newMap[row.ID]) {
+                        newCnt++;
+                    }
                 }
             }
-            this.writeXlsx(filteredRows, cols, path.join(outputRoot, this.OutXlsx), setting);
+            this.writeXlsx(filteredRows, option, path.join(outputRoot, this.OutXlsx));
+
+            // 写一个全量字典
+            const dictRows: LanguageRow[] = [];
+            for (const key in this.strMap) {
+                const row = this.strMap[key];
+                for (const lang of option.langs) {
+                    if (row[lang]) {
+                        dictRows.push(this.strMap[key]);
+                        break;
+                    }
+                }
+            }
+            this.writeXlsx(dictRows, option, path.join(outputRoot, this.OutDictXlsx));
         } else if (option?.softReplace) {
             // 生成各个语言包
-            for (let oj in this.outputJSONMap) {
+            console.log('[unity-i18n]开始生成语言包...');
+            for (const oj in this.outputJSONMap) {
                 const m = this.outputJSONMap[oj];
                 const cnArr = Object.keys(m);
                 cnArr.sort();
+
+                // 需要增加脚本字符串
+                const svrScriptRows = this.sheetRowMap?.['脚本'];
+                if (svrScriptRows) {
+                    let ssCnt = 0;
+                    for (const row of svrScriptRows) {
+                        if (!m[row.CN]) {
+                            cnArr.push(row.CN);
+                            ssCnt++;
+                        }
+                    }
+                    console.log('[unity-i18n]脚本文字串数量：', ssCnt);
+                } else {
+                    console.error('[unity-i18n]生成语言包时未找到任何脚本文字串！')
+                }
 
                 let ojRoot = this.normalizePath(oj);
                 if(option.inputRoot && !path.isAbsolute(ojRoot)) {
                     ojRoot = path.join(option.inputRoot, ojRoot);
                 }
                 // 中文包
-                let ojArr: string[] = [];
+                const ojArr: string[] = [];
                 for (let cn of cnArr) {
                     ojArr.push(this.getStringMd5(cn));
                     ojArr.push(cn);
@@ -273,16 +272,58 @@ export class Localizer {
 
         if(this.mode == LocalizeMode.Search) {
             console.log('[unity-i18n]搜索结束! 耗时: \x1B[36m%d\x1B[0m秒. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', 
-            ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, this.newCnt);
+            ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, newCnt);
         } else {
             console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', 
             ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
         }
     }
 
-    private writeXlsx(sortedRows: LanguageRow[], cols: xlsx.ColInfo[], outputXlsx: string, setting?: CfgSetting): void {
+    private readXlsx(xlsxPath: string, option: GlobalOption): { [sheetName: string]: LanguageRow[] } {
+        const xlsxBook = xlsx.readFile(xlsxPath);
+        const errorRows: number[] = [];
+        const newlineRows: number[] = [];
+        const out: { [sheetName: string]: LanguageRow[] } = {};
+        for (const sheetName of xlsxBook.SheetNames) {
+            const xlsxSheet = xlsxBook.Sheets[sheetName];
+            this.colInfoMap[sheetName] = xlsxSheet['!cols'];
+            const sheetRows = xlsx.utils.sheet_to_json<LanguageRow>(xlsxSheet);
+            out[sheetName] = sheetRows;
+            for(let i = 0, len = sheetRows.length; i < len; i++) {
+                let oneRow = sheetRows[i];
+                if(oneRow.CN == undefined) {
+                    errorRows.push(i + 2);
+                    continue;
+                }
+                if (oneRow.ID != this.getStringMd5(oneRow.CN)) {
+                    console.warn(`row ${i + 2} MD5 error, auto corrected!`);
+                    oneRow.ID = this.getStringMd5(oneRow.CN);
+                }
+                oneRow.CN = this.eunsureString(oneRow.CN);
+                for (let lang of option.langs) {
+                    let local = oneRow[lang];
+                    if (undefined != local) {
+                        oneRow[lang] = this.eunsureString(local);
+                        // 检查翻译中是否有换行符
+                        let idx = local.search(/[\r\n]/g);
+                        if(idx >= 0) {
+                            newlineRows.push(i + 2);
+                        }
+                    }
+                }
+                // 修复翻译中的换行
+                this.strMap[oneRow.ID] = oneRow;
+            }
+        }
+        this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
+        this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
+        this.assert(newlineRows.length == 0, 'The following rows contains newline char: ' + newlineRows.join(', '));
+        return out;
+    }
+
+    private writeXlsx(sortedRows: LanguageRow[], option: GlobalOption, outputXlsx: string): void {
         const sheetInfos: LangSheetInfo[] = [];
-        if (setting?.grouped) {
+        if (this.setting?.grouped) {
             const sheetMap: { [group: string]: LangSheetInfo } = {};
             const otherSheet: LangSheetInfo = { name: '其它', rows: [] };
             for (const row of sortedRows) {
@@ -298,16 +339,33 @@ export class Localizer {
                     otherSheet.rows.push(row);
                 }
             }
+            sheetInfos.push(otherSheet);
         } else {
             sheetInfos.push({ rows: sortedRows });
         }
         const newBook = xlsx.utils.book_new();
-        for (const info of sheetInfos) {
-            let newSheet = xlsx.utils.json_to_sheet(info.rows);
+        let sheetCnt = 0;
+        for (let i = 0, len = sheetInfos.length; i < len; i++) {
+            const info = sheetInfos[i];
+            const newSheet = xlsx.utils.json_to_sheet(info.rows);
+            if (!newSheet) continue;
+            
+            let cols = this.colInfoMap[info.name ?? `Sheet${i + 1}`];
+            if(!cols) {
+                cols = [{wch: 20}, {wch: 110}];
+                for (const lang of option.langs) {
+                    cols.push({wch: 110});
+                }
+            }
             newSheet["!cols"] = cols;
             xlsx.utils.book_append_sheet(newBook, newSheet, info.name);
+            sheetCnt++;
         }
-        xlsx.writeFile(newBook, outputXlsx);
+        if (sheetCnt > 0) {
+            xlsx.writeFile(newBook, outputXlsx);
+        } else {
+            console.log(`[unity-i18n]Nothing to write: ${outputXlsx}`);
+        }
     }
 
     private isRowTranslated(oneRow: LanguageRow, option: GlobalOption): boolean {
@@ -777,15 +835,19 @@ export class Localizer {
         if (this.crtTask.group) {
             this.groupMap[id] = this.crtTask.group;
         }
-        if (this.strMap[id]) return;
-        let node: LanguageRow = {ID: id, CN: cn};
-        for (let lang of option.langs) {
-            node[lang] = '';
+        let node: LanguageRow = this.strMap[id];
+        if (node == null) {
+            node = {ID: id, CN: cn};
+            for (let lang of option.langs) {
+                node[lang] = '';
+            }
+            this.strMap[id] = node;
+            this.newMap[id] = true;
         }
-        this.strMap[id] = node;
-        this.newMap[id] = true;
-        this.sheetRows.push(node);
-        this.newCnt++;
+        if (!this.capturedMap[id]) {
+            this.capturedMap[id] = node;
+            this.sheetRows.push(node);
+        }
     }
 
     private getLocal(cn: string, option: GlobalOption): LanguageRow
@@ -803,7 +865,17 @@ export class Localizer {
 
     private formatString(s: string): string
     {
-        return s.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\\n');
+        return this.safeprintf(s.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\\n'));        
+    }
+
+    private safeprintf(s: string): string {
+        if (this.setting.enableSafeprintf && this.crtTask.safeprintf) {
+            let cnt = 0;
+            s = s.replace(/\{\^?%(s|d)\}/g, (substring: string, ...args: any[]) => {
+                return `{${cnt++}}`;
+            });
+        }
+        return s;
     }
 
     private getStringMd5(s: string): string {

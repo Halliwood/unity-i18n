@@ -54,7 +54,8 @@ function makeTasks() {
             }, 
             "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
         },
-        "group": "脚本"
+        "group": "脚本",
+        safeprintf: true
     };
     const svrCfgTask = {
         "roots": ['$workspace/servercfg'], 
@@ -66,7 +67,8 @@ function makeTasks() {
                 "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
             }
         },
-        "group": "表格"
+        "group": "表格",
+        safeprintf: true
     };
     
     const replacer = {'$workspace': '..'};
