@@ -66,7 +66,7 @@ export class Localizer {
     private md52rawStr: { [str: string]: string } = {};
     private outputJSONMap: { [file: string]: { [cn: string]: true } } = {};
 
-    private setting: CfgSetting;
+    private setting?: CfgSetting;
     private colInfoMap: { [sheetName: string]: xlsx.ColInfo[] } = {};
 
     searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
@@ -869,7 +869,7 @@ export class Localizer {
     }
 
     private safeprintf(s: string): string {
-        if (this.setting.enableSafeprintf && this.crtTask.safeprintf) {
+        if (this.setting?.enableSafeprintf && this.crtTask.safeprintf) {
             let cnt = 0;
             s = s.replace(/\{\^?%(s|d)\}/g, (substring: string, ...args: any[]) => {
                 return `{${cnt++}}`;

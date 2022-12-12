@@ -843,7 +843,7 @@ class Localizer {
         return this.safeprintf(s.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\\n'));
     }
     safeprintf(s) {
-        if (this.setting.enableSafeprintf && this.crtTask.safeprintf) {
+        if (this.setting?.enableSafeprintf && this.crtTask.safeprintf) {
             let cnt = 0;
             s = s.replace(/\{\^?%(s|d)\}/g, (substring, ...args) => {
                 return `{${cnt++}}`;
