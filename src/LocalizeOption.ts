@@ -48,7 +48,7 @@ export interface LocalizeOption {
      */
     softReplacer?: string;
     /**用于将相关文字输出到指定的语言包JSON文件中。 */
-    outputJSON?: string;
+    outputJSONs?: string[];
 }
 
 export type LocalizeTask = string | TaskWithOption;

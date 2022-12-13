@@ -380,10 +380,12 @@ class Localizer {
         }
         this.crtTask = oneTask;
         const finalOpt = this.mergeOption(oneTask.option, option);
-        const oj = oneTask.option?.outputJSON;
-        if (oj) {
-            if (!this.outputJSONMap[oj])
-                this.outputJSONMap[oj] = {};
+        const ojs = oneTask.option?.outputJSONs;
+        if (ojs) {
+            for (const oj of ojs) {
+                if (!this.outputJSONMap[oj])
+                    this.outputJSONMap[oj] = {};
+            }
         }
         for (let oneRoot of oneTask.roots) {
             if (option.replacer) {
@@ -806,9 +808,10 @@ class Localizer {
         return false;
     }
     markTaskUsed(cn) {
-        const oj = this.crtTask.option?.outputJSON;
-        if (oj) {
-            this.outputJSONMap[oj][cn] = true;
+        const ojs = this.crtTask.option?.outputJSONs;
+        if (ojs) {
+            for (const oj of ojs)
+                this.outputJSONMap[oj][cn] = true;
         }
     }
     getReplacement(zh, option) {
