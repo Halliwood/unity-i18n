@@ -549,7 +549,7 @@ export class Localizer {
         }
 
         if(this.mode == LocalizeMode.Replace) {
-            if (option.softReplace && option.replaceOutput && this.crtTask.readonly) {
+            if (option.softReplace && option.replaceOutput && !this.crtTask.readonly) {
                 const filename = path.basename(filePath, fileExt);
                 for (let lang of option.langs) {
                     const newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);
