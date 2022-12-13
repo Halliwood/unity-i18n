@@ -22,6 +22,12 @@ interface CfgSetting {
     groups?: string[]
 }
 
+enum TranslateState {
+    None = 0,
+    Partial,
+    Fullfilled
+}
+
 export class Localizer {
     private readonly HanPattern = /[\u4e00-\u9fa5]+/;
     private readonly CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
@@ -136,17 +142,16 @@ export class Localizer {
         // 排序，没翻译的放前面
         let sortedRows: LanguageRow[];
         if(option?.xlsxStyle == 'prepend') {
-            sortedRows = [];
+            const stateMap: { [id: string]: TranslateState } = {};
             for(let oneRow of this.sheetRows) {
-                if(!this.isRowTranslated(oneRow, option)) {
-                    sortedRows.push(oneRow);
-                }
+                stateMap[oneRow.ID] = this.getTranslateState(oneRow, option);
             }
-            for(let oneRow of this.sheetRows) {
-                if(this.isRowTranslated(oneRow, option)) {
-                    sortedRows.push(oneRow);
-                }
-            }
+            sortedRows = this.sheetRows.sort((a: LanguageRow, b: LanguageRow): number=>{
+                const statea = stateMap[a.ID];
+                const stateb = stateMap[b.ID];
+                if (statea != stateb) return stateb - statea;
+                return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
+            })
         } else if(option?.xlsxStyle == 'sort-by-id') {
             sortedRows = this.sheetRows.sort((a: LanguageRow, b: LanguageRow): number=>{
                 return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
@@ -368,13 +373,19 @@ export class Localizer {
         }
     }
 
-    private isRowTranslated(oneRow: LanguageRow, option: GlobalOption): boolean {
+    private getTranslateState(oneRow: LanguageRow, option: GlobalOption): TranslateState {
+        let cnt = 0;
         for (let lang of option.langs) {
-            if (oneRow[lang] == undefined) {
-                return false;
+            if (oneRow[lang] != null) {
+                cnt++;
             }
         }
-        return true;
+        if (cnt === 0) {
+            return TranslateState.None;
+        } else if (cnt === option.langs.length) {
+            return TranslateState.Fullfilled;
+        }
+        return TranslateState.Partial;
     }
 
     private runTask(oneTask: LocalizeTask, option: GlobalOption) {

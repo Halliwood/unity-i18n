@@ -29,6 +29,12 @@ const path = require("path");
 const md5 = require("md5");
 const xlsx = require("xlsx");
 const LocalizeOption_1 = require("./LocalizeOption");
+var TranslateState;
+(function (TranslateState) {
+    TranslateState[TranslateState["None"] = 0] = "None";
+    TranslateState[TranslateState["Partial"] = 1] = "Partial";
+    TranslateState[TranslateState["Fullfilled"] = 2] = "Fullfilled";
+})(TranslateState || (TranslateState = {}));
 class Localizer {
     HanPattern = /[\u4e00-\u9fa5]+/;
     CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
@@ -126,17 +132,17 @@ class Localizer {
         // 排序，没翻译的放前面
         let sortedRows;
         if (option?.xlsxStyle == 'prepend') {
-            sortedRows = [];
+            const stateMap = {};
             for (let oneRow of this.sheetRows) {
-                if (!this.isRowTranslated(oneRow, option)) {
-                    sortedRows.push(oneRow);
-                }
+                stateMap[oneRow.ID] = this.getTranslateState(oneRow, option);
             }
-            for (let oneRow of this.sheetRows) {
-                if (this.isRowTranslated(oneRow, option)) {
-                    sortedRows.push(oneRow);
-                }
-            }
+            sortedRows = this.sheetRows.sort((a, b) => {
+                const statea = stateMap[a.ID];
+                const stateb = stateMap[b.ID];
+                if (statea != stateb)
+                    return stateb - statea;
+                return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
+            });
         }
         else if (option?.xlsxStyle == 'sort-by-id') {
             sortedRows = this.sheetRows.sort((a, b) => {
@@ -350,13 +356,20 @@ class Localizer {
             console.log(`[unity-i18n]Nothing to write: ${outputXlsx}`);
         }
     }
-    isRowTranslated(oneRow, option) {
+    getTranslateState(oneRow, option) {
+        let cnt = 0;
         for (let lang of option.langs) {
-            if (oneRow[lang] == undefined) {
-                return false;
+            if (oneRow[lang] != null) {
+                cnt++;
             }
         }
-        return true;
+        if (cnt === 0) {
+            return TranslateState.None;
+        }
+        else if (cnt === option.langs.length) {
+            return TranslateState.Fullfilled;
+        }
+        return TranslateState.Partial;
     }
     runTask(oneTask, option) {
         if (typeof (oneTask) == 'string') {
