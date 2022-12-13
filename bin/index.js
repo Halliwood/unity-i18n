@@ -65,6 +65,7 @@ program
     .option("--silent", "Silent mode.")
     .option("-x, --xlsxstyle <prepend|append|sort-by-id>", "Xlsx sort rule.", 'append')
     .option("-l, --log", "Generate log file.")
+    .option("--pretty", "Generate pretty json files.")
     .parse(process.argv);
 let opts = program.opts();
 if (!opts.src && !opts.tasks) {
@@ -97,6 +98,9 @@ if (opts.log) {
 }
 if (opts.xlsxstyle) {
     globalOption.xlsxStyle = opts.xlsxstyle;
+}
+if (opts.pretty) {
+    globalOption.pretty = opts.pretty;
 }
 if (opts.default) {
     if (opts.default == 'xml2bin') {

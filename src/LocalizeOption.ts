@@ -7,6 +7,7 @@ export interface GlobalOption extends LocalizeOption {
     needLog?: boolean;
     silent?: boolean;
     xlsxStyle?: 'prepend' | 'append' | 'sort-by-id';
+    pretty?: boolean;
 }
 
 export interface TaskWithOption {
@@ -16,7 +17,9 @@ export interface TaskWithOption {
     /**文字分类 */
     group?: string;
     /**是否需要对拼接字符串%s进行安全处理 */
-    safeprintf?: boolean
+    safeprintf?: boolean;
+    /**是否只读不修改（即便是replace模式） */
+    readonly?: boolean;
 }
 
 export interface LocalizeOption {

@@ -242,7 +242,7 @@ class Localizer {
                     ojArr.push(this.getStringMd5(cn));
                     ojArr.push(cn);
                 }
-                fs.writeFileSync(ojRoot.replace('$LANG', 'CN'), JSON.stringify({ strings: ojArr }), 'utf-8');
+                fs.writeFileSync(ojRoot.replace('$LANG', 'CN'), JSON.stringify({ strings: ojArr }, null, option.pretty ? 2 : undefined), 'utf-8');
                 // 外文包
                 for (let lang of option.langs) {
                     let ojArr = [];
@@ -251,7 +251,7 @@ class Localizer {
                         const local = this.getLocal(cn, option);
                         ojArr.push(local?.[lang] || cn);
                     }
-                    fs.writeFileSync(ojRoot.replace('$LANG', lang), JSON.stringify({ strings: ojArr }), 'utf-8');
+                    fs.writeFileSync(ojRoot.replace('$LANG', lang), JSON.stringify({ strings: ojArr }, null, option.pretty ? 2 : undefined), 'utf-8');
                 }
             }
         }
@@ -528,7 +528,7 @@ class Localizer {
             newContent = this.processZnInCodeFile(fileContent, option);
         }
         if (this.mode == LocalizeOption_1.LocalizeMode.Replace) {
-            if (option.softReplace && option.replaceOutput) {
+            if (option.softReplace && option.replaceOutput && this.crtTask.readonly) {
                 const filename = path.basename(filePath, fileExt);
                 for (let lang of option.langs) {
                     const newFilePath = path.join(option.inputRoot, option.replaceOutput).replace(/\$LANG/g, lang).replace(/\$FILENAME/g, filename);

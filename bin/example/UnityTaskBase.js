@@ -55,7 +55,8 @@ function makeTasks() {
             "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
         },
         "group": "脚本",
-        safeprintf: true
+        safeprintf: true,
+        readonly: true
     };
     const svrCfgTask = {
         "roots": ['$workspace/servercfg'],
@@ -68,7 +69,8 @@ function makeTasks() {
             }
         },
         "group": "表格",
-        safeprintf: true
+        safeprintf: true,
+        readonly: true
     };
     const replacer = { '$workspace': '..' };
     return { prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask, replacer };
