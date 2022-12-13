@@ -73,6 +73,5 @@ function makeTasks() {
     const replacer = { '$workspace': '..' };
     return { prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask, replacer };
 }
-const UnityTaskBase = makeTasks();
-exports.default = UnityTaskBase;
+exports.default = makeTasks;
 //# sourceMappingURL=UnityTaskBase.js.map

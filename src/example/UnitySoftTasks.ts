@@ -1,9 +1,12 @@
 import { LocalizeTask, TaskWithOption } from "../LocalizeOption";
-import utb from "./UnityTaskBase";
+import makeTasks from "./UnityTaskBase";
+
+const utb = makeTasks();
 
 (utb.prefabTask as TaskWithOption).option.outputJSON = "Assets/AssetSources/i18n/$LANG.json";
 
 (utb.jsonTask as TaskWithOption).option.replaceOutput = "Assets/AssetSources/data$LANG/$FILENAME.json";
+(utb.jsonTask as TaskWithOption).option.outputJSON = "Assets/AssetSources/i18n/$LANG.json";
 
 (utb.tsTask as TaskWithOption).option.softReplacer = "I18N.I18NMgr.Translate($RAWSTRING)";
 (utb.tsTask as TaskWithOption).option.outputJSON = "Assets/AssetSources/i18n/$LANG.json";
@@ -11,8 +14,10 @@ import utb from "./UnityTaskBase";
 (utb.csTask as TaskWithOption).option.softReplacer = "I18N.I18NMgr.Translate($RAWSTRING)";
 (utb.csTask as TaskWithOption).option.outputJSON = "Assets/AssetSources/i18n/$LANG.json";
 
+(utb.svrCfgTask as TaskWithOption).option.outputJSON = "Assets/AssetSources/i18n/$LANG.json";
+
 let searchTasks: LocalizeTask[] = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.csTask, utb.svrScriptTask, utb.svrCfgTask];
-let replaceTasks: LocalizeTask[] = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.csTask];
+let replaceTasks: LocalizeTask[] = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.csTask, utb.svrCfgTask];
 const replacer = utb.replacer;
 let UnitySoftTasks = {searchTasks, replaceTasks, replacer};
 export default UnitySoftTasks;

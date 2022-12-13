@@ -46,7 +46,7 @@ function makeTasks() {
         },
         "group": "代码"
     };
-    const svrScriptTask = {
+    const svrScriptTask: LocalizeTask = {
         "roots": ['$workspace/serverscript'], 
         "option": {
             "includes": {
@@ -57,7 +57,7 @@ function makeTasks() {
         "group": "脚本",
         safeprintf: true
     };
-    const svrCfgTask = {
+    const svrCfgTask: LocalizeTask = {
         "roots": ['$workspace/servercfg'], 
         "option": {
             "includes": {
@@ -75,5 +75,4 @@ function makeTasks() {
     return { prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask, replacer };
 }
 
-const UnityTaskBase = makeTasks();
-export default UnityTaskBase;
+export default makeTasks;
