@@ -13,8 +13,22 @@ utb.tsTask.option.outputJSONs = ["Assets/AssetSources/i18n/$LANG.json"];
 utb.csTask.option.softReplacer = "I18N.I18NMgr.Translate($RAWSTRING)";
 utb.csTask.option.outputJSONs = ["Assets/AssetSources/i18n/$LANG.json", "Assets/Resources/native$LANG.json"];
 utb.svrCfgTask.option.outputJSONs = ["Assets/AssetSources/i18n/$LANG.json"];
-let searchTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.csTask, utb.svrScriptTask, utb.svrCfgTask];
-let replaceTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.csTask, utb.svrCfgTask];
+// 脚本、后台的字符串处理
+// 后台某些功能会用到表格里的字符，如果某字段包含convertOption:lang属性，这些字段会打进lang.json中，也打进语言包
+const langTask = {
+    roots: ['Assets/AssetSources/data'],
+    option: {
+        includes: {
+            files: ['lang\\.json']
+        },
+        outputJSONs: ["Assets/AssetSources/i18n/$LANG.json"]
+    },
+    group: "表格",
+    safeprintf: true,
+    readonly: true
+};
+let searchTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.csTask, utb.svrScriptTask, utb.svrCfgTask, langTask];
+let replaceTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.csTask, langTask];
 const replacer = utb.replacer;
 let UnitySoftTasks = { searchTasks, replaceTasks, replacer };
 exports.default = UnitySoftTasks;

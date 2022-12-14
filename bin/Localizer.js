@@ -398,8 +398,8 @@ class Localizer {
                 oneRoot = path.join(option.inputRoot, oneRoot);
             }
             if (!fs.existsSync(oneRoot)) {
-                console.warn('[WARNING]Task root not exists: %s\n', oneRoot);
-                continue;
+                console.error('[unity-i18n]Task root not exists: %s\n', oneRoot);
+                process.exit(1);
             }
             let rootStat = fs.statSync(oneRoot);
             if (rootStat.isFile()) {

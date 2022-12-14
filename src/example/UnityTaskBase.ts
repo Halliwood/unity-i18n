@@ -1,74 +1,74 @@
-import { LocalizeTask } from "../LocalizeOption";
+import { TaskWithOption } from "../LocalizeOption";
 
 function makeTasks() {
-    const prefabTask: LocalizeTask = {
-        "roots": ['Assets/AssetSources/ui', 'Assets/Arts/sequenceAnim'], 
-        "option": {
-            "includes": {
-                "exts": ['.prefab']
+    const prefabTask: TaskWithOption = {
+        roots: ['Assets/AssetSources/ui', 'Assets/Arts/sequenceAnim'], 
+        option: {
+            includes: {
+                exts: ['.prefab']
             }
         },
-        "group": "UI"
+        group: "UI"
     };
-    const jsonTask: LocalizeTask = {
-        "roots": ['Assets/AssetSources/data'], 
-        "option": {
-            "includes": {
-                "exts": ['.json']
+    const jsonTask: TaskWithOption = {
+        roots: ['Assets/AssetSources/data'], 
+        option: {
+            includes: {
+                exts: ['.json']
             }
         },
-        "group": "表格"
+        group: "表格"
     };
-    const tsTask: LocalizeTask = {
-        "roots": ['TsScripts'], 
-        "option": {
-            "excludes": {
-                "dirs": ['protocol/new'], 
-                "files": ['TestView.ts', 'Macros.ts', 'ErrorId.ts', 'SendMsgUtil.ts', 'GameConfig.d.ts']
+    const tsTask: TaskWithOption = {
+        roots: ['TsScripts'], 
+        option: {
+            excludes: {
+                dirs: ['protocol/new'], 
+                files: ['TestView.ts', 'Macros.ts', 'ErrorId.ts', 'SendMsgUtil.ts', 'GameConfig.d.ts', 'RawString.ts']
             }, 
-            "includes": {
-                "exts": ['.ts']
+            includes: {
+                exts: ['.ts']
             }, 
-            "skipPatterns": ["^\\s*uts\\.log", "^\\s*uts\\.assert\\("]
+            skipPatterns: ["^\\s*uts\\.log", "^\\s*uts\\.assert\\("]
         },
-        "group": "代码"
+        group: "代码"
     };
-    const csTask: LocalizeTask = {
-        "roots": ['Assets/Scripts', 'Assets/Editor/XCodeBuilder'], 
-        "option": {
-            "excludes": {
-                "dirs": ['uts/StaticWrap/Wraps', 'i18n']
+    const csTask: TaskWithOption = {
+        roots: ['Assets/Scripts', 'Assets/Editor/XCodeBuilder'], 
+        option: {
+            excludes: {
+                dirs: ['uts/StaticWrap/Wraps', 'i18n']
             }, 
-            "includes": {
-                "exts": ['.cs']
+            includes: {
+                exts: ['.cs']
             }, 
-            "skipPatterns": ["^\\s*Debug\\.Log"]
+            skipPatterns: ["^\\s*Debug\\.Log"]
         },
-        "group": "代码"
+        group: "代码"
     };
-    const svrScriptTask: LocalizeTask = {
-        "roots": ['$workspace/serverscript'], 
-        "option": {
-            "includes": {
-                "exts": ['.cxx', '.atm']
+    const svrScriptTask: TaskWithOption = {
+        roots: ['$workspace/serverscript'], 
+        option: {
+            includes: {
+                exts: ['.cxx', '.atm']
             }, 
-            "skipPatterns": ["^\\s*ATM_DebugSystemMessage\\("]
+            skipPatterns: ["^\\s*ATM_DebugSystemMessage\\("]
         },
-        "group": "脚本",
+        group: "脚本",
         safeprintf: true,
         readonly: true
     };
-    const svrCfgTask: LocalizeTask = {
-        "roots": ['$workspace/servercfg'], 
-        "option": {
-            "includes": {
-                "exts": ['.xml']
+    const svrCfgTask: TaskWithOption = {
+        roots: ['$workspace/servercfg'], 
+        option: {
+            includes: {
+                exts: ['.xml']
             }, 
-            "excludes" : {
-                "files": ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
+            excludes: {
+                files: ['WorldName.xml', 'RobotNameConfig.xml', 'NewbieTutorial.config.xml']
             }
         },
-        "group": "表格",
+        group: "表格",
         safeprintf: true,
         readonly: true
     };
