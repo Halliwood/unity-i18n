@@ -33,6 +33,16 @@ function makeTasks() {
         },
         group: "代码"
     };
+    const libTask: TaskWithOption = {
+        roots: ['libs'], 
+        option: {
+            includes: {
+                exts: ['.j']
+            }, 
+            skipPatterns: ["^\\s*uts\\.log", "^\\s*uts\\.assert\\("]
+        },
+        group: "代码"
+    };
     const csTask: TaskWithOption = {
         roots: ['Assets/Scripts', 'Assets/Editor/XCodeBuilder'], 
         option: {
@@ -74,7 +84,7 @@ function makeTasks() {
     };
     
     const replacer = {'$workspace': '..'};
-    return { prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask, replacer };
+    return { prefabTask, jsonTask, tsTask, libTask, csTask, svrScriptTask, svrCfgTask, replacer };
 }
 
 export default makeTasks;

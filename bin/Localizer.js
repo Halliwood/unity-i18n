@@ -217,21 +217,20 @@ class Localizer {
                 const m = this.outputJSONMap[oj];
                 const cnArr = Object.keys(m);
                 cnArr.sort();
-                // 需要增加脚本字符串
-                const svrScriptRows = this.sheetRowMap?.['脚本'];
-                if (svrScriptRows) {
-                    let ssCnt = 0;
-                    for (const row of svrScriptRows) {
-                        if (!m[row.CN]) {
-                            cnArr.push(row.CN);
-                            ssCnt++;
-                        }
-                    }
-                    console.log('[unity-i18n]脚本文字串数量：', ssCnt);
-                }
-                else {
-                    console.error('[unity-i18n]生成语言包时未找到任何脚本文字串！');
-                }
+                // // 需要增加脚本字符串
+                // const svrScriptRows = this.sheetRowMap?.['脚本'];
+                // if (svrScriptRows) {
+                //     let ssCnt = 0;
+                //     for (const row of svrScriptRows) {
+                //         if (!m[row.CN]) {
+                //             cnArr.push(row.CN);
+                //             ssCnt++;
+                //         }
+                //     }
+                //     console.log('[unity-i18n]脚本文字串数量：', ssCnt);
+                // } else {
+                //     console.error('[unity-i18n]生成语言包时未找到任何脚本文字串！')
+                // }
                 let ojRoot = this.normalizePath(oj);
                 if (option.inputRoot && !path.isAbsolute(ojRoot)) {
                     ojRoot = path.join(option.inputRoot, ojRoot);
@@ -359,7 +358,7 @@ class Localizer {
     getTranslateState(oneRow, option) {
         let cnt = 0;
         for (let lang of option.langs) {
-            if (oneRow[lang] != null) {
+            if (oneRow[lang]) {
                 cnt++;
             }
         }
@@ -810,6 +809,7 @@ class Localizer {
     markTaskUsed(cn) {
         const ojs = this.crtTask.option?.outputJSONs;
         if (ojs) {
+            cn = this.formatString(cn);
             for (const oj of ojs)
                 this.outputJSONMap[oj][cn] = true;
         }
@@ -861,7 +861,7 @@ class Localizer {
     safeprintf(s) {
         if (this.setting?.enableSafeprintf && this.crtTask.safeprintf) {
             let cnt = 0;
-            s = s.replace(/\{\^?%(s|d)\}/g, (substring, ...args) => {
+            s = s.replace(/\{\^?%\w+\}/g, (substring, ...args) => {
                 return `{${cnt++}}`;
             });
         }

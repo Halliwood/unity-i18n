@@ -33,6 +33,16 @@ function makeTasks() {
         },
         group: "代码"
     };
+    const libTask = {
+        roots: ['libs'],
+        option: {
+            includes: {
+                exts: ['.j']
+            },
+            skipPatterns: ["^\\s*uts\\.log", "^\\s*uts\\.assert\\("]
+        },
+        group: "代码"
+    };
     const csTask = {
         roots: ['Assets/Scripts', 'Assets/Editor/XCodeBuilder'],
         option: {
@@ -73,7 +83,7 @@ function makeTasks() {
         readonly: true
     };
     const replacer = { '$workspace': '..' };
-    return { prefabTask, jsonTask, tsTask, csTask, svrScriptTask, svrCfgTask, replacer };
+    return { prefabTask, jsonTask, tsTask, libTask, csTask, svrScriptTask, svrCfgTask, replacer };
 }
 exports.default = makeTasks;
 //# sourceMappingURL=UnityTaskBase.js.map
