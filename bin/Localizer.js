@@ -61,6 +61,7 @@ class Localizer {
     fromMap = {};
     newMap = {};
     crtTask;
+    crtTaskErrors;
     crtFile;
     totalCnt = 0;
     modifiedFileCnt = 0;
@@ -378,6 +379,7 @@ class Localizer {
             };
         }
         this.crtTask = oneTask;
+        this.crtTaskErrors = [];
         const finalOpt = this.mergeOption(oneTask.option, option);
         const ojs = oneTask.option?.outputJSONs;
         if (ojs) {
@@ -407,6 +409,14 @@ class Localizer {
             else {
                 this.searchZhInDir(oneRoot, finalOpt);
             }
+        }
+        // 检查任务错误
+        if (this.crtTaskErrors.length > 0) {
+            console.log('[unity-i18n]Task failed!');
+            for (const e of this.crtTaskErrors) {
+                console.error(e);
+            }
+            process.exit(1);
         }
     }
     mergeOption(local, global) {
@@ -630,6 +640,12 @@ class Localizer {
                     let rawContent = ret[2];
                     if (this.containsZh(rawContent)) {
                         zh = rawContent;
+                        // 对于ts和js，不允许使用内嵌字符串
+                        if (option.softReplace && this.crtFile.endsWith('.ts') || this.crtFile.endsWith('.js')) {
+                            if (quote === '`') {
+                                this.crtTaskErrors.push(`不允许使用内嵌字符串，请使用uts.format! ${this.crtFile} : line ${i + 1}`);
+                            }
+                        }
                         this.markTaskUsed(zh);
                     }
                     if (this.mode == LocalizeOption_1.LocalizeMode.Search) {

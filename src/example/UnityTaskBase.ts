@@ -37,7 +37,7 @@ function makeTasks() {
         roots: ['libs'], 
         option: {
             includes: {
-                exts: ['.j']
+                exts: ['.js']
             }, 
             skipPatterns: ["^\\s*uts\\.log", "^\\s*uts\\.assert\\("]
         },
