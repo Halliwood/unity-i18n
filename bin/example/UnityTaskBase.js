@@ -29,7 +29,7 @@ function makeTasks() {
             includes: {
                 exts: ['.ts']
             },
-            skipPatterns: ["^\\s*uts\\.log", "^\\s*uts\\.assert\\("]
+            skipPatterns: ["^\\s*uts\\.log", "^\\s*uts\\.assert\\(", "^\\s*console\\.log", "^\\s*console\\.assert\\(", "^\\s*(CS\\.)?UnityEngine\\.Debug\\.Log\w*\\("]
         },
         group: "代码"
     };
@@ -39,7 +39,7 @@ function makeTasks() {
             includes: {
                 exts: ['.js']
             },
-            skipPatterns: ["^\\s*uts\\.log", "^\\s*uts\\.assert\\("]
+            skipPatterns: tsTask.option.skipPatterns
         },
         group: "代码"
     };
@@ -52,7 +52,7 @@ function makeTasks() {
             includes: {
                 exts: ['.cs']
             },
-            skipPatterns: ["^\\s*Debug\\.Log"]
+            skipPatterns: ["^\\s*Debug\\.Log", "^\\s*UnityEngine\\.Debug\\.Log"]
         },
         group: "代码"
     };
