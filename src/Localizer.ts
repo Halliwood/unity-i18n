@@ -32,7 +32,7 @@ export class Localizer {
     private readonly HanPattern = /[\u4e00-\u9fa5]+/;
     private readonly CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
     private readonly XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
-    private readonly PrefabZhPattern = /(?<=\s)(value|m_Text): (["']{1})([\s\S]*)/;
+    private readonly PrefabZhPattern = /(?<=\s)(value|m_Text|m_text): (["']{1})([\s\S]*)/;
 
     private readonly TagID = 'ID=';
     private readonly TagCN = 'CN=';

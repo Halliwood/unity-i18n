@@ -39,7 +39,7 @@ class Localizer {
     HanPattern = /[\u4e00-\u9fa5]+/;
     CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
     XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
-    PrefabZhPattern = /(?<=\s)(value|m_Text): (["']{1})([\s\S]*)/;
+    PrefabZhPattern = /(?<=\s)(value|m_Text|m_text): (["']{1})([\s\S]*)/;
     TagID = 'ID=';
     TagCN = 'CN=';
     OutXlsx = 'language.xlsx';
