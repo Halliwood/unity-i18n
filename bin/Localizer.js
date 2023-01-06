@@ -551,7 +551,7 @@ class Localizer {
                         outContent = newContent.replace(/\$i18n-(\w+)\$/g, (substring, ...args) => {
                             const local = this.strMap[args[0]];
                             if (local) {
-                                return this.processQuoteInJson(local[lang]) || local.CN;
+                                return this.processQuoteInJson(local[lang] || local.CN);
                             }
                             let raw = this.md52rawStr[args[0]];
                             this.assert(raw != undefined, `No local and raw found when process ${filename}`);
