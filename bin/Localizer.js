@@ -36,6 +36,9 @@ var TranslateState;
     TranslateState[TranslateState["Fullfilled"] = 2] = "Fullfilled";
 })(TranslateState || (TranslateState = {}));
 class Localizer {
+    IgnorePattern = /^\s*\/\/\s*@i18n-ignore/;
+    IgnoreBeginPattern = /^\s*\/\/\s*@i18n-ignore:begin/;
+    IgnoreEndPattern = /^\s*\/\/\s*@i18n-ignore:end/;
     HanPattern = /[\u4e00-\u9fa5]+/;
     CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
     XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
@@ -616,12 +619,28 @@ class Localizer {
             return '[[[i18n-comment]]]';
         });
         let lines = fileContent.split(/\r?\n/); // 保留空行
+        // skipEnd不包含自身
+        let skipBegin = -1, skipEnd = -1;
         for (let i = 0, len = lines.length; i < len; i++) {
             if (i > 0)
                 newContent += '\n';
             let oneLine = lines[i];
-            // 过滤掉注释行
-            let skip = oneLine.match(/^\s*\/\//) != null || oneLine.match(/^\s*\/\*/) != null;
+            // 忽略翻译
+            if (oneLine.match(this.IgnoreBeginPattern)) {
+                skipBegin = i;
+                skipEnd = -1;
+            }
+            else if (oneLine.match(this.IgnoreEndPattern)) {
+                skipEnd = i + 1;
+            }
+            else if (oneLine.match(this.IgnorePattern)) {
+                skipBegin = i;
+                skipEnd = i + 2;
+            }
+            // 检查是否忽略行
+            let skip = skipBegin >= 0 && i >= skipBegin && (skipEnd < 0 || i < skipEnd) ||
+                // 过滤掉注释行
+                oneLine.match(/^\s*\/\//) != null || oneLine.match(/^\s*\/\*/) != null;
             // 过滤掉log语句
             if (!skip && option?.skipPatterns) {
                 for (let j = 0, jlen = option.skipPatterns.length; j < jlen; j++) {
