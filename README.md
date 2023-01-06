@@ -191,6 +191,10 @@ TW.JSON
 {"strings":["3d69a6e96ef836615a4d0988950dcaa0"," (已完成)","7f4ae9a211d22e3930c9eee0b37196c2"," (進行中)","fe058bb2bc7d6eeebe567b157b968f8c","(?D天) hh:mm:ss","fe4557e1c0b4e3a09acc147e3e5675ac","(?D天)h時","7835a8a1216f025a65fb8235bd3b7d9f","(?D天)h時m分s秒"]}
 ```
 
+# @i18n-ignore
+
+在代码中，使用`// @i18n-ignore`可指定下一行不进行翻译。使用`// @i18n-ignore:begin`和`// @i18n-ignore:end`可指定之间的所有行均不参与翻译。
+
 # 使用示例
 
 ## 搜索中文文本

@@ -551,7 +551,7 @@ class Localizer {
                         outContent = newContent.replace(/\$i18n-(\w+)\$/g, (substring, ...args) => {
                             const local = this.strMap[args[0]];
                             if (local) {
-                                return local[lang] || local.CN;
+                                return this.processQuoteInJson(local[lang]) || local.CN;
                             }
                             let raw = this.md52rawStr[args[0]];
                             this.assert(raw != undefined, `No local and raw found when process ${filename}`);
@@ -939,6 +939,9 @@ class Localizer {
             s = s.replace(/(?<!\\)'/g, "\\'");
         }
         return s;
+    }
+    processQuoteInJson(s) {
+        return s.replace(/(?<!\\)"/g, "\\\"");
     }
     ensureRegExp(r) {
         if (typeof (r) == 'string')
