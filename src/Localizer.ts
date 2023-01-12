@@ -425,7 +425,7 @@ export class Localizer {
             }
             if(!fs.existsSync(oneRoot)) {
                 console.error('[unity-i18n]Task root not exists: %s\n', oneRoot);
-                process.exit(1);
+                continue;
             }
             let rootStat = fs.statSync(oneRoot);
             if(rootStat.isFile()) {
