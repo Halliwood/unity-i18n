@@ -896,7 +896,7 @@ class Localizer {
     safeprintf(s) {
         if (this.setting?.enableSafeprintf && this.crtTask.safeprintf) {
             let cnt = 0;
-            s = s.replace(/\{\^?%\w+\}/g, (substring, ...args) => {
+            s = s.replace(/\{\^?%[\.\w]+\}/g, (substring, ...args) => {
                 return `{${cnt++}}`;
             });
         }
