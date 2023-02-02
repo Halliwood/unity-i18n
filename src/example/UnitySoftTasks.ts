@@ -11,7 +11,7 @@ if (utb.jsonTask.option.excludes != null) {
     process.exit(1);
 }
 utb.jsonTask.option.excludes = {
-    files: ['PlayerName\\.\\w+\\.json', 'lang\\.json']
+    files: ['PlayerNameM\\.\\w+\\.json', 'lang\\.json']
 };
 utb.jsonTask.option.outputJSONs = ["Assets/AssetSources/i18n/$LANG.json"];
 
