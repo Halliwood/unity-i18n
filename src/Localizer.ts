@@ -313,7 +313,7 @@ export class Localizer {
                 for (let lang of option.langs) {
                     let local = oneRow[lang];
                     if (undefined != local) {
-                        oneRow[lang] = this.eunsureString(local);
+                        oneRow[lang] = local = this.eunsureString(local);
                         // 检查翻译中是否有换行符
                         let idx = local.search(/[\r\n]/g);
                         if(idx >= 0) {
