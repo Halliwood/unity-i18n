@@ -615,8 +615,9 @@ class Localizer {
         // 保留跨行注释
         let commentCaches = [];
         fileContent = fileContent.replace(/\/\*[\s\S]*?\*\//g, (substring, ...args) => {
+            const commentLines = substring.split(/\r?\n/);
             commentCaches.push(substring);
-            return '[[[i18n-comment]]]';
+            return this.makeCommentReplacer(commentLines.length);
         });
         let lines = fileContent.split(/\r?\n/); // 保留空行
         // skipEnd不包含自身
@@ -660,11 +661,21 @@ class Localizer {
                     if (this.containsZh(rawContent)) {
                         zh = rawContent;
                         // 对于ts和js，不允许使用内嵌字符串
-                        if (option.softReplace && this.crtFile.endsWith('.ts') || this.crtFile.endsWith('.js')) {
-                            if (quote === '`') {
-                                this.crtTaskErrors.push(`不允许使用内嵌字符串，请使用uts.format! ${this.crtFile} : line ${i + 1}`);
-                            }
-                        }
+                        // if (option.softReplace && (this.crtFile.endsWith('.ts') || this.crtFile.endsWith('.js')) && !oneLine.includes('.assert') && !oneLine.includes('.log')) {
+                        //     if (quote === '`') {
+                        //         this.crtTaskErrors.push(`不允许使用内嵌字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index}`);
+                        //     } else {
+                        //         const headStr = oneLine.substring(0, ret.index);
+                        //         if (headStr.match(/\+\s*$/)) {
+                        //             this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index}`);
+                        //         } else {
+                        //             const tailStr = oneLine.substring(ret.index + ret[0].length);
+                        //             if (tailStr.match(/^\s*\+/)) {
+                        //                 this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index}`);
+                        //             }
+                        //         }
+                        //     }
+                        // }
                         this.markTaskUsed(zh);
                     }
                     if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
@@ -705,12 +716,25 @@ class Localizer {
             }
         }
         if (modified && commentCaches.length > 0) {
-            let commentCnt = 0;
-            newContent = newContent.replace(/\[\[\[i18n-comment\]\]\]/g, (substring, ...args) => {
-                return commentCaches[commentCnt++];
-            });
+            // let commentCnt = 0;
+            // newContent = newContent.replace(/\[\[\[i18n-comment\]\]\]+/mg, (substring: string, ...args: any[]) => {
+            //     return commentCaches[commentCnt++];
+            // });
+            for (const comment of commentCaches) {
+                const commentLines = comment.split(/\r?\n/);
+                newContent = newContent.replace(this.makeCommentReplacer(commentLines.length), comment);
+            }
         }
         return modified ? newContent : null;
+    }
+    makeCommentReplacer(count) {
+        let s = '';
+        for (let i = 0; i < count; i++) {
+            if (i > 0)
+                s += '\n';
+            s += '[[[i18n-comment]]]';
+        }
+        return s;
     }
     processZnInJSON(fileContent, option) {
         let modified = false;
@@ -721,6 +745,8 @@ class Localizer {
             let rawContent = ret[2];
             if (this.containsZh(rawContent)) {
                 zh = rawContent;
+                // 脚本里使用的errorno字符串会用到%%来进行转义
+                zh = zh.replaceAll('%%', '%');
                 this.markTaskUsed(zh);
             }
             if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
