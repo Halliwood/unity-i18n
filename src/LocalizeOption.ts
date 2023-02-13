@@ -8,6 +8,7 @@ export interface GlobalOption extends LocalizeOption {
     silent?: boolean;
     xlsxStyle?: 'prepend' | 'append' | 'sort-by-id';
     pretty?: boolean;
+    strict?: boolean;
 }
 
 export interface TaskWithOption {
@@ -20,6 +21,7 @@ export interface TaskWithOption {
     safeprintf?: boolean;
     /**是否只读不修改（即便是replace模式） */
     readonly?: boolean;
+    strict?: boolean;
 }
 
 export interface LocalizeOption {

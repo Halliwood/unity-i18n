@@ -290,7 +290,7 @@ class Localizer {
                     oneRow.ID = this.getStringMd5(oneRow.CN);
                 }
                 oneRow.CN = this.eunsureString(oneRow.CN);
-                for (let lang of option.langs) {
+                for (const lang of option.langs) {
                     let local = oneRow[lang];
                     if (undefined != local) {
                         oneRow[lang] = local = this.eunsureString(local);
@@ -303,12 +303,42 @@ class Localizer {
                 }
                 // 修复翻译中的换行
                 this.strMap[oneRow.ID] = oneRow;
+                // 派生智能翻译用于修改使用uts.format的情况
+                this.smartDerive(oneRow, option);
             }
         }
         this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
         this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
         this.assert(newlineRows.length == 0, 'The following rows contains newline char: ' + newlineRows.join(', '));
         return out;
+    }
+    smartDerive(oneRow, option) {
+        const cn1 = '{0}' + oneRow.CN;
+        const r1 = { ID: this.getStringMd5(cn1), CN: cn1 };
+        for (const lang of option.langs) {
+            if (oneRow[lang] == null)
+                continue;
+            if (lang === 'EN' && !oneRow[lang].startsWith(' ')) {
+                r1[lang] = '{0} ' + oneRow[lang];
+            }
+            else {
+                r1[lang] = '{0}' + oneRow[lang];
+            }
+        }
+        this.strMap[r1.ID] = r1;
+        const cn2 = oneRow.CN + '{0}';
+        const r2 = { ID: this.getStringMd5(cn2), CN: cn2 };
+        for (const lang of option.langs) {
+            if (oneRow[lang] == null)
+                continue;
+            if (lang === 'EN' && !oneRow[lang].endsWith(' ')) {
+                r2[lang] = oneRow[lang] + ' {0}';
+            }
+            else {
+                r2[lang] = oneRow[lang] + '{0}';
+            }
+        }
+        this.strMap[r2.ID] = r2;
     }
     writeXlsx(sortedRows, option, outputXlsx) {
         const sheetInfos = [];
@@ -537,6 +567,9 @@ class Localizer {
             newContent = this.processZnInJSON(fileContent, option);
         }
         else {
+            if (filePath.includes('NPCSellData.ts')) {
+                console.log(1);
+            }
             newContent = this.processZnInCodeFile(fileContent, option);
         }
         if (this.mode == LocalizeOption_1.LocalizeMode.Replace && !this.crtTask.readonly) {
@@ -626,6 +659,7 @@ class Localizer {
             if (i > 0)
                 newContent += '\n';
             let oneLine = lines[i];
+            const rawOneLine = oneLine;
             // 忽略翻译
             if (oneLine.match(this.IgnoreBeginPattern)) {
                 skipBegin = i;
@@ -661,21 +695,23 @@ class Localizer {
                     if (this.containsZh(rawContent)) {
                         zh = rawContent;
                         // 对于ts和js，不允许使用内嵌字符串
-                        // if (option.softReplace && (this.crtFile.endsWith('.ts') || this.crtFile.endsWith('.js')) && !oneLine.includes('.assert') && !oneLine.includes('.log')) {
-                        //     if (quote === '`') {
-                        //         this.crtTaskErrors.push(`不允许使用内嵌字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index}`);
-                        //     } else {
-                        //         const headStr = oneLine.substring(0, ret.index);
-                        //         if (headStr.match(/\+\s*$/)) {
-                        //             this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index}`);
-                        //         } else {
-                        //             const tailStr = oneLine.substring(ret.index + ret[0].length);
-                        //             if (tailStr.match(/^\s*\+/)) {
-                        //                 this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index}`);
-                        //             }
-                        //         }
-                        //     }
-                        // }
+                        if (option.strict && this.crtTask.strict && option.softReplace && (this.crtFile.endsWith('.ts') || this.crtFile.endsWith('.js')) && !rawOneLine.includes('.assert') && !rawOneLine.includes('.log')) {
+                            if (quote === '`') {
+                                this.crtTaskErrors.push(`不允许使用内嵌字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
+                            }
+                            else {
+                                const headStr = oneLine.substring(0, ret.index);
+                                if (headStr.match(/\+\s*$/)) {
+                                    this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
+                                }
+                                else {
+                                    const tailStr = oneLine.substring(ret.index + ret[0].length);
+                                    if (tailStr.match(/^\s*\+/)) {
+                                        this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
+                                    }
+                                }
+                            }
+                        }
                         this.markTaskUsed(zh);
                     }
                     if (this.mode == LocalizeOption_1.LocalizeMode.Search) {

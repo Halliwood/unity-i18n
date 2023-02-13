@@ -31,7 +31,8 @@ function makeTasks() {
             },
             skipPatterns: ["^\\s*uts\\.log", "^\\s*uts\\.assert\\(", "^\\s*console\\.log", "^\\s*console\\.assert\\(", "^\\s*(CS\\.)?UnityEngine\\.Debug\\.Log\w*\\("]
         },
-        group: "代码"
+        group: "代码",
+        strict: true
     };
     const libTask = {
         roots: ['libs'],

@@ -41,6 +41,7 @@ interface CmdParams {
     xlsxstyle?: 'prepend' | 'append' | 'sort-by-id';
     log?: boolean;
     pretty?: boolean;
+    strict?: boolean;
 }
 
 // for exmaple
@@ -59,6 +60,7 @@ program
 	.option("-x, --xlsxstyle <prepend|append|sort-by-id>", "Xlsx sort rule.", 'append')
 	.option("-l, --log", "Generate log file.")
 	.option("--pretty", "Generate pretty json files.")
+	.option("--strict", "Strict mode.")
     .parse(process.argv);
 
 let opts = program.opts() as CmdParams;
@@ -97,6 +99,9 @@ if(opts.xlsxstyle) {
 }
 if(opts.pretty) {
     globalOption.pretty = opts.pretty;
+}
+if(opts.strict) {
+    globalOption.strict = opts.strict;
 }
 
 if(opts.default) {

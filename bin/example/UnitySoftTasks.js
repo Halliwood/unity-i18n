@@ -37,7 +37,7 @@ const langTask = {
     readonly: true
 };
 let searchTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.libTask, utb.csTask, utb.svrScriptTask, utb.svrCfgTask, langTask];
-let replaceTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.libTask, utb.csTask, langTask];
+let replaceTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.libTask, utb.csTask, utb.svrCfgTask, langTask];
 const replacer = utb.replacer;
 let UnitySoftTasks = { searchTasks, replaceTasks, replacer };
 exports.default = UnitySoftTasks;

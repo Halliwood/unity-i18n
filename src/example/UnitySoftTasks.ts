@@ -42,7 +42,7 @@ const langTask: TaskWithOption = {
 };
 
 let searchTasks: LocalizeTask[] = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.libTask, utb.csTask, utb.svrScriptTask, utb.svrCfgTask, langTask];
-let replaceTasks: LocalizeTask[] = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.libTask, utb.csTask, langTask];
+let replaceTasks: LocalizeTask[] = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.libTask, utb.csTask, utb.svrCfgTask, langTask];
 const replacer = utb.replacer;
 let UnitySoftTasks = {searchTasks, replaceTasks, replacer};
 export default UnitySoftTasks;
