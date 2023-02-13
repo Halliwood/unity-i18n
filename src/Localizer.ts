@@ -67,7 +67,7 @@ export class Localizer {
     private totalCnt = 0;
 
     private modifiedFileCnt = 0;
-    private noLocalCnt = 0;
+    private noLocals: string[] = [];
 
     private logContent: string = '';
 
@@ -99,7 +99,7 @@ export class Localizer {
 
         this.totalCnt = 0;
         this.modifiedFileCnt = 0;
-        this.noLocalCnt = 0;
+        this.noLocals.length = 0;
 
         this.logContent = '';
 
@@ -165,6 +165,16 @@ export class Localizer {
             sortedRows = this.sheetRows;
         }
 
+        const blackMap: { [cn: string]: true } = {};
+        const blackFile = path.join(outputRoot, this.BlacklistTxt);
+        if (fs.existsSync(blackFile)) {
+            const blackContent = fs.readFileSync(blackFile, 'utf-8');
+            const blackLines = blackContent.split(/\r?\n/);
+            for (const bl of blackLines) {
+                blackMap[bl] = true;
+            }
+        }
+
         let newCnt = 0;
         if(this.mode == LocalizeMode.Search) {
             let txtContent = '';
@@ -194,15 +204,6 @@ export class Localizer {
             fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
         
             // 写一个过滤掉黑名单的
-            const blackMap: { [cn: string]: true } = {};
-            const blackFile = path.join(outputRoot, this.BlacklistTxt);
-            if (fs.existsSync(blackFile)) {
-                const blackContent = fs.readFileSync(blackFile, 'utf-8');
-                const blackLines = blackContent.split(/\r?\n/);
-                for (const bl of blackLines) {
-                    blackMap[bl] = true;
-                }
-            }
             const filteredRows: LanguageRow[] = [];
             for (const row of sortedRows) {
                 if (!blackMap[row.CN]) {
@@ -285,7 +286,21 @@ export class Localizer {
             ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, newCnt);
         } else {
             console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', 
-            ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
+            ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocals.length);
+            
+            if (this.noLocals.length > 0) {
+                let ncnt = 0;
+                for (const zh of this.noLocals) {
+                    if (!blackMap[zh]) {
+                        console.error('[unity-i18n]No local:', zh);
+                        ncnt++;
+                    }
+                }
+                if (ncnt > 0 && option.strict) {
+                    console.error('[unity-i18n]Failed, check above.');
+                    process.exit(1);
+                }
+            }
         }
     }
 
@@ -640,6 +655,8 @@ export class Localizer {
                 let rawContent = ret[2];
                 if(!rawContent.startsWith('0') && this.containsZh(rawContent)) {
                     zh = rawContent;
+                    // 脚本里使用的errorno字符串会用到%%来进行转义
+                    zh = zh.replaceAll('%%', '%');
                     this.markTaskUsed(zh);
                 }                
             }
@@ -925,15 +942,6 @@ export class Localizer {
         }
     }
 
-    private getReplacement(zh: string, option: GlobalOption): string {
-        if (option.softReplace && option.softReplacer) {
-            const id = this.getStringMd5(zh);
-            return option.softReplacer.replace('$STRINGID', id).replace('$LOCAL', `%$${id}$%`);
-        }
-        const local = this.getLocal(zh, option);
-        return local?.[option.langs[0]] || zh;
-    }
-
     private insertString(cn: string, option: GlobalOption): void {
         this.totalCnt++;
         cn = this.formatString(cn);
@@ -965,8 +973,9 @@ export class Localizer {
         let oneRow = this.strMap[id];
         if (!oneRow || !oneRow[option.langs[0]])
         {
-            this.noLocalCnt++;
-            this.addLog('NOLOCAL', cn);
+            if (!this.noLocals.includes(cn)) {
+                this.noLocals.push(cn);
+            }
         }
         return oneRow;
     }

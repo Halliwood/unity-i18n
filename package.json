@@ -7,7 +7,7 @@
     "maintain": "node bin/maintain.js",
     "test:df:s": "node bin/index.js -s \"D:/works/df/trunk/project/\" -o \"D:/works/df/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -S --soft-replace --langs TW,EN -x prepend --pretty",
     "test:dp:s": "node bin/index.js -s \"D:/works/dp/trunk/project/\" -o \"D:/works/dp/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -S --soft-replace --langs TW,EN -x prepend --pretty",
-    "test:dp:r": "node bin/index.js -s \"D:/works/dp/trunk/project/\" -o \"D:/works/dp/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -R --soft-replace --langs TW,EN -x prepend --pretty",
+    "test:dp:r": "node bin/index.js -s \"D:/works/dp/trunk/project/\" -o \"D:/works/dp/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -R --soft-replace --langs TW,EN -x prepend --pretty --strict",
     "test:dldltw": "node bin/index.js -s \"G:/dldltw/trunk/\" -o \"G:/dldltw/trunk/tools/i18n/dictionary/tw\" -d \"unity\" -R",
     "test:laya": "node bin/index.js -s \"G:/qhgame/trunk/project/\" -o \"G:/qhgame/trunk/project/tools/i18n/dictionary/tw\" -d \"laya\" --task-replacer \"$workspace=F:/layai18nwork/QHGame\" -S",
     "build": "tsc",

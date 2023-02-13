@@ -68,7 +68,7 @@ class Localizer {
     crtFile;
     totalCnt = 0;
     modifiedFileCnt = 0;
-    noLocalCnt = 0;
+    noLocals = [];
     logContent = '';
     mode;
     md5Cache = {};
@@ -91,7 +91,7 @@ class Localizer {
         this.newMap = {};
         this.totalCnt = 0;
         this.modifiedFileCnt = 0;
-        this.noLocalCnt = 0;
+        this.noLocals.length = 0;
         this.logContent = '';
         let outputRoot = option?.outputRoot || 'output/';
         if (!fs.existsSync(outputRoot)) {
@@ -156,6 +156,15 @@ class Localizer {
         else {
             sortedRows = this.sheetRows;
         }
+        const blackMap = {};
+        const blackFile = path.join(outputRoot, this.BlacklistTxt);
+        if (fs.existsSync(blackFile)) {
+            const blackContent = fs.readFileSync(blackFile, 'utf-8');
+            const blackLines = blackContent.split(/\r?\n/);
+            for (const bl of blackLines) {
+                blackMap[bl] = true;
+            }
+        }
         let newCnt = 0;
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
             let txtContent = '';
@@ -182,15 +191,6 @@ class Localizer {
             fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
             fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
             // 写一个过滤掉黑名单的
-            const blackMap = {};
-            const blackFile = path.join(outputRoot, this.BlacklistTxt);
-            if (fs.existsSync(blackFile)) {
-                const blackContent = fs.readFileSync(blackFile, 'utf-8');
-                const blackLines = blackContent.split(/\r?\n/);
-                for (const bl of blackLines) {
-                    blackMap[bl] = true;
-                }
-            }
             const filteredRows = [];
             for (const row of sortedRows) {
                 if (!blackMap[row.CN]) {
@@ -266,7 +266,20 @@ class Localizer {
             console.log('[unity-i18n]搜索结束! 耗时: \x1B[36m%d\x1B[0m秒. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, newCnt);
         }
         else {
-            console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocalCnt);
+            console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocals.length);
+            if (this.noLocals.length > 0) {
+                let ncnt = 0;
+                for (const zh of this.noLocals) {
+                    if (!blackMap[zh]) {
+                        console.error('[unity-i18n]No local:', zh);
+                        ncnt++;
+                    }
+                }
+                if (ncnt > 0 && option.strict) {
+                    console.error('[unity-i18n]Failed, check above.');
+                    process.exit(1);
+                }
+            }
         }
     }
     readXlsx(xlsxPath, option) {
@@ -618,6 +631,8 @@ class Localizer {
                 let rawContent = ret[2];
                 if (!rawContent.startsWith('0') && this.containsZh(rawContent)) {
                     zh = rawContent;
+                    // 脚本里使用的errorno字符串会用到%%来进行转义
+                    zh = zh.replaceAll('%%', '%');
                     this.markTaskUsed(zh);
                 }
             }
@@ -911,14 +926,6 @@ class Localizer {
                 this.outputJSONMap[oj][cn] = true;
         }
     }
-    getReplacement(zh, option) {
-        if (option.softReplace && option.softReplacer) {
-            const id = this.getStringMd5(zh);
-            return option.softReplacer.replace('$STRINGID', id).replace('$LOCAL', `%$${id}$%`);
-        }
-        const local = this.getLocal(zh, option);
-        return local?.[option.langs[0]] || zh;
-    }
     insertString(cn, option) {
         this.totalCnt++;
         cn = this.formatString(cn);
@@ -947,8 +954,9 @@ class Localizer {
         let id = this.getStringMd5(cn);
         let oneRow = this.strMap[id];
         if (!oneRow || !oneRow[option.langs[0]]) {
-            this.noLocalCnt++;
-            this.addLog('NOLOCAL', cn);
+            if (!this.noLocals.includes(cn)) {
+                this.noLocals.push(cn);
+            }
         }
         return oneRow;
     }
