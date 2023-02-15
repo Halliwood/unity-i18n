@@ -125,6 +125,10 @@ export interface LocalizeOption {
 * 代码中包含拼接字符串
 * 存在未翻译的字符串
 
+## --lockfile
+
+启用构建锁。
+
 ## -h, --help
 
 查看帮助菜单。
