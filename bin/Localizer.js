@@ -29,6 +29,7 @@ const path = require("path");
 const md5 = require("md5");
 const xlsx = require("xlsx");
 const LocalizeOption_1 = require("./LocalizeOption");
+const errors_1 = require("./errors");
 var TranslateState;
 (function (TranslateState) {
     TranslateState[TranslateState["None"] = 0] = "None";
@@ -277,7 +278,7 @@ class Localizer {
                 }
                 if (ncnt > 0 && option.strict) {
                     console.error('[unity-i18n]Failed, check above.');
-                    process.exit(1);
+                    process.exit(errors_1.Ei18nErrorCode.NoLocal);
                 }
             }
         }
@@ -462,7 +463,7 @@ class Localizer {
             for (const e of this.crtTaskErrors) {
                 console.error(e);
             }
-            process.exit(1);
+            process.exit(errors_1.Ei18nErrorCode.ConcatStrings);
         }
     }
     mergeOption(local, global) {

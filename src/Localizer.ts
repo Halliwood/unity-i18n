@@ -3,6 +3,7 @@ import path = require('path');
 import md5 = require('md5');
 import xlsx = require('xlsx');
 import { GlobalOption, LocalizeTask, LocalizeOption, LocalizeMode, TaskWithOption } from './LocalizeOption';
+import { Ei18nErrorCode } from './errors';
 
 interface LanguageRow {
     ID: string
@@ -298,7 +299,7 @@ export class Localizer {
                 }
                 if (ncnt > 0 && option.strict) {
                     console.error('[unity-i18n]Failed, check above.');
-                    process.exit(1);
+                    process.exit(Ei18nErrorCode.NoLocal);
                 }
             }
         }
@@ -484,7 +485,7 @@ export class Localizer {
             for (const e of this.crtTaskErrors) {
                 console.error(e);
             }
-            process.exit(1);
+            process.exit(Ei18nErrorCode.ConcatStrings);
         }
     }
 
