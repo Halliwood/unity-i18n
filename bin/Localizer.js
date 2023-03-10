@@ -717,7 +717,7 @@ class Localizer {
                             }
                             else {
                                 const headStr = oneLine.substring(0, ret.index);
-                                if (headStr.match(/\+\s*$/)) {
+                                if (headStr.match(/\+=?\s*$/)) {
                                     this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
                                 }
                                 else {

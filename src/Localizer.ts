@@ -737,7 +737,7 @@ export class Localizer {
                                 this.crtTaskErrors.push(`不允许使用内嵌字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
                             } else {
                                 const headStr = oneLine.substring(0, ret.index);
-                                if (headStr.match(/\+\s*$/)) {
+                                if (headStr.match(/\+=?\s*$/)) {
                                     this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
                                 } else {
                                     const tailStr = oneLine.substring(ret.index + ret[0].length);
