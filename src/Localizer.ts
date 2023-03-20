@@ -126,6 +126,9 @@ export class Localizer {
             console.log('[unity-i18n]读入翻译表：%s', xlsxPath);
             this.sheetRowMap = this.readXlsx(xlsxPath, option);
         }
+        // 派生智能翻译用于修改使用uts.format的情况
+        this.smartDerive(option);
+
         this.sheetRows = [];
         console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', Object.keys(this.strMap).length);
 
@@ -339,8 +342,6 @@ export class Localizer {
                 }
                 // 修复翻译中的换行
                 this.strMap[oneRow.ID] = oneRow;
-                // 派生智能翻译用于修改使用uts.format的情况
-                this.smartDerive(oneRow, option);
             }
         }
         this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
@@ -349,30 +350,43 @@ export class Localizer {
         return out;
     }
 
-    private smartDerive(oneRow: LanguageRow, option: GlobalOption): void {
-        const cn1 = '{0}' + oneRow.CN;
-        const r1: LanguageRow = { ID: this.getStringMd5(cn1), CN: cn1 };
-        for (const lang of option.langs) {
-            if (oneRow[lang] == null) continue;
-            if (lang === 'EN' && !oneRow[lang].startsWith(' ')) {
-                r1[lang] = '{0} ' + oneRow[lang];
-            } else {
-                r1[lang] = '{0}' + oneRow[lang];
+    private smartDerive(option: GlobalOption): void {
+        for (const sid in this.strMap) {
+            const oneRow = this.strMap[sid];
+            if (!oneRow.CN.match(/^\{\d+\}/)) {
+                const cn1 = '{0}' + oneRow.CN;
+                const id1 = this.getStringMd5(cn1);
+                if (this.strMap[id1] == null) {
+                    const r1: LanguageRow = { ID: id1, CN: cn1 };
+                    for (const lang of option.langs) {
+                        if (oneRow[lang] == null) continue;
+                        if (lang === 'EN' && !oneRow[lang].startsWith(' ')) {
+                            r1[lang] = '{0} ' + oneRow[lang];
+                        } else {
+                            r1[lang] = '{0}' + oneRow[lang];
+                        }
+                    }
+                    this.strMap[id1] = r1;
+                }
+            }
+    
+            if (!oneRow.CN.match(/\{\d+\}$/)) {
+                const cn2 = oneRow.CN + '{0}';
+                const id2 = this.getStringMd5(cn2);
+                if (this.strMap[id2] == null) {
+                    const r2: LanguageRow = { ID: id2, CN: cn2 };
+                    for (const lang of option.langs) {
+                        if (oneRow[lang] == null) continue;
+                        if (lang === 'EN' && !oneRow[lang].endsWith(' ')) {
+                            r2[lang] = oneRow[lang] + ' {0}';
+                        } else {
+                            r2[lang] = oneRow[lang] + '{0}';
+                        }
+                    }
+                    this.strMap[id2] = r2;
+                }
             }
         }
-        this.strMap[r1.ID] = r1;
-
-        const cn2 = oneRow.CN + '{0}';
-        const r2: LanguageRow = { ID: this.getStringMd5(cn2), CN: cn2 };
-        for (const lang of option.langs) {
-            if (oneRow[lang] == null) continue;
-            if (lang === 'EN' && !oneRow[lang].endsWith(' ')) {
-                r2[lang] = oneRow[lang] + ' {0}';
-            } else {
-                r2[lang] = oneRow[lang] + '{0}';
-            }
-        }
-        this.strMap[r2.ID] = r2;
     }
 
     private writeXlsx(sortedRows: LanguageRow[], option: GlobalOption, outputXlsx: string): void {
