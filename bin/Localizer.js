@@ -365,31 +365,6 @@ class Localizer {
                     this.strMap[id2] = r2;
                 }
             }
-            // 时间格式化格式修改，下面对翻译进行自适应，避免需要重新翻译
-            const timeRegexp = /(?<![\{#%])(?:\bYYYY\b|\bM{1,2}\b|\bD{1,2}\b|\bh{1,2}\b|\bm{1,2}\b|\bs{1,2}\b)(?!\})/g;
-            if (oneRow.CN.search(timeRegexp) >= 0) {
-                const replaced = [];
-                const cn3 = oneRow.CN.replaceAll(timeRegexp, (substring) => {
-                    replaced.push(substring);
-                    return `{${substring}}`;
-                });
-                if (cn3 !== oneRow.CN) {
-                    const id3 = this.getStringMd5(cn3);
-                    if (this.strMap[id3] == null) {
-                        const r3 = { ID: id3, CN: cn3 };
-                        for (const lang of option.langs) {
-                            if (oneRow[lang] == null || oneRow[lang] === '')
-                                continue;
-                            let newLang = oneRow[lang];
-                            for (const r of replaced) {
-                                newLang = newLang.replace(r, `{${r}}`);
-                            }
-                            r3[lang] = newLang;
-                        }
-                        this.strMap[id3] = r3;
-                    }
-                }
-            }
         }
     }
     writeXlsx(sortedRows, option, outputXlsx) {
