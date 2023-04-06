@@ -335,7 +335,7 @@ class Localizer {
                 if (this.strMap[id1] == null) {
                     const r1 = { ID: id1, CN: cn1 };
                     for (const lang of option.langs) {
-                        if (oneRow[lang] == null)
+                        if (oneRow[lang] == null || oneRow[lang] === '')
                             continue;
                         if (lang === 'EN' && !oneRow[lang].startsWith(' ')) {
                             r1[lang] = '{0} ' + oneRow[lang];
@@ -353,7 +353,7 @@ class Localizer {
                 if (this.strMap[id2] == null) {
                     const r2 = { ID: id2, CN: cn2 };
                     for (const lang of option.langs) {
-                        if (oneRow[lang] == null)
+                        if (oneRow[lang] == null || oneRow[lang] === '')
                             continue;
                         if (lang === 'EN' && !oneRow[lang].endsWith(' ')) {
                             r2[lang] = oneRow[lang] + ' {0}';
@@ -363,6 +363,31 @@ class Localizer {
                         }
                     }
                     this.strMap[id2] = r2;
+                }
+            }
+            // 时间格式化格式修改，下面对翻译进行自适应，避免需要重新翻译
+            const timeRegexp = /(?<![\{#%])(?:\bYYYY\b|\bM{1,2}\b|\bD{1,2}\b|\bh{1,2}\b|\bm{1,2}\b|\bs{1,2}\b)(?!\})/g;
+            if (oneRow.CN.search(timeRegexp) >= 0) {
+                const replaced = [];
+                const cn3 = oneRow.CN.replaceAll(timeRegexp, (substring) => {
+                    replaced.push(substring);
+                    return `{${substring}}`;
+                });
+                if (cn3 !== oneRow.CN) {
+                    const id3 = this.getStringMd5(cn3);
+                    if (this.strMap[id3] == null) {
+                        const r3 = { ID: id3, CN: cn3 };
+                        for (const lang of option.langs) {
+                            if (oneRow[lang] == null || oneRow[lang] === '')
+                                continue;
+                            let newLang = oneRow[lang];
+                            for (const r of replaced) {
+                                newLang = newLang.replace(r, `{${r}}`);
+                            }
+                            r3[lang] = newLang;
+                        }
+                        this.strMap[id3] = r3;
+                    }
                 }
             }
         }
