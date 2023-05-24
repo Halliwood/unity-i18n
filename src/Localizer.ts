@@ -55,7 +55,6 @@ export class Localizer {
     private capturedMap: {[id: string]: LanguageRow} = {};
     /**存储所有文字表（包括本次捕获的和历史上捕获的） */
     private strMap: {[id: string]: LanguageRow} = {};
-    private derivedMap: {[id: string]: true} = {};
     /**存储各个sheet对应的文字表（只包含languages.xlsx） */
     private sheetRowMap: { [sheetName: string]: LanguageRow[] } = {};
     private groupMap: {[id: string]: string} = {};
@@ -96,7 +95,6 @@ export class Localizer {
         let startAt = (new Date()).getTime();
 
         this.strMap = {};
-        this.derivedMap = {};
         this.fromMap = {};
         this.newMap = {};
 
@@ -182,34 +180,7 @@ export class Localizer {
         }
 
         let newCnt = 0;
-        if(this.mode == LocalizeMode.Search) {
-            let txtContent = '';
-            let txtNewContent = '';
-            let txtSrcContent = '';
-            for(let id in this.strMap) {
-                if (this.derivedMap[id]) continue;
-                let oneRow = this.strMap[id];
-                let infos = this.TagID + oneRow.ID + '\n';
-                infos += this.TagCN + oneRow.CN + '\n';
-                for (let lang of option.langs) {
-                    infos += lang + '=' + oneRow[lang] + '\n';
-                }
-                txtContent += infos + '\n';
-    
-                if(this.newMap[oneRow.ID]) {
-                    infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
-                    txtNewContent += infos + '\n';
-                }
-
-                if (this.fromMap[oneRow.ID]) {
-                    txtSrcContent += oneRow.CN + '\n';
-                    txtSrcContent += this.fromMap[oneRow.ID] + '\n\n';
-                }
-            }
-            fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
-            fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
-            fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
-        
+        if(this.mode == LocalizeMode.Search) {        
             // 写一个过滤掉黑名单的
             const filteredRows: LanguageRow[] = [];
             for (const row of sortedRows) {
@@ -234,6 +205,41 @@ export class Localizer {
                 }
             }
             this.writeXlsx(dictRows, option, path.join(outputRoot, this.OutDictXlsx));
+
+            let txtContent = '';
+            for (const oneRow of filteredRows) {
+                let infos = this.TagID + oneRow.ID + '\n';
+                infos += this.TagCN + oneRow.CN + '\n';
+                for (let lang of option.langs) {
+                    infos += lang + '=' + oneRow[lang] + '\n';
+                }
+                txtContent += infos + '\n';
+            }
+            fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
+
+            let txtNewContent = '';
+            let txtSrcContent = '';
+            for(let id in this.strMap) {
+                let oneRow = this.strMap[id];
+                let infos = this.TagID + oneRow.ID + '\n';
+                infos += this.TagCN + oneRow.CN + '\n';
+                for (let lang of option.langs) {
+                    infos += lang + '=' + oneRow[lang] + '\n';
+                }
+                txtContent += infos + '\n';
+    
+                if(this.newMap[oneRow.ID]) {
+                    infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
+                    txtNewContent += infos + '\n';
+                }
+
+                if (this.fromMap[oneRow.ID]) {
+                    txtSrcContent += oneRow.CN + '\n';
+                    txtSrcContent += this.fromMap[oneRow.ID] + '\n\n';
+                }
+            }
+            fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
+            fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
         } else if (option?.softReplace) {
             // 生成各个语言包
             console.log('[unity-i18n]开始生成语言包...');
@@ -370,7 +376,6 @@ export class Localizer {
                         }
                     }
                     this.strMap[id1] = r1;
-                    this.derivedMap[id1] = true;
                 }
             }
     
@@ -388,7 +393,6 @@ export class Localizer {
                         }
                     }
                     this.strMap[id2] = r2;
-                    this.derivedMap[id2] = true;
                 }
             }
         }

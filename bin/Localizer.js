@@ -59,7 +59,6 @@ class Localizer {
     capturedMap = {};
     /**存储所有文字表（包括本次捕获的和历史上捕获的） */
     strMap = {};
-    derivedMap = {};
     /**存储各个sheet对应的文字表（只包含languages.xlsx） */
     sheetRowMap = {};
     groupMap = {};
@@ -89,7 +88,6 @@ class Localizer {
     processTasks(tasks, option) {
         let startAt = (new Date()).getTime();
         this.strMap = {};
-        this.derivedMap = {};
         this.fromMap = {};
         this.newMap = {};
         this.totalCnt = 0;
@@ -172,31 +170,6 @@ class Localizer {
         }
         let newCnt = 0;
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
-            let txtContent = '';
-            let txtNewContent = '';
-            let txtSrcContent = '';
-            for (let id in this.strMap) {
-                if (this.derivedMap[id])
-                    continue;
-                let oneRow = this.strMap[id];
-                let infos = this.TagID + oneRow.ID + '\n';
-                infos += this.TagCN + oneRow.CN + '\n';
-                for (let lang of option.langs) {
-                    infos += lang + '=' + oneRow[lang] + '\n';
-                }
-                txtContent += infos + '\n';
-                if (this.newMap[oneRow.ID]) {
-                    infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
-                    txtNewContent += infos + '\n';
-                }
-                if (this.fromMap[oneRow.ID]) {
-                    txtSrcContent += oneRow.CN + '\n';
-                    txtSrcContent += this.fromMap[oneRow.ID] + '\n\n';
-                }
-            }
-            fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
-            fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
-            fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
             // 写一个过滤掉黑名单的
             const filteredRows = [];
             for (const row of sortedRows) {
@@ -220,6 +193,37 @@ class Localizer {
                 }
             }
             this.writeXlsx(dictRows, option, path.join(outputRoot, this.OutDictXlsx));
+            let txtContent = '';
+            for (const oneRow of filteredRows) {
+                let infos = this.TagID + oneRow.ID + '\n';
+                infos += this.TagCN + oneRow.CN + '\n';
+                for (let lang of option.langs) {
+                    infos += lang + '=' + oneRow[lang] + '\n';
+                }
+                txtContent += infos + '\n';
+            }
+            fs.writeFileSync(path.join(outputRoot, this.OutTxt), txtContent);
+            let txtNewContent = '';
+            let txtSrcContent = '';
+            for (let id in this.strMap) {
+                let oneRow = this.strMap[id];
+                let infos = this.TagID + oneRow.ID + '\n';
+                infos += this.TagCN + oneRow.CN + '\n';
+                for (let lang of option.langs) {
+                    infos += lang + '=' + oneRow[lang] + '\n';
+                }
+                txtContent += infos + '\n';
+                if (this.newMap[oneRow.ID]) {
+                    infos += 'FROM=' + this.fromMap[oneRow.ID] + '\n';
+                    txtNewContent += infos + '\n';
+                }
+                if (this.fromMap[oneRow.ID]) {
+                    txtSrcContent += oneRow.CN + '\n';
+                    txtSrcContent += this.fromMap[oneRow.ID] + '\n\n';
+                }
+            }
+            fs.writeFileSync(path.join(outputRoot, this.OutNewTxt), txtNewContent);
+            fs.writeFileSync(path.join(outputRoot, this.OutSrcTxt), txtSrcContent);
         }
         else if (option?.softReplace) {
             // 生成各个语言包
@@ -349,7 +353,6 @@ class Localizer {
                         }
                     }
                     this.strMap[id1] = r1;
-                    this.derivedMap[id1] = true;
                 }
             }
             if (!oneRow.CN.match(/\{\d+\}$/)) {
@@ -368,7 +371,6 @@ class Localizer {
                         }
                     }
                     this.strMap[id2] = r2;
-                    this.derivedMap[id2] = true;
                 }
             }
         }
