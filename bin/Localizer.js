@@ -59,6 +59,7 @@ class Localizer {
     capturedMap = {};
     /**存储所有文字表（包括本次捕获的和历史上捕获的） */
     strMap = {};
+    derivedMap = {};
     /**存储各个sheet对应的文字表（只包含languages.xlsx） */
     sheetRowMap = {};
     groupMap = {};
@@ -88,6 +89,7 @@ class Localizer {
     processTasks(tasks, option) {
         let startAt = (new Date()).getTime();
         this.strMap = {};
+        this.derivedMap = {};
         this.fromMap = {};
         this.newMap = {};
         this.totalCnt = 0;
@@ -174,6 +176,8 @@ class Localizer {
             let txtNewContent = '';
             let txtSrcContent = '';
             for (let id in this.strMap) {
+                if (this.derivedMap[id])
+                    continue;
                 let oneRow = this.strMap[id];
                 let infos = this.TagID + oneRow.ID + '\n';
                 infos += this.TagCN + oneRow.CN + '\n';
@@ -345,6 +349,7 @@ class Localizer {
                         }
                     }
                     this.strMap[id1] = r1;
+                    this.derivedMap[id1] = true;
                 }
             }
             if (!oneRow.CN.match(/\{\d+\}$/)) {
@@ -363,6 +368,7 @@ class Localizer {
                         }
                     }
                     this.strMap[id2] = r2;
+                    this.derivedMap[id2] = true;
                 }
             }
         }

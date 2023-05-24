@@ -55,6 +55,7 @@ export class Localizer {
     private capturedMap: {[id: string]: LanguageRow} = {};
     /**存储所有文字表（包括本次捕获的和历史上捕获的） */
     private strMap: {[id: string]: LanguageRow} = {};
+    private derivedMap: {[id: string]: true} = {};
     /**存储各个sheet对应的文字表（只包含languages.xlsx） */
     private sheetRowMap: { [sheetName: string]: LanguageRow[] } = {};
     private groupMap: {[id: string]: string} = {};
@@ -95,6 +96,7 @@ export class Localizer {
         let startAt = (new Date()).getTime();
 
         this.strMap = {};
+        this.derivedMap = {};
         this.fromMap = {};
         this.newMap = {};
 
@@ -185,6 +187,7 @@ export class Localizer {
             let txtNewContent = '';
             let txtSrcContent = '';
             for(let id in this.strMap) {
+                if (this.derivedMap[id]) continue;
                 let oneRow = this.strMap[id];
                 let infos = this.TagID + oneRow.ID + '\n';
                 infos += this.TagCN + oneRow.CN + '\n';
@@ -367,6 +370,7 @@ export class Localizer {
                         }
                     }
                     this.strMap[id1] = r1;
+                    this.derivedMap[id1] = true;
                 }
             }
     
@@ -384,6 +388,7 @@ export class Localizer {
                         }
                     }
                     this.strMap[id2] = r2;
+                    this.derivedMap[id2] = true;
                 }
             }
         }
