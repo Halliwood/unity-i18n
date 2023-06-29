@@ -55,7 +55,7 @@ function makeTasks() {
             }, 
             skipPatterns: ["^\\s*Debug\\.Log", "^\\s*UnityEngine\\.Debug\\.Log"]
         },
-        group: "代码"
+        group: "CS代码"
     };
     const svrScriptTask: TaskWithOption = {
         roots: ['$workspace/serverscript'], 

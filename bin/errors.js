@@ -7,5 +7,5 @@ var Ei18nErrorCode;
     Ei18nErrorCode[Ei18nErrorCode["Failed"] = 1] = "Failed";
     Ei18nErrorCode[Ei18nErrorCode["NoLocal"] = 1000] = "NoLocal";
     Ei18nErrorCode[Ei18nErrorCode["ConcatStrings"] = 1001] = "ConcatStrings";
-})(Ei18nErrorCode = exports.Ei18nErrorCode || (exports.Ei18nErrorCode = {}));
+})(Ei18nErrorCode || (exports.Ei18nErrorCode = Ei18nErrorCode = {}));
 //# sourceMappingURL=errors.js.map
