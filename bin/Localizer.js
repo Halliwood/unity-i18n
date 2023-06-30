@@ -47,7 +47,7 @@ class Localizer {
     TagID = 'ID=';
     TagCN = 'CN=';
     OutXlsx = 'language.xlsx';
-    OutDictXlsx = 'language.dict.xlsx';
+    // private readonly OutDictXlsx = 'language.dict.xlsx';
     OutTxt = 'languages_mid.txt';
     OutNewTxt = 'languages_new.txt';
     OutSrcTxt = 'languages_src.txt';
@@ -106,11 +106,11 @@ class Localizer {
             console.log('[unity-i18n]setting: ', this.setting);
         }
         // 先读入xlsx
-        const dictPath = path.join(outputRoot, this.OutDictXlsx);
-        if (fs.existsSync(dictPath)) {
-            console.log('[unity-i18n]读入字典：%s', dictPath);
-            this.readXlsx(dictPath, option);
-        }
+        // const dictPath = path.join(outputRoot, this.OutDictXlsx);
+        // if(fs.existsSync(dictPath)) {
+        //     console.log('[unity-i18n]读入字典：%s', dictPath);
+        //     this.readXlsx(dictPath, option);
+        // }
         const xlsxPath = path.join(outputRoot, this.OutXlsx);
         if (fs.existsSync(xlsxPath)) {
             console.log('[unity-i18n]读入翻译表：%s', xlsxPath);
@@ -181,18 +181,18 @@ class Localizer {
                 }
             }
             this.writeXlsx(filteredRows, option, path.join(outputRoot, this.OutXlsx));
-            // 写一个全量字典
-            const dictRows = [];
-            for (const key in this.strMap) {
-                const row = this.strMap[key];
-                for (const lang of option.langs) {
-                    if (row[lang]) {
-                        dictRows.push(this.strMap[key]);
-                        break;
-                    }
-                }
-            }
-            this.writeXlsx(dictRows, option, path.join(outputRoot, this.OutDictXlsx));
+            // // 写一个全量字典
+            // const dictRows: LanguageRow[] = [];
+            // for (const key in this.strMap) {
+            //     const row = this.strMap[key];
+            //     for (const lang of option.langs) {
+            //         if (row[lang]) {
+            //             dictRows.push(this.strMap[key]);
+            //             break;
+            //         }
+            //     }
+            // }
+            // this.writeXlsx(dictRows, option, path.join(outputRoot, this.OutDictXlsx));
             let txtContent = '';
             for (const oneRow of filteredRows) {
                 let infos = this.TagID + oneRow.ID + '\n';

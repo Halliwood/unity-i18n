@@ -10,7 +10,6 @@ export declare class Localizer {
     private readonly TagID;
     private readonly TagCN;
     private readonly OutXlsx;
-    private readonly OutDictXlsx;
     private readonly OutTxt;
     private readonly OutNewTxt;
     private readonly OutSrcTxt;
