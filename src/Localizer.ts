@@ -55,8 +55,6 @@ export class Localizer {
     private capturedMap: {[id: string]: LanguageRow} = {};
     /**存储所有文字表（包括本次捕获的和历史上捕获的） */
     private strMap: {[id: string]: LanguageRow} = {};
-    /**存储各个sheet对应的文字表（只包含languages.xlsx） */
-    private sheetRowMap: { [sheetName: string]: LanguageRow[] } = {};
     private groupMap: {[id: string]: string} = {};
     private fromMap: {[id: string]: string} = {};
     private newMap: {[id: string]: boolean} = {};
@@ -124,7 +122,17 @@ export class Localizer {
         const xlsxPath = path.join(outputRoot, this.OutXlsx);
         if(fs.existsSync(xlsxPath)) {
             console.log('[unity-i18n]读入翻译表：%s', xlsxPath);
-            this.sheetRowMap = this.readXlsx(xlsxPath, option);
+            this.readXlsx(xlsxPath, option);
+        }
+        if (option.individual) {
+            // 读入分语言翻译表
+            for (const lang of option.langs) {
+                const individualXlsxPath = this.getIndividualXlsx(path.join(outputRoot, this.OutXlsx), lang);
+                if(fs.existsSync(individualXlsxPath)) {
+                    console.log('[unity-i18n]读入翻译表：%s', individualXlsxPath);
+                    this.readXlsx(individualXlsxPath, option);
+                }
+            }
         }
         // 派生智能翻译用于修改使用uts.format的情况
         this.smartDerive(option);
@@ -191,7 +199,19 @@ export class Localizer {
                     }
                 }
             }
-            this.writeXlsx(filteredRows, option, path.join(outputRoot, this.OutXlsx));
+
+            if (option.individual) {
+                for (const lang of option.langs) {
+                    const langRows = filteredRows.map((v) => {
+                        const lv = { ID: v.ID, CN: v.CN }
+                        lv[lang] = v[lang];
+                        return lv;
+                    });
+                    this.writeXlsx(langRows, option, this.getIndividualXlsx(path.join(outputRoot, this.OutXlsx), lang));
+                }
+            } else {
+                this.writeXlsx(filteredRows, option, path.join(outputRoot, this.OutXlsx));
+            }
 
             // // 写一个全量字典
             // const dictRows: LanguageRow[] = [];
@@ -317,16 +337,14 @@ export class Localizer {
         }
     }
 
-    private readXlsx(xlsxPath: string, option: GlobalOption): { [sheetName: string]: LanguageRow[] } {
+    private readXlsx(xlsxPath: string, option: GlobalOption): void {
         const xlsxBook = xlsx.readFile(xlsxPath);
         const errorRows: number[] = [];
         const newlineRows: number[] = [];
-        const out: { [sheetName: string]: LanguageRow[] } = {};
         for (const sheetName of xlsxBook.SheetNames) {
             const xlsxSheet = xlsxBook.Sheets[sheetName];
             this.colInfoMap[sheetName] = xlsxSheet['!cols'];
             const sheetRows = xlsx.utils.sheet_to_json<LanguageRow>(xlsxSheet);
-            out[sheetName] = sheetRows;
             for(let i = 0, len = sheetRows.length; i < len; i++) {
                 let oneRow = sheetRows[i];
                 if(oneRow.CN == undefined) {
@@ -337,11 +355,11 @@ export class Localizer {
                     console.warn(`row ${i + 2} MD5 error, auto corrected!`);
                     oneRow.ID = this.getStringMd5(oneRow.CN);
                 }
-                oneRow.CN = this.eunsureString(oneRow.CN);
+                oneRow.CN = this.ensureString(oneRow.CN);
                 for (const lang of option.langs) {
                     let local = oneRow[lang];
                     if (undefined != local) {
-                        oneRow[lang] = local = this.eunsureString(local);
+                        oneRow[lang] = local = this.ensureString(local);
                         // 检查翻译中是否有换行符
                         let idx = local.search(/[\r\n]/g);
                         if(idx >= 0) {
@@ -350,13 +368,16 @@ export class Localizer {
                     }
                 }
                 // 修复翻译中的换行
+                const oldRow = this.strMap[oneRow.ID];
+                if (oldRow != null) {
+                    oneRow = Object.assign(oldRow, oneRow);
+                }
                 this.strMap[oneRow.ID] = oneRow;
             }
         }
         this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
         this.assert(errorRows.length == 0, 'The following rows are suspect illegal: ' + errorRows.join(', '));
         this.assert(newlineRows.length == 0, 'The following rows contains newline char: ' + newlineRows.join(', '));
-        return out;
     }
 
     private smartDerive(option: GlobalOption): void {
@@ -1045,7 +1066,7 @@ export class Localizer {
         return p;     
     }
 
-    private eunsureString(s: any): string {
+    private ensureString(s: any): string {
         if(typeof(s) != 'string') {
             return s.toString();
         }
@@ -1069,6 +1090,11 @@ export class Localizer {
         if (typeof(r) == 'string')
             r = new RegExp(r);
         return r;
+    }
+
+    private getIndividualXlsx(file: string, lang: string): string {
+        const ext = path.extname(file);
+        return file.replace(ext, '.' + lang + ext);
     }
 
     private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {

@@ -21,8 +21,6 @@ export declare class Localizer {
     private capturedMap;
     /**存储所有文字表（包括本次捕获的和历史上捕获的） */
     private strMap;
-    /**存储各个sheet对应的文字表（只包含languages.xlsx） */
-    private sheetRowMap;
     private groupMap;
     private fromMap;
     private newMap;
@@ -65,10 +63,11 @@ export declare class Localizer {
     private unicode2utf8;
     private utf82unicode;
     private normalizePath;
-    private eunsureString;
+    private ensureString;
     private processQuote;
     private processQuoteInJson;
     private ensureRegExp;
+    private getIndividualXlsx;
     private addLog;
     private assert;
 }

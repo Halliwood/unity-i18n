@@ -70,6 +70,7 @@ program
     .option("--pretty", "Generate pretty json files.")
     .option("--strict", "Strict mode.")
     .option("--lockfile <string>", "Lock file to check.")
+    .option("--individual", "Make individual files for each language.")
     .parse(process.argv);
 const opts = program.opts();
 async function main() {
@@ -119,6 +120,9 @@ async function main() {
     }
     if (opts.strict) {
         globalOption.strict = opts.strict;
+    }
+    if (opts.individual && opts.langs.length > 1) {
+        globalOption.individual = true;
     }
     if (opts.default) {
         if (opts.default == 'xml2bin') {

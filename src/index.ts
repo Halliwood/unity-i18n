@@ -45,6 +45,7 @@ interface CmdParams {
     pretty?: boolean;
     strict?: boolean;
     lockfile?: string;
+    individual?: boolean;
 }
 
 // for exmaple
@@ -65,6 +66,7 @@ program
 	.option("--pretty", "Generate pretty json files.")
 	.option("--strict", "Strict mode.")
 	.option("--lockfile <string>", "Lock file to check.")
+	.option("--individual", "Make individual files for each language.")
     .parse(process.argv);
 
 const opts = program.opts() as CmdParams;
@@ -118,6 +120,9 @@ async function main(): Promise<void> {
     }
     if(opts.strict) {
         globalOption.strict = opts.strict;
+    }
+    if(opts.individual && opts.langs.length > 1) {
+        globalOption.individual = true;
     }
     
     if(opts.default) {

@@ -9,6 +9,7 @@ export interface GlobalOption extends LocalizeOption {
     xlsxStyle?: 'prepend' | 'append' | 'sort-by-id';
     pretty?: boolean;
     strict?: boolean;
+    individual?: boolean;
 }
 
 export interface TaskWithOption {
