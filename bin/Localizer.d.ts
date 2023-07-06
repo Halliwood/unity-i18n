@@ -30,6 +30,7 @@ export declare class Localizer {
     private totalCnt;
     private modifiedFileCnt;
     private noLocals;
+    private jsonSafeErrors;
     private logContent;
     private mode;
     private md5Cache;
@@ -55,6 +56,7 @@ export declare class Localizer {
     private processZnInPrefab;
     private containsZh;
     private markTaskUsed;
+    private checkJsonSafe;
     private insertString;
     private getLocal;
     private formatString;

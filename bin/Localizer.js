@@ -68,6 +68,7 @@ class Localizer {
     totalCnt = 0;
     modifiedFileCnt = 0;
     noLocals = [];
+    jsonSafeErrors = [];
     logContent = '';
     mode;
     md5Cache = {};
@@ -91,6 +92,7 @@ class Localizer {
         this.totalCnt = 0;
         this.modifiedFileCnt = 0;
         this.noLocals.length = 0;
+        this.jsonSafeErrors.length = 0;
         this.logContent = '';
         let outputRoot = option?.outputRoot || 'output/';
         if (!fs.existsSync(outputRoot)) {
@@ -310,6 +312,12 @@ class Localizer {
                     console.error('[unity-i18n]Failed, check above.');
                     process.exit(errors_1.Ei18nErrorCode.NoLocal);
                 }
+            }
+            if (this.jsonSafeErrors.length > 0) {
+                for (const str of this.jsonSafeErrors) {
+                    console.error('[unity-i18n]Syntax error:', str);
+                }
+                process.exit(errors_1.Ei18nErrorCode.SyntaxError);
             }
         }
     }
@@ -640,7 +648,9 @@ class Localizer {
                         outContent = newContent.replace(/\$i18n-(\w+)\$/g, (substring, ...args) => {
                             const local = this.strMap[args[0]];
                             if (local) {
-                                return this.processQuoteInJson(local[lang] || local.CN);
+                                const s = this.processQuoteInJson(local[lang] || local.CN);
+                                this.checkJsonSafe(s);
+                                return s;
                             }
                             let raw = this.md52rawStr[args[0]];
                             this.assert(raw != undefined, `No local and raw found when process ${filename}`);
@@ -856,9 +866,10 @@ class Localizer {
                         localStr = `$i18n-${this.getStringMd5(zh)}$`;
                     }
                     else {
-                        let local = this.getLocal(zh, option);
+                        const local = this.getLocal(zh, option);
                         if (local?.[option.langs[0]]) {
-                            localStr = local[option.langs[0]].replace(/(?<!\\)"/g, '\\"');
+                            localStr = this.processQuoteInJson(local[option.langs[0]]);
+                            this.checkJsonSafe(localStr);
                         }
                     }
                 }
@@ -969,6 +980,17 @@ class Localizer {
                 this.outputJSONMap[oj][cn] = true;
         }
     }
+    checkJsonSafe(s) {
+        const test = `{"k":"${s}"}`;
+        try {
+            JSON.parse(test);
+        }
+        catch (e) {
+            if (!this.jsonSafeErrors.includes(s)) {
+                this.jsonSafeErrors.push(s);
+            }
+        }
+    }
     insertString(cn, option) {
         this.totalCnt++;
         cn = this.formatString(cn);
@@ -1054,7 +1076,7 @@ class Localizer {
         return s;
     }
     processQuoteInJson(s) {
-        return s.replace(/(?<!\\)"/g, "\\\"");
+        return s.replace(/(?<!\\)"/g, '\\"');
     }
     ensureRegExp(r) {
         if (typeof (r) == 'string')
@@ -1071,7 +1093,6 @@ class Localizer {
     assert(cond, msg) {
         if (!cond) {
             throw new Error(msg);
-            process.exit(1);
         }
     }
 }
