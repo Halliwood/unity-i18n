@@ -10,9 +10,9 @@
                     "exts": [
                         ".prefab"
                     ]
-                },
-                "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
-            }
+                }
+            },
+            "group": "UI"
         },
         {
             "roots": [
@@ -23,9 +23,9 @@
                     "exts": [
                         ".json"
                     ]
-                },
-                "replaceOutput": "Assets/AssetSources/data$LANG/$FILENAME.json"
-            }
+                }
+            },
+            "group": "表格"
         },
         {
             "roots": [
@@ -41,7 +41,8 @@
                         "Macros.ts",
                         "ErrorId.ts",
                         "SendMsgUtil.ts",
-                        "GameConfig.d.ts"
+                        "GameConfig.d.ts",
+                        "RawString.ts"
                     ]
                 },
                 "includes": {
@@ -51,11 +52,14 @@
                 },
                 "skipPatterns": [
                     "^\\s*uts\\.log",
-                    "^\\s*uts\\.assert\\("
-                ],
-                "softReplacer": "I18N.I18NMgr.Translate($RAWSTRING)",
-                "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
-            }
+                    "^\\s*uts\\.assert\\(",
+                    "^\\s*console\\.log",
+                    "^\\s*console\\.assert\\(",
+                    "^\\s*(CS\\.)?UnityEngine\\.Debug\\.Logw*\\("
+                ]
+            },
+            "group": "代码",
+            "strict": true
         },
         {
             "roots": [
@@ -75,11 +79,11 @@
                     ]
                 },
                 "skipPatterns": [
-                    "^\\s*Debug\\.Log"
-                ],
-                "softReplacer": "I18N.I18NMgr.Translate($RAWSTRING)",
-                "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
-            }
+                    "^\\s*Debug\\.Log",
+                    "^\\s*UnityEngine\\.Debug\\.Log"
+                ]
+            },
+            "group": "CS代码"
         },
         {
             "roots": [
@@ -95,7 +99,10 @@
                 "skipPatterns": [
                     "^\\s*ATM_DebugSystemMessage\\("
                 ]
-            }
+            },
+            "group": "脚本",
+            "safeprintf": true,
+            "readonly": true
         },
         {
             "roots": [
@@ -114,7 +121,10 @@
                         "NewbieTutorial.config.xml"
                     ]
                 }
-            }
+            },
+            "group": "表格",
+            "safeprintf": true,
+            "readonly": true
         }
     ],
     "replaceTasks": [
@@ -128,9 +138,9 @@
                     "exts": [
                         ".prefab"
                     ]
-                },
-                "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
-            }
+                }
+            },
+            "group": "UI"
         },
         {
             "roots": [
@@ -141,9 +151,9 @@
                     "exts": [
                         ".json"
                     ]
-                },
-                "replaceOutput": "Assets/AssetSources/data$LANG/$FILENAME.json"
-            }
+                }
+            },
+            "group": "表格"
         },
         {
             "roots": [
@@ -159,7 +169,8 @@
                         "Macros.ts",
                         "ErrorId.ts",
                         "SendMsgUtil.ts",
-                        "GameConfig.d.ts"
+                        "GameConfig.d.ts",
+                        "RawString.ts"
                     ]
                 },
                 "includes": {
@@ -169,11 +180,14 @@
                 },
                 "skipPatterns": [
                     "^\\s*uts\\.log",
-                    "^\\s*uts\\.assert\\("
-                ],
-                "softReplacer": "I18N.I18NMgr.Translate($RAWSTRING)",
-                "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
-            }
+                    "^\\s*uts\\.assert\\(",
+                    "^\\s*console\\.log",
+                    "^\\s*console\\.assert\\(",
+                    "^\\s*(CS\\.)?UnityEngine\\.Debug\\.Logw*\\("
+                ]
+            },
+            "group": "代码",
+            "strict": true
         },
         {
             "roots": [
@@ -193,11 +207,11 @@
                     ]
                 },
                 "skipPatterns": [
-                    "^\\s*Debug\\.Log"
-                ],
-                "softReplacer": "I18N.I18NMgr.Translate($RAWSTRING)",
-                "outputJSON": "Assets/AssetSources/i18n/$LANG.json"
-            }
+                    "^\\s*Debug\\.Log",
+                    "^\\s*UnityEngine\\.Debug\\.Log"
+                ]
+            },
+            "group": "CS代码"
         }
     ],
     "replacer": {

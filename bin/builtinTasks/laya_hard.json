@@ -10,7 +10,8 @@
                         ".json"
                     ]
                 }
-            }
+            },
+            "group": "UI"
         },
         {
             "roots": [
@@ -39,7 +40,8 @@
                     "^\\s*console\\.assert(",
                     "^\\s*FyGame\\.assert\\("
                 ]
-            }
+            },
+            "group": "代码"
         },
         {
             "roots": [
@@ -58,7 +60,8 @@
                         "NewbieTutorial.config.xml"
                     ]
                 }
-            }
+            },
+            "group": "表格"
         },
         {
             "roots": [
@@ -74,7 +77,8 @@
                 "skipPatterns": [
                     "^\\s*ATM_DebugSystemMessage\\("
                 ]
-            }
+            },
+            "group": "脚本"
         },
         {
             "roots": [
@@ -93,7 +97,8 @@
                         "NewbieTutorial.config.xml"
                     ]
                 }
-            }
+            },
+            "group": "表格"
         }
     ],
     "replaceTasks": [
@@ -107,7 +112,8 @@
                         ".json"
                     ]
                 }
-            }
+            },
+            "group": "UI"
         },
         {
             "roots": [
@@ -136,7 +142,8 @@
                     "^\\s*console\\.assert(",
                     "^\\s*FyGame\\.assert\\("
                 ]
-            }
+            },
+            "group": "代码"
         }
     ],
     "xml2binReplaceTasks": [
@@ -157,7 +164,8 @@
                         "NewbieTutorial.config.xml"
                     ]
                 }
-            }
+            },
+            "group": "表格"
         }
     ],
     "replacer": {
