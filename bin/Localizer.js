@@ -300,6 +300,7 @@ class Localizer {
         }
         else {
             console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocals.length);
+            let errorCode = 0;
             if (this.noLocals.length > 0) {
                 let ncnt = 0;
                 for (const zh of this.noLocals) {
@@ -310,15 +311,17 @@ class Localizer {
                 }
                 if (ncnt > 0 && option.strict) {
                     console.error('[unity-i18n]Failed, check above.');
-                    process.exit(errors_1.Ei18nErrorCode.NoLocal);
+                    errorCode = errors_1.Ei18nErrorCode.NoLocal;
                 }
             }
             if (this.jsonSafeErrors.length > 0) {
                 for (const str of this.jsonSafeErrors) {
                     console.error('[unity-i18n]Syntax error:', str);
                 }
-                process.exit(errors_1.Ei18nErrorCode.SyntaxError);
+                errorCode = errors_1.Ei18nErrorCode.SyntaxError;
             }
+            if (errorCode != 0)
+                process.exit(errorCode);
         }
     }
     readXlsx(xlsxPath, option) {
