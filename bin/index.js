@@ -71,6 +71,7 @@ program
     .option("--strict", "Strict mode.")
     .option("--lockfile <string>", "Lock file to check.")
     .option("--individual", "Make individual files for each language.")
+    .option("--validate [string]", "Specify which languages to be validated.")
     .parse(process.argv);
 const opts = program.opts();
 async function main() {
@@ -123,6 +124,9 @@ async function main() {
     }
     if (opts.individual && opts.langs.length > 1) {
         globalOption.individual = true;
+    }
+    if (opts.validate) {
+        globalOption.validate = opts.validate.split(',');
     }
     if (opts.default) {
         if (opts.default == 'xml2bin') {

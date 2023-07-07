@@ -3,5 +3,6 @@ export enum Ei18nErrorCode {
     Failed = 1, 
     NoLocal = 1000, 
     ConcatStrings = 1001,
-    SyntaxError = 1002
+    SyntaxError = 1002,
+    FormatError = 1003
 }

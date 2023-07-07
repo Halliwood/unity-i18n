@@ -126,6 +126,8 @@ class Localizer {
                 }
             }
         }
+        this.correct(option);
+        this.validate(option);
         // 派生智能翻译用于修改使用uts.format的情况
         this.smartDerive(option);
         this.sheetRows = [];
@@ -146,29 +148,6 @@ class Localizer {
                 this.runTask(oneTask, option);
             }
         }
-        // 排序，没翻译的放前面
-        let sortedRows;
-        if (option?.xlsxStyle == 'prepend') {
-            const stateMap = {};
-            for (let oneRow of this.sheetRows) {
-                stateMap[oneRow.ID] = this.getTranslateState(oneRow, option);
-            }
-            sortedRows = this.sheetRows.sort((a, b) => {
-                const statea = stateMap[a.ID];
-                const stateb = stateMap[b.ID];
-                if (statea != stateb)
-                    return stateb - statea;
-                return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
-            });
-        }
-        else if (option?.xlsxStyle == 'sort-by-id') {
-            sortedRows = this.sheetRows.sort((a, b) => {
-                return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
-            });
-        }
-        else {
-            sortedRows = this.sheetRows;
-        }
         const blackMap = {};
         const blackFile = path.join(outputRoot, this.BlacklistTxt);
         if (fs.existsSync(blackFile)) {
@@ -182,7 +161,7 @@ class Localizer {
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
             // 写一个过滤掉黑名单的
             const filteredRows = [];
-            for (const row of sortedRows) {
+            for (const row of this.sheetRows) {
                 if (!blackMap[row.CN]) {
                     filteredRows.push(row);
                     if (this.newMap[row.ID]) {
@@ -197,11 +176,11 @@ class Localizer {
                         lv[lang] = v[lang];
                         return lv;
                     });
-                    this.writeXlsx(langRows, option, this.getIndividualXlsx(path.join(outputRoot, this.OutXlsx), lang));
+                    this.writeXlsx(this.sortRows(langRows, option), option, this.getIndividualXlsx(path.join(outputRoot, this.OutXlsx), lang));
                 }
             }
             else {
-                this.writeXlsx(filteredRows, option, path.join(outputRoot, this.OutXlsx));
+                this.writeXlsx(this.sortRows(filteredRows, option), option, path.join(outputRoot, this.OutXlsx));
             }
             // // 写一个全量字典
             // const dictRows: LanguageRow[] = [];
@@ -296,10 +275,10 @@ class Localizer {
         }
         let endAt = (new Date()).getTime();
         if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
-            console.log('[unity-i18n]搜索结束! 耗时: \x1B[36m%d\x1B[0m秒. Total: \x1B[36m%d\x1B[0m, net: \x1B[36m%d\x1B[0m, new: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.totalCnt, sortedRows.length, newCnt);
+            console.log('[unity-i18n]搜索结束! 耗时: %d秒.', ((endAt - startAt) / 1000).toFixed());
         }
         else {
-            console.log('[unity-i18n]替换结束! 耗时: \x1B[36m%d\x1B[0m秒. Modified file: \x1B[36m%d\x1B[0m, no local: \x1B[36m%d\x1B[0m.', ((endAt - startAt) / 1000).toFixed(), this.modifiedFileCnt, this.noLocals.length);
+            console.log('[unity-i18n]替换结束! 耗时: %d.', ((endAt - startAt) / 1000).toFixed());
             let errorCode = 0;
             if (this.noLocals.length > 0) {
                 let ncnt = 0;
@@ -323,6 +302,31 @@ class Localizer {
             if (errorCode != 0)
                 process.exit(errorCode);
         }
+    }
+    sortRows(rows, option) {
+        let out;
+        if (option?.xlsxStyle == 'prepend') {
+            const stateMap = {};
+            for (let oneRow of rows) {
+                stateMap[oneRow.ID] = this.getTranslateState(oneRow, option);
+            }
+            out = rows.sort((a, b) => {
+                const statea = stateMap[a.ID];
+                const stateb = stateMap[b.ID];
+                if (statea != stateb)
+                    return stateb - statea;
+                return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
+            });
+        }
+        else if (option?.xlsxStyle == 'sort-by-id') {
+            out = rows.sort((a, b) => {
+                return a.ID.charCodeAt(0) - b.ID.charCodeAt(0);
+            });
+        }
+        else {
+            out = rows;
+        }
+        return out;
     }
     readXlsx(xlsxPath, option) {
         const xlsxBook = xlsx.readFile(xlsxPath);
@@ -1068,6 +1072,82 @@ class Localizer {
             return s.toString();
         }
         return s;
+    }
+    validate(option) {
+        if (option.validate == null)
+            return;
+        const fmtErrors = [];
+        for (let id in this.strMap) {
+            const row = this.strMap[id];
+            // 检查html格式
+            const mchs = row.CN.matchAll(/<\/?.*?>/g);
+            for (const mch of mchs) {
+                for (const lang of option.validate) {
+                    const local = row[lang];
+                    if (local && !local.includes(mch[0]) && !fmtErrors.includes(local)) {
+                        fmtErrors.push(local);
+                    }
+                }
+            }
+        }
+        if (fmtErrors.length > 0) {
+            for (const str of fmtErrors) {
+                console.error('[unity-i18n]Format error:', str);
+            }
+            process.exit(errors_1.Ei18nErrorCode.FormatError);
+        }
+    }
+    correct(option) {
+        let fixNewlineCnt = 0, fixFormatCnt = 0;
+        for (let id in this.strMap) {
+            const row = this.strMap[id];
+            // 修复#N
+            const newlineCnt = row.CN.match(/#N/g)?.length;
+            if (newlineCnt > 0) {
+                for (const lang of option.langs) {
+                    const local = row[lang];
+                    if (local) {
+                        // 先校正#N
+                        if (local.match(/#N/g)?.length < newlineCnt) {
+                            let newLocal = local.replaceAll('#n', '#N');
+                            if (newLocal.match(/#N/g)?.length < newlineCnt) {
+                                newLocal = local.replace('# n', '#N');
+                            }
+                            if (newLocal.match(/#N/g)?.length == newlineCnt) {
+                                row[lang] = newLocal;
+                                fixNewlineCnt++;
+                            }
+                        }
+                    }
+                }
+            }
+            // 再校正html标记
+            const mchs = row.CN.match(/<\/?.*?>/g);
+            if (mchs != null) {
+                for (const lang of option.langs) {
+                    const local = row[lang];
+                    if (!local)
+                        continue;
+                    const missingHtmlElems = [];
+                    for (const mch of mchs) {
+                        if (!local.includes(mch)) {
+                            missingHtmlElems.push(mch);
+                        }
+                    }
+                    if (missingHtmlElems.length == 0)
+                        continue;
+                    // 先去除多余的空格
+                    let newLocal = local.replaceAll(/<\/?.*?>/g, (substring, ...args) => substring.replaceAll(/\s+/g, ''));
+                    // 修改大小写问题
+                    newLocal = newLocal.replaceAll(/(?<=<\/?)\w+(?==.*?>)/g, (substring, ...args) => substring.toLowerCase());
+                    if (newLocal != local) {
+                        row[lang] = newLocal;
+                        fixFormatCnt++;
+                    }
+                }
+            }
+        }
+        console.log(`${fixNewlineCnt} #N fixed, ${fixFormatCnt} format fixed`);
     }
     processQuote(s, quote) {
         if (quote == '"') {

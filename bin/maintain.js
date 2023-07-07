@@ -11,9 +11,9 @@ const UnitySoftTasks_1 = __importDefault(require("./example/UnitySoftTasks"));
 async function makeTaskJson() {
     const jsonRoot = path_1.default.join(__dirname, 'builtinTasks');
     await fs_extra_1.default.ensureDir(jsonRoot);
-    await fs_extra_1.default.writeJSON(path_1.default.join(jsonRoot, 'unity_hard.json'), UnityHardTasks_1.default, { spaces: 4 });
-    await fs_extra_1.default.writeJSON(path_1.default.join(jsonRoot, 'unity_soft.json'), UnitySoftTasks_1.default, { spaces: 4 });
-    await fs_extra_1.default.writeJSON(path_1.default.join(jsonRoot, 'laya_hard.json'), LayaTasks_1.default, { spaces: 4 });
+    await fs_extra_1.default.writeJSON(path_1.default.join(jsonRoot, 'unity_hard.json'), UnityHardTasks_1.default, { spaces: 4, EOL: '\r\n' });
+    await fs_extra_1.default.writeJSON(path_1.default.join(jsonRoot, 'unity_soft.json'), UnitySoftTasks_1.default, { spaces: 4, EOL: '\r\n' });
+    await fs_extra_1.default.writeJSON(path_1.default.join(jsonRoot, 'laya_hard.json'), LayaTasks_1.default, { spaces: 4, EOL: '\r\n' });
 }
 makeTaskJson();
 //# sourceMappingURL=maintain.js.map

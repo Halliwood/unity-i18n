@@ -41,6 +41,7 @@ export declare class Localizer {
     searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption): void;
     replaceZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption): void;
     private processTasks;
+    private sortRows;
     private readXlsx;
     private smartDerive;
     private writeXlsx;
@@ -66,6 +67,8 @@ export declare class Localizer {
     private utf82unicode;
     private normalizePath;
     private ensureString;
+    private validate;
+    private correct;
     private processQuote;
     private processQuoteInJson;
     private ensureRegExp;

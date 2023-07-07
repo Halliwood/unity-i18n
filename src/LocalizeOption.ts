@@ -10,6 +10,7 @@ export interface GlobalOption extends LocalizeOption {
     pretty?: boolean;
     strict?: boolean;
     individual?: boolean;
+    validate?: string[];
 }
 
 export interface TaskWithOption {
