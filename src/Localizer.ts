@@ -1116,6 +1116,18 @@ export class Localizer {
                     }
                 }
             }
+            // 检查富文本格式
+            for (const lang of option.validate) {
+                const local = row[lang];
+                if (local && !fmtErrors.includes(local)) {
+                    if (local.search(/\{\^?%\s+.+?\}/) >= 0 ||
+                    local.search(/#\s+((?:(?:C=(?:\b0[xX][0-9a-fA-F]+\b|\d+)|CC=\d+|I=\d+|SQ=\d+|P=\d+|K=\d+|S=\d+|\bU\b|[Bb]|ZP|M|F|GW|XT|CJ|ZW|HD|DJ=\d+|WL=\d+|DL=\d+|WN=\d+|IN=\d+|MN=\d+|DN=\d+|TN=\d+|CK=\d+|URL=[^;#]+|O|XQ=\d+|GI=\d+),?)+)(?:;([^#]*))?#/) >= 0 ||
+                    local.search(/#((?:(?:C=(?:\b0[xX][0-9a-fA-F]+\b|\d+)|CC=\d+|I=\d+|SQ=\d+|P=\d+|K=\d+|S=\d+|\bU\b|[Bb]|ZP|M|F|GW|XT|CJ|ZW|HD|DJ=\d+|WL=\d+|DL=\d+|WN=\d+|IN=\d+|MN=\d+|DN=\d+|TN=\d+|CK=\d+|URL=[^;#]+|O|XQ=\d+|GI=\d+),?)+\s+)(?:;([^#]*))?#/) >= 0 ||
+                    local.search(/#\s+((?:(?:C=(?:\b0[xX][0-9a-fA-F]+\b|\d+)|CC=\d+|I=\d+|SQ=\d+|P=\d+|K=\d+|S=\d+|\bU\b|[Bb]|ZP|M|F|GW|XT|CJ|ZW|HD|DJ=\d+|WL=\d+|DL=\d+|WN=\d+|IN=\d+|MN=\d+|DN=\d+|TN=\d+|CK=\d+|URL=[^;#]+|O|XQ=\d+|GI=\d+),?)+\s+)(?:;([^#]*))?#/) >= 0) {
+                        fmtErrors.push(local);
+                    }
+                }
+            }
         }
 
         if (fmtErrors.length > 0) {
@@ -1127,7 +1139,7 @@ export class Localizer {
     }
 
     private correct(option: GlobalOption): void {
-        let fixNewlineCnt = 0, fixFormatCnt = 0;
+        let fixNewlineCnt = 0, fixRichCnt = 0, fixHtmlCnt = 0;
         for (let id in this.strMap) {
             const row = this.strMap[id];
             // 修复#N
@@ -1147,7 +1159,36 @@ export class Localizer {
                                 row[lang] = newLocal;
                                 fixNewlineCnt++;
                             }
-                        }    
+                        }
+                    }
+                }
+            }
+            for (const lang of option.langs) {
+                let local = row[lang];
+                if (local.match(/#N/g)?.length == newlineCnt) {
+                    // 先按#N拆分
+                    const slarr = local.split('#N');
+                    for (let i = 0, len = slarr.length; i < len; i++) {
+                        // 去除多余的空格
+                        const savedFormats: string[] = [];
+                        let fcnt = 0;
+                        let newsl = slarr[i].replaceAll(/#(.+?)#/g, (substring, ...args: string[]) => {
+                            const newFormat = substring.replaceAll(/#\s+(.+?)#/g, (substring, ...args) => `#${args[0]}#`).replaceAll(/#(.+?)\s+;(.+?)#/g, (substring, ...args) => `#${args[0]};${args[1]}#`);
+                            savedFormats.push(newFormat);
+                            return `__RT${fcnt++}__`;
+                        });
+                        if (fcnt > 0) {
+                            newsl = newsl.replaceAll(/__RT(\d+)__/g, (substring, ...args: string[]) => savedFormats[args[0]]);
+                        }
+                        // 再去除{^%s}里的空格
+                        newsl = newsl.replaceAll(/\{\s*(\^?)\s*%\s*(\w+)\s*\}/g, (substring, ...args) => `{${args[0]}%${args[1]}}`);
+                        slarr[i] = newsl;
+                    }
+                    const newLocal = slarr.join('#N');
+                    if (newLocal != local) {
+                        row[lang] = newLocal;
+                        console.log('[FIX] ', local, ' -> ', newLocal);
+                        fixRichCnt++;
                     }
                 }
             }
@@ -1170,13 +1211,13 @@ export class Localizer {
                     newLocal = newLocal.replaceAll(/(?<=<\/?)\w+(?==.*?>)/g, (substring, ...args) => substring.toLowerCase());
                     if (newLocal != local) {
                         row[lang] = newLocal;
-                        fixFormatCnt++;
+                        fixHtmlCnt++;
                     }                
                 }
             }
         }
 
-        console.log(`${fixNewlineCnt} #N fixed, ${fixFormatCnt} format fixed`);
+        console.log(`${fixNewlineCnt} #N fixed, ${fixRichCnt} rich text fixed, ${fixHtmlCnt} html fixed`);
     }
 
     private processQuote(s: string, quote: string): string {
