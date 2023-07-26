@@ -959,7 +959,8 @@ export class Localizer {
 
             let zh = '';
             if(quotedContent) {
-                quotedContent = this.unicode2utf8(quotedContent);
+                // 处理prefab里显式使用\n进行换行的情况
+                quotedContent = this.unicode2utf8(quotedContent.replaceAll('\\\\n', '\\n'));
                 if(this.containsZh(quotedContent)) {
                     zh = quotedContent;
                     this.markTaskUsed(zh);
