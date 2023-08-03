@@ -1166,7 +1166,7 @@ export class Localizer {
             }
             for (const lang of option.langs) {
                 let local = row[lang];
-                if (local.match(/#N/g)?.length == newlineCnt) {
+                if (local && local.match(/#N/g)?.length == newlineCnt) {
                     // 先按#N拆分
                     const slarr = local.split('#N');
                     for (let i = 0, len = slarr.length; i < len; i++) {
