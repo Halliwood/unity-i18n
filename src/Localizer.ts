@@ -1078,7 +1078,10 @@ export class Localizer {
     }
 
     private unicode2utf8(ustr: string): string {
-        return ustr.replace(/&#x([\da-f]{1,4});|\\u([\da-f]{1,4})|&#(\d+);|\\([\da-f]{1,4})/gi, function (t, e, n, o, r) { if (o) return String.fromCodePoint(o); var c = e || n || r; return /^\d+$/.test(c) && (c = parseInt(c, 10), !isNaN(c) && c < 256) ? unescape("%" + c) : unescape("%u" + c) })
+        const ostr = ustr.replace(/&#x([\da-f]{1,4});|\\u([\da-f]{1,4})|&#(\d+);|\\([\da-f]{1,4})/gi, function (t, e, n, o, r) { if (o) return String.fromCodePoint(o); var c = e || n || r; return /^\d+$/.test(c) && (c = parseInt(c, 10), !isNaN(c) && c < 256) ? unescape("%" + c) : unescape("%u" + c) });
+        return ostr.replace(/\\x([0-9A-Fa-f]{2})/g, function() {
+            return String.fromCharCode(parseInt(arguments[1], 16));
+        });
     }
 
     private utf82unicode(ustr: string): string {
