@@ -1144,7 +1144,7 @@ export class Localizer {
             }
         }
 
-        if (fmtErrors.length > 0) {
+        if (fmtMissings.length > 0 || fmtErrors.length > 0) {
             for (const str of fmtMissings) {
                 console.error('[unity-i18n]Format missing:', str);
             }
