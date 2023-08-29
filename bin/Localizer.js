@@ -1077,9 +1077,22 @@ class Localizer {
     validate(option) {
         if (option.validate == null)
             return;
+        const fmtMissings = [];
         const fmtErrors = [];
         for (let id in this.strMap) {
             const row = this.strMap[id];
+            // 检查文本格式化
+            const fmts = row.CN.match(/\{\d+\}/g);
+            if (fmts != null) {
+                for (const fmt of fmts) {
+                    for (const lang of option.langs) {
+                        const local = row[lang];
+                        if (local && local.indexOf(fmt) < 0) {
+                            fmtMissings.push(local);
+                        }
+                    }
+                }
+            }
             // 检查html格式
             const mchs = row.CN.matchAll(/<\/?.*?>/g);
             for (const mch of mchs) {
@@ -1104,6 +1117,9 @@ class Localizer {
             }
         }
         if (fmtErrors.length > 0) {
+            for (const str of fmtMissings) {
+                console.error('[unity-i18n]Format missing:', str);
+            }
             for (const str of fmtErrors) {
                 console.error('[unity-i18n]Format error:', str);
             }
