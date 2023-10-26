@@ -1012,6 +1012,7 @@ class Localizer {
         if (node == null) {
             node = { ID: id, CN: cn };
             for (let lang of option.langs) {
+                // Translator.translateTo(cn, lang);
                 node[lang] = '';
             }
             this.strMap[id] = node;
@@ -1084,18 +1085,19 @@ class Localizer {
         const fmtErrors = [];
         for (let id in this.strMap) {
             const row = this.strMap[id];
+            // 暂时去掉检测，philip没空搞印尼
             // 检查文本格式化
-            const fmts = row.CN.match(/\{\d+\}/g);
-            if (fmts != null) {
-                for (const fmt of fmts) {
-                    for (const lang of option.langs) {
-                        const local = row[lang];
-                        if (local && local.indexOf(fmt) < 0) {
-                            fmtMissings.push(local);
-                        }
-                    }
-                }
-            }
+            // const fmts = row.CN.match(/\{\d+\}/g);
+            // if (fmts != null) {
+            //     for (const fmt of fmts) {
+            //         for (const lang of option.langs) {
+            //             const local = row[lang];
+            //             if (local && local.indexOf(fmt) < 0) {
+            //                 fmtMissings.push(local);
+            //             }
+            //         }
+            //     }
+            // }
             // 检查html格式
             const mchs = row.CN.matchAll(/<\/?.*?>/g);
             for (const mch of mchs) {

@@ -1,6 +1,10 @@
 # Source code
 src
 
+# env
+*.env
+*.translatorenv
+
 # Output
 output
 

@@ -1,7 +1,8 @@
+import { TLangs } from "./Translator.js";
 export interface GlobalOption extends LocalizeOption {
     inputRoot?: string;
     outputRoot?: string;
-    langs: string[];
+    langs: TLangs[];
     replacer?: {
         [key: string]: string;
     };

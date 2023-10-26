@@ -1,3 +1,6 @@
+import { install } from 'source-map-support';
+install();
+
 import program = require('commander');
 import * as fs from 'fs';
 import lockfile from 'proper-lockfile'
@@ -8,6 +11,7 @@ import UnityHardTasks from "./example/UnityHardTasks";
 import LayaTasks from "./example/LayaTasks";
 import UnitySoftTasks from './example/UnitySoftTasks';
 import path = require('path');
+import { TLangs, Translator } from './Translator.js';
 
 const myPackage = require('../package.json');
 
@@ -47,6 +51,7 @@ interface CmdParams {
     lockfile?: string;
     individual?: boolean;
     validate?: string;
+    transEnv?: string;
 }
 
 // for exmaple
@@ -69,6 +74,7 @@ program
 	.option("--lockfile <string>", "Lock file to check.")
 	.option("--individual", "Make individual files for each language.")
 	.option("--validate [string]", "Specify which languages to be validated.")
+	.option("--trans-env [string]", "Auto translate if the translation environment configuration file provided.")
     .parse(process.argv);
 
 const opts = program.opts() as CmdParams;
@@ -103,7 +109,7 @@ async function main(): Promise<void> {
     const globalOption: GlobalOption = { 
         inputRoot: opts.src, 
         outputRoot: opts.output, 
-        langs: opts.langs.split(','), 
+        langs: opts.langs.split(',') as TLangs[], 
         replacer: {}, 
         softReplace: opts.softReplace
     };
@@ -129,63 +135,72 @@ async function main(): Promise<void> {
     if(opts.validate) {
         globalOption.validate = opts.validate.split(',');
     }
-    
-    if(opts.default) {
-        if(opts.default == 'xml2bin') {
-            if(opts.replace) {
-                globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
-                localizer.replaceZhInFiles(LayaTasks.xml2binReplaceTasks, globalOption);
-            }
-        } else {
-            let tasks: { searchTasks: LocalizeTask[], replaceTasks: LocalizeTask[], replacer: {[key: string]: string} };
-            if (opts.default == 'unity' || opts.default == 'unity_hard') {
-                tasks = UnityHardTasks;
-            } else if (opts.default == 'unity_soft') {
-                tasks = UnitySoftTasks;
-            } else if (opts.default == 'laya' || opts.default == 'laya_hard') {
-                tasks = LayaTasks;
-            } 
-            if (tasks) {
-                globalOption.replacer = opts.taskReplacer || tasks.replacer;
-                if(opts.search) {
-                    localizer.searchZhInFiles(tasks.searchTasks, globalOption);
-                }
-                if(opts.replace) {
-                    localizer.replaceZhInFiles(tasks.replaceTasks, globalOption);
-                }
-            } else {
-                console.error('Cannot find default tasks for: %s', opts.default);
-                exit(1);
-            }
-        }
-    } else if(opts.tasks) {
-        let tasksObj: LocalizeTask[] = null;
-        if(typeof(opts.tasks) == 'object') {
-            // json
-            tasksObj = opts.tasks as LocalizeTask[];
-        } else if(typeof(opts.tasks) == 'string') {
-            // json file
-            let tasksFile = opts.tasks as string;
-            if(!fs.existsSync(tasksFile)) {
-                console.error('Cannot find tasks file: %s', tasksFile);
-                exit(1);
-            }
-            let tasksContent = fs.readFileSync(tasksFile, 'utf-8');
-            tasksObj = JSON.parse(tasksContent) as LocalizeTask[];
-        }
-        if(tasksObj) {
-            try {
-                if(opts.search) {
-                    localizer.searchZhInFiles(tasksObj, globalOption);
-                }
-                if(opts.replace) {
-                    localizer.replaceZhInFiles(tasksObj, globalOption);
-                } 
-            } catch(e) {
-                console.log(e);
-                process.exit(1);
-            }       
-        }
+
+    if (opts.transEnv) {
+        Translator.setup(opts.transEnv);
+    } else {
+        Translator.setup('.translatorenv');
     }
+    Translator.translateTo('您获得了：{%d} {%s}', 'EN');
+    Translator.translateTo('购买<color=#BB5959>超值礼包</color>，<color=#BB5959>大幅提升</color>战力', 'EN');
+    Translator.translateTo('月卡/季卡每日均有概率获得<url={0}><u><color=#{1}>{2}</color></u></url>', 'EN');    
+    
+    // if(opts.default) {
+    //     if(opts.default == 'xml2bin') {
+    //         if(opts.replace) {
+    //             globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
+    //             localizer.replaceZhInFiles(LayaTasks.xml2binReplaceTasks, globalOption);
+    //         }
+    //     } else {
+    //         let tasks: { searchTasks: LocalizeTask[], replaceTasks: LocalizeTask[], replacer: {[key: string]: string} };
+    //         if (opts.default == 'unity' || opts.default == 'unity_hard') {
+    //             tasks = UnityHardTasks;
+    //         } else if (opts.default == 'unity_soft') {
+    //             tasks = UnitySoftTasks;
+    //         } else if (opts.default == 'laya' || opts.default == 'laya_hard') {
+    //             tasks = LayaTasks;
+    //         } 
+    //         if (tasks) {
+    //             globalOption.replacer = opts.taskReplacer || tasks.replacer;
+    //             if(opts.search) {
+    //                 localizer.searchZhInFiles(tasks.searchTasks, globalOption);
+    //             }
+    //             if(opts.replace) {
+    //                 localizer.replaceZhInFiles(tasks.replaceTasks, globalOption);
+    //             }
+    //         } else {
+    //             console.error('Cannot find default tasks for: %s', opts.default);
+    //             exit(1);
+    //         }
+    //     }
+    // } else if(opts.tasks) {
+    //     let tasksObj: LocalizeTask[] = null;
+    //     if(typeof(opts.tasks) == 'object') {
+    //         // json
+    //         tasksObj = opts.tasks as LocalizeTask[];
+    //     } else if(typeof(opts.tasks) == 'string') {
+    //         // json file
+    //         let tasksFile = opts.tasks as string;
+    //         if(!fs.existsSync(tasksFile)) {
+    //             console.error('Cannot find tasks file: %s', tasksFile);
+    //             exit(1);
+    //         }
+    //         let tasksContent = fs.readFileSync(tasksFile, 'utf-8');
+    //         tasksObj = JSON.parse(tasksContent) as LocalizeTask[];
+    //     }
+    //     if(tasksObj) {
+    //         try {
+    //             if(opts.search) {
+    //                 localizer.searchZhInFiles(tasksObj, globalOption);
+    //             }
+    //             if(opts.replace) {
+    //                 localizer.replaceZhInFiles(tasksObj, globalOption);
+    //             } 
+    //         } catch(e) {
+    //             console.log(e);
+    //             process.exit(1);
+    //         }       
+    //     }
+    // }
 }
 main();
