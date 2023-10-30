@@ -1,4 +1,4 @@
-import { LocalizeTask } from "../LocalizeOption";
+import { LocalizeTask } from "../LocalizeOption.js";
 declare const UnityHardTasks: {
     searchTasks: LocalizeTask[];
     replaceTasks: LocalizeTask[];

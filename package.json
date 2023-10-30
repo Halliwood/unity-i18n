@@ -2,12 +2,12 @@
   "name": "unity-i18n",
   "version": "1.0.108",
   "description": "i18n tool for unity game project",
+  "type": "module",
   "main": "bin/index.js",
   "scripts": {
     "maintain": "node bin/maintain.js",
-    "test:df:s": "node bin/index.js -s \"D:/works/df/trunk/project/\" -o \"D:/works/df/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -S --soft-replace --langs TW,EN,INA  --validate TW,EN-x prepend --pretty --strict --lockfile buildlock --individual",
-    "test:dp:s": "node bin/index.js -s \"D:/works/dp/trunk/project/\" -o \"D:/works/dp/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -S --soft-replace --langs TW,EN,INA --validate TW,EN -x prepend --pretty --strict --lockfile buildlock --individual",
-    "test:dp:r": "node bin/index.js -s \"D:/works/dp/trunk/project/\" -o \"D:/works/dp/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -R --soft-replace --langs TW,EN,INA --validate TW,EN -x prepend --pretty --lockfile buildlock --individual",
+    "test:dp:s": "node bin/index.js -s \"D:/works/dp/trunk/project/\" -o \"D:/works/dp/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -S --soft-replace --langs TW,EN,INA,Thai --validate TW,EN -x prepend --pretty --strict --lockfile buildlock --individual --auto-trans -l",
+    "test:dp:r": "node bin/index.js -s \"D:/works/dp/trunk/project/\" -o \"D:/works/dp/trunk/project/tools/i18n/dictionary\" -d \"unity_soft\" -R --soft-replace --langs TW,EN,INA,Thai --validate TW,EN -x prepend --pretty --lockfile buildlock --individual",
     "test:dldltw": "node bin/index.js -s \"G:/dldltw/trunk/\" -o \"G:/dldltw/trunk/tools/i18n/dictionary/tw\" -d \"unity\" -R",
     "test:laya": "node bin/index.js -s \"G:/qhgame/trunk/project/\" -o \"G:/qhgame/trunk/project/tools/i18n/dictionary/tw\" -d \"laya\" --task-replacer \"$workspace=F:/layai18nwork/QHGame\" -S",
     "build": "tsc",
@@ -29,7 +29,7 @@
     "translation"
   ],
   "author": "teppei",
-  "bin": "bin/unity-i18n",
+  "bin": "bin/unity-i18n.mjs",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Halliwood/unity-i18n/issues"
@@ -41,6 +41,7 @@
     "dotenv": "^16.3.1",
     "fs-extra": "^10.1.0",
     "md5": "^2.3.0",
+    "ora": "^7.0.1",
     "proper-lockfile": "^4.1.2",
     "sleep-promise": "^9.1.0",
     "source-map-support": "^0.5.21",
@@ -50,7 +51,7 @@
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
     "@types/md5": "^2.2.0",
-    "@types/node": "^14.6.3",
+    "@types/node": "^14.18.63",
     "@types/proper-lockfile": "^4.1.2",
     "@types/typescript": "^2.0.0",
     "@types/xlsx": "0.0.36",

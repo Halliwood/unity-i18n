@@ -1,14 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.httpGet = exports.__http_record = void 0;
-const axios_1 = __importDefault(require("axios"));
-exports.__http_record = {
+import axios from "axios";
+export const __http_record = {
     lastURL: ''
 };
-async function httpGet(url, param, config) {
+export async function httpGet(url, param, config) {
     if (param != null) {
         let pstr = '';
         if (typeof (param) === 'object') {
@@ -28,11 +22,11 @@ async function httpGet(url, param, config) {
         }
     }
     try {
-        exports.__http_record.lastURL = url;
+        __http_record.lastURL = url;
         const opt = { timeout: 3000 };
         if (config != null)
             Object.assign(opt, config);
-        let rsp = await axios_1.default.get(url, opt);
+        let rsp = await axios.get(url, opt);
         return rsp.data;
     }
     catch (e) {
@@ -41,5 +35,4 @@ async function httpGet(url, param, config) {
         return null;
     }
 }
-exports.httpGet = httpGet;
 //# sourceMappingURL=http.js.map

@@ -1,42 +1,18 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Localizer = void 0;
-const fs = __importStar(require("fs-extra"));
-const path = require("path");
-const md5 = require("md5");
-const xlsx = require("xlsx");
-const LocalizeOption_1 = require("./LocalizeOption");
-const errors_1 = require("./errors");
+const ora = await import('ora');
+import fs from 'fs-extra';
+import path from 'path';
+import md5 from 'md5';
+import xlsx from 'xlsx';
+import { LocalizeMode } from './LocalizeOption.js';
+import { Ei18nErrorCode } from './errors.js';
+import { Translator } from './Translator.js';
 var TranslateState;
 (function (TranslateState) {
     TranslateState[TranslateState["None"] = 0] = "None";
     TranslateState[TranslateState["Partial"] = 1] = "Partial";
     TranslateState[TranslateState["Fullfilled"] = 2] = "Fullfilled";
 })(TranslateState || (TranslateState = {}));
-class Localizer {
+export class Localizer {
     IgnorePattern = /^\s*\/\/\s*@i18n-ignore/;
     IgnoreBeginPattern = /^\s*\/\/\s*@i18n-ignore:begin/;
     IgnoreEndPattern = /^\s*\/\/\s*@i18n-ignore:end/;
@@ -76,15 +52,15 @@ class Localizer {
     outputJSONMap = {};
     setting;
     colInfoMap = {};
-    searchZhInFiles(tasks, option) {
-        this.mode = LocalizeOption_1.LocalizeMode.Search;
-        this.processTasks(tasks, option);
+    async searchZhInFiles(tasks, option) {
+        this.mode = LocalizeMode.Search;
+        await this.processTasks(tasks, option);
     }
-    replaceZhInFiles(tasks, option) {
-        this.mode = LocalizeOption_1.LocalizeMode.Replace;
-        this.processTasks(tasks, option);
+    async replaceZhInFiles(tasks, option) {
+        this.mode = LocalizeMode.Replace;
+        await this.processTasks(tasks, option);
     }
-    processTasks(tasks, option) {
+    async processTasks(tasks, option) {
         let startAt = (new Date()).getTime();
         this.strMap = {};
         this.fromMap = {};
@@ -132,7 +108,7 @@ class Localizer {
         this.smartDerive(option);
         this.sheetRows = [];
         console.log('[unity-i18n]读入翻译记录：\x1B[36m%d\x1B[0m', Object.keys(this.strMap).length);
-        if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+        if (this.mode == LocalizeMode.Search) {
             console.log('开始搜索中文串...\n');
         }
         else {
@@ -158,16 +134,51 @@ class Localizer {
             }
         }
         let newCnt = 0;
-        if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+        if (this.mode == LocalizeMode.Search) {
             // 写一个过滤掉黑名单的
             const filteredRows = [];
+            let nonCnt = 0;
             for (const row of this.sheetRows) {
                 if (!blackMap[row.CN]) {
                     filteredRows.push(row);
                     if (this.newMap[row.ID]) {
                         newCnt++;
                     }
+                    for (const lang of option.langs) {
+                        if (!row[lang])
+                            nonCnt++;
+                    }
                 }
+            }
+            // 开始连机翻译
+            if (option.autoTrans) {
+                console.log('Begin auto translation...');
+                let spinner;
+                if (!option.silent) {
+                    spinner = ora.default('translating...').start();
+                }
+                let successCnt = 0, failedCnt = 0;
+                for (const lang of option.langs) {
+                    for (const row of filteredRows) {
+                        if (!row[lang]) {
+                            if (spinner != null) {
+                                spinner.text = `translating... ${successCnt + failedCnt}/${nonCnt}`;
+                            }
+                            const t = await Translator.translateTo(row.CN, lang, option);
+                            if (t != null) {
+                                row[lang] = t;
+                                successCnt++;
+                            }
+                            else {
+                                failedCnt++;
+                            }
+                        }
+                    }
+                }
+                if (spinner != null) {
+                    spinner.succeed();
+                }
+                console.log(`Auto translation finished, success: ${successCnt}, failed: ${failedCnt}`);
             }
             if (option.individual) {
                 for (const lang of option.langs) {
@@ -270,11 +281,8 @@ class Localizer {
                 }
             }
         }
-        if (option?.needLog) {
-            fs.writeFileSync('log.' + LocalizeOption_1.LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
-        }
         let endAt = (new Date()).getTime();
-        if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+        if (this.mode == LocalizeMode.Search) {
             console.log('[unity-i18n]搜索结束! 耗时: %d秒.', ((endAt - startAt) / 1000).toFixed());
         }
         else {
@@ -290,14 +298,14 @@ class Localizer {
                 }
                 if (ncnt > 0 && option.strict) {
                     console.error('[unity-i18n]Failed, check above.');
-                    errorCode = errors_1.Ei18nErrorCode.NoLocal;
+                    errorCode = Ei18nErrorCode.NoLocal;
                 }
             }
             if (this.jsonSafeErrors.length > 0) {
                 for (const str of this.jsonSafeErrors) {
                     console.error('[unity-i18n]Syntax error:', str);
                 }
-                errorCode = errors_1.Ei18nErrorCode.SyntaxError;
+                errorCode = Ei18nErrorCode.SyntaxError;
             }
             if (errorCode != 0)
                 process.exit(errorCode);
@@ -520,7 +528,7 @@ class Localizer {
             for (const e of this.crtTaskErrors) {
                 console.error(e);
             }
-            process.exit(errors_1.Ei18nErrorCode.ConcatStrings);
+            process.exit(Ei18nErrorCode.ConcatStrings);
         }
     }
     mergeOption(local, global) {
@@ -643,7 +651,7 @@ class Localizer {
             }
             newContent = this.processZnInCodeFile(fileContent, option);
         }
-        if (this.mode == LocalizeOption_1.LocalizeMode.Replace && !this.crtTask.readonly) {
+        if (this.mode == LocalizeMode.Replace && !this.crtTask.readonly) {
             if (option.softReplace && option.replaceOutput) {
                 const filename = path.basename(filePath, fileExt);
                 for (let lang of option.langs) {
@@ -696,7 +704,7 @@ class Localizer {
                     this.markTaskUsed(zh);
                 }
             }
-            if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+            if (this.mode == LocalizeMode.Search) {
                 if (zh) {
                     this.insertString(zh, option);
                 }
@@ -789,7 +797,7 @@ class Localizer {
                         }
                         this.markTaskUsed(zh);
                     }
-                    if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+                    if (this.mode == LocalizeMode.Search) {
                         if (zh) {
                             this.insertString(zh, option);
                         }
@@ -860,7 +868,7 @@ class Localizer {
                 zh = zh.replaceAll('%%', '%');
                 this.markTaskUsed(zh);
             }
-            if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+            if (this.mode == LocalizeMode.Search) {
                 if (zh) {
                     this.insertString(zh, option);
                 }
@@ -951,7 +959,7 @@ class Localizer {
                 }
             }
             crossLineCache = null;
-            if (this.mode == LocalizeOption_1.LocalizeMode.Search) {
+            if (this.mode == LocalizeMode.Search) {
                 if (zh) {
                     this.insertString(zh, option);
                 }
@@ -1128,7 +1136,7 @@ class Localizer {
             for (const str of fmtErrors) {
                 console.error('[unity-i18n]Format error:', str);
             }
-            process.exit(errors_1.Ei18nErrorCode.FormatError);
+            process.exit(Ei18nErrorCode.FormatError);
         }
     }
     correct(option) {
@@ -1242,5 +1250,4 @@ class Localizer {
         }
     }
 }
-exports.Localizer = Localizer;
 //# sourceMappingURL=Localizer.js.map

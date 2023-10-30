@@ -1,10 +1,12 @@
-import * as fs from 'fs-extra';
-import path = require('path');
-import md5 = require('md5');
-import xlsx = require('xlsx');
-import { GlobalOption, LocalizeTask, LocalizeOption, LocalizeMode, TaskWithOption } from './LocalizeOption';
-import { Ei18nErrorCode } from './errors';
+const ora = await import('ora')
+import fs from 'fs-extra';
+import path from 'path';
+import md5 from 'md5';
+import xlsx from 'xlsx';
+import { GlobalOption, LocalizeTask, LocalizeOption, LocalizeMode, TaskWithOption } from './LocalizeOption.js';
+import { Ei18nErrorCode } from './errors.js';
 import { Translator } from './Translator.js';
+import { Ora } from 'ora';
 
 interface LanguageRow {
     ID: string
@@ -81,17 +83,17 @@ export class Localizer {
     private setting?: CfgSetting;
     private colInfoMap: { [sheetName: string]: xlsx.ColInfo[] } = {};
 
-    searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
+    async searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
         this.mode = LocalizeMode.Search;
-        this.processTasks(tasks, option);
+        await this.processTasks(tasks, option);
     }
 
-    replaceZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
+    async replaceZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption) {
         this.mode = LocalizeMode.Replace;
-        this.processTasks(tasks, option);
+        await this.processTasks(tasks, option);
     }
 
-    private processTasks(tasks: string | LocalizeTask[], option?: GlobalOption) {
+    private async processTasks(tasks: string | LocalizeTask[], option?: GlobalOption): Promise<void> {
         let startAt = (new Date()).getTime();
 
         this.strMap = {};
@@ -175,13 +177,47 @@ export class Localizer {
         if(this.mode == LocalizeMode.Search) {        
             // 写一个过滤掉黑名单的
             const filteredRows: LanguageRow[] = [];
+            let nonCnt = 0;
             for (const row of this.sheetRows) {
                 if (!blackMap[row.CN]) {
                     filteredRows.push(row);
                     if (this.newMap[row.ID]) {
                         newCnt++;
                     }
+                    for (const lang of option.langs) {
+                        if (!row[lang]) nonCnt++;
+                    }
                 }
+            }
+
+            // 开始连机翻译
+            if (option.autoTrans) {
+                console.log('Begin auto translation...');
+                let spinner: Ora;
+                if(!option.silent) {
+                    spinner = ora.default('translating...').start();
+                }
+                let successCnt = 0, failedCnt = 0;
+                for (const lang of option.langs) {
+                    for (const row of filteredRows) {
+                        if (!row[lang]) {
+                            if (spinner != null) {
+                                spinner.text = `translating... ${successCnt + failedCnt}/${nonCnt}`;
+                            }
+                            const t = await Translator.translateTo(row.CN, lang, option);
+                            if (t != null) {
+                                row[lang] = t;
+                                successCnt++;
+                            } else {
+                                failedCnt++;
+                            }
+                        }
+                    }
+                }
+                if (spinner != null) {
+                    spinner.succeed();
+                }
+                console.log(`Auto translation finished, success: ${successCnt}, failed: ${failedCnt}`);
             }
 
             if (option.individual) {
@@ -290,10 +326,6 @@ export class Localizer {
                     fs.writeFileSync(ojRoot.replace('$LANG', lang), JSON.stringify({ strings: ojArr }, null, option.pretty ? 2 : 0), 'utf-8');
                 }
             }
-        }
-
-        if(option?.needLog) {
-            fs.writeFileSync('log.' + LocalizeMode[this.mode] + '.txt', this.logContent, 'utf-8');
         }
 
         let endAt = (new Date()).getTime();

@@ -1,10 +1,5 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const UnityTaskBase_1 = __importDefault(require("./UnityTaskBase"));
-const utb = (0, UnityTaskBase_1.default)();
+import makeTasks from "./UnityTaskBase.js";
+const utb = makeTasks();
 utb.prefabTask.option.outputJSONs = ["Assets/AssetSources/i18n/$LANG.json"];
 utb.jsonTask.option.replaceOutput = "Assets/AssetSources/data$LANG/$FILENAME.json";
 if (utb.jsonTask.option.excludes != null) {
@@ -40,5 +35,5 @@ let searchTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.libTask, utb.cs
 let replaceTasks = [utb.prefabTask, utb.jsonTask, utb.tsTask, utb.libTask, utb.csTask, utb.svrCfgTask, langTask];
 const replacer = utb.replacer;
 let UnitySoftTasks = { searchTasks, replaceTasks, replacer };
-exports.default = UnitySoftTasks;
+export default UnitySoftTasks;
 //# sourceMappingURL=UnitySoftTasks.js.map

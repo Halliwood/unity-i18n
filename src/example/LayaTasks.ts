@@ -1,4 +1,4 @@
-import { LocalizeTask } from "../LocalizeOption";
+import { LocalizeTask } from "../LocalizeOption.js";
 
 const jsonTask: LocalizeTask = {
     "roots": ['bin/view'], 

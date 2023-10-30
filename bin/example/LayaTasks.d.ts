@@ -1,4 +1,4 @@
-import { LocalizeTask } from "../LocalizeOption";
+import { LocalizeTask } from "../LocalizeOption.js";
 declare const LayaTasks: {
     searchTasks: LocalizeTask[];
     replaceTasks: LocalizeTask[];

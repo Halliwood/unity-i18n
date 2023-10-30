@@ -14,6 +14,7 @@ export interface GlobalOption extends LocalizeOption {
     strict?: boolean;
     individual?: boolean;
     validate?: string[];
+    autoTrans?: boolean;
 }
 export interface TaskWithOption {
     /**任务执行路径，需采用linux风格，即以“/”为分隔符。绝对路径或相对路径均可 */

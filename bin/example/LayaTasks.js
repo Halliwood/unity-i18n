@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const jsonTask = {
     "roots": ['bin/view'],
     "option": {
@@ -62,5 +60,5 @@ const replaceTasks = [jsonTask, asTask];
 const xml2binReplaceTasks = [clientCfgTask];
 const replacer = { '$workspace': '..' };
 const LayaTasks = { searchTasks, replaceTasks, xml2binReplaceTasks, replacer };
-exports.default = LayaTasks;
+export default LayaTasks;
 //# sourceMappingURL=LayaTasks.js.map

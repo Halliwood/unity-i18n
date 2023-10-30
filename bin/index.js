@@ -1,44 +1,16 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const source_map_support_1 = require("source-map-support");
-(0, source_map_support_1.install)();
-const program = require("commander");
-const fs = __importStar(require("fs"));
-const proper_lockfile_1 = __importDefault(require("proper-lockfile"));
-const Localizer_1 = require("./Localizer");
-const process_1 = require("process");
-const UnityHardTasks_1 = __importDefault(require("./example/UnityHardTasks"));
-const LayaTasks_1 = __importDefault(require("./example/LayaTasks"));
-const UnitySoftTasks_1 = __importDefault(require("./example/UnitySoftTasks"));
-const path = require("path");
-const Translator_js_1 = require("./Translator.js");
-const myPackage = require('../package.json');
+import { install } from 'source-map-support';
+install();
+import program from 'commander';
+import fs from 'fs-extra';
+import lockfile from 'proper-lockfile';
+import { Localizer } from "./Localizer.js";
+import { exit } from 'process';
+import UnityHardTasks from "./example/UnityHardTasks.js";
+import LayaTasks from "./example/LayaTasks.js";
+import UnitySoftTasks from './example/UnitySoftTasks.js';
+import path from 'path';
+import { Translator } from './Translator.js';
+const myPackage = await fs.readJSON('package.json');
 const rmQuotes = (val) => {
     let rst = val.match(/(['"])(.+)\1/);
     if (rst)
@@ -75,7 +47,7 @@ program
     .option("--lockfile <string>", "Lock file to check.")
     .option("--individual", "Make individual files for each language.")
     .option("--validate [string]", "Specify which languages to be validated.")
-    .option("--trans-env [string]", "Auto translate if the translation environment configuration file provided.")
+    .option("--auto-trans", "Auto translate or not.")
     .parse(process.argv);
 const opts = program.opts();
 async function main() {
@@ -96,20 +68,21 @@ async function main() {
     // 检查lockfile，防止和版本构建冲突
     if (opts.lockfile) {
         const lf = path.join(opts.src, opts.lockfile);
-        const lockStatus = await proper_lockfile_1.default.check(lf, { realpath: false });
+        const lockStatus = await lockfile.check(lf, { realpath: false });
         if (lockStatus) {
             console.error('[unity-i18n]Workspace locked! Please wait! 正在构版本，请稍候。');
             process.exit(1);
         }
-        await proper_lockfile_1.default.lock(lf, { realpath: false });
+        await lockfile.lock(lf, { realpath: false });
     }
-    const localizer = new Localizer_1.Localizer();
+    const localizer = new Localizer();
     const globalOption = {
         inputRoot: opts.src,
         outputRoot: opts.output,
         langs: opts.langs.split(','),
         replacer: {},
-        softReplace: opts.softReplace
+        softReplace: opts.softReplace,
+        autoTrans: opts.autoTrans
     };
     if (opts.silent) {
         globalOption.silent = opts.silent;
@@ -132,45 +105,45 @@ async function main() {
     if (opts.validate) {
         globalOption.validate = opts.validate.split(',');
     }
-    if (opts.transEnv) {
-        Translator_js_1.Translator.setup(opts.transEnv);
+    if (opts.autoTrans) {
+        Translator.setup(opts.output);
     }
-    // else {
-    //     Translator.setup('.translatorenv');
-    // }
+    // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'EN');
+    // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'Thai');
     // Translator.translateTo('您获得了：{%d} {%s}', 'EN');
     // Translator.translateTo('购买<color=#BB5959>超值礼包</color>，<color=#BB5959>大幅提升</color>战力', 'EN');
-    // Translator.translateTo('月卡/季卡每日均有概率获得<url={0}><u><color=#{1}>{2}</color></u></url>', 'EN');    
+    // Translator.translateTo('对敌方2个目标攻击2次，每次造成180%X0斗气伤害，附加斗气回复效果降低60%，持续8秒', 'EN');
+    // Translator.translateTo('对敌方2个目标攻击2次，每次造成180%@SH0 斗气伤害，附加斗气回复效果降低60%，持续8秒', 'EN');
     if (opts.default) {
         if (opts.default == 'xml2bin') {
             if (opts.replace) {
-                globalOption.replacer = opts.taskReplacer || LayaTasks_1.default.replacer;
-                localizer.replaceZhInFiles(LayaTasks_1.default.xml2binReplaceTasks, globalOption);
+                globalOption.replacer = opts.taskReplacer || LayaTasks.replacer;
+                localizer.replaceZhInFiles(LayaTasks.xml2binReplaceTasks, globalOption);
             }
         }
         else {
             let tasks;
             if (opts.default == 'unity' || opts.default == 'unity_hard') {
-                tasks = UnityHardTasks_1.default;
+                tasks = UnityHardTasks;
             }
             else if (opts.default == 'unity_soft') {
-                tasks = UnitySoftTasks_1.default;
+                tasks = UnitySoftTasks;
             }
             else if (opts.default == 'laya' || opts.default == 'laya_hard') {
-                tasks = LayaTasks_1.default;
+                tasks = LayaTasks;
             }
             if (tasks) {
                 globalOption.replacer = opts.taskReplacer || tasks.replacer;
                 if (opts.search) {
-                    localizer.searchZhInFiles(tasks.searchTasks, globalOption);
+                    await localizer.searchZhInFiles(tasks.searchTasks, globalOption);
                 }
                 if (opts.replace) {
-                    localizer.replaceZhInFiles(tasks.replaceTasks, globalOption);
+                    await localizer.replaceZhInFiles(tasks.replaceTasks, globalOption);
                 }
             }
             else {
                 console.error('Cannot find default tasks for: %s', opts.default);
-                (0, process_1.exit)(1);
+                exit(1);
             }
         }
     }
@@ -185,7 +158,7 @@ async function main() {
             let tasksFile = opts.tasks;
             if (!fs.existsSync(tasksFile)) {
                 console.error('Cannot find tasks file: %s', tasksFile);
-                (0, process_1.exit)(1);
+                exit(1);
             }
             let tasksContent = fs.readFileSync(tasksFile, 'utf-8');
             tasksObj = JSON.parse(tasksContent);

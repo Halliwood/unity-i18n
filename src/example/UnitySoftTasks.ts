@@ -1,5 +1,5 @@
-import { LocalizeTask, TaskWithOption } from "../LocalizeOption";
-import makeTasks from "./UnityTaskBase";
+import { LocalizeTask, TaskWithOption } from "../LocalizeOption.js";
+import makeTasks from "./UnityTaskBase.js";
 
 const utb = makeTasks();
 

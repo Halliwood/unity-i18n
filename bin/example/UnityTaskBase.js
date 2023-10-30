@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 function makeTasks() {
     const prefabTask = {
         roots: ['Assets/AssetSources/ui', 'Assets/Arts/sequenceAnim'],
@@ -86,5 +84,5 @@ function makeTasks() {
     const replacer = { '$workspace': '..' };
     return { prefabTask, jsonTask, tsTask, libTask, csTask, svrScriptTask, svrCfgTask, replacer };
 }
-exports.default = makeTasks;
+export default makeTasks;
 //# sourceMappingURL=UnityTaskBase.js.map

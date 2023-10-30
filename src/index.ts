@@ -1,19 +1,19 @@
 import { install } from 'source-map-support';
 install();
 
-import program = require('commander');
-import * as fs from 'fs';
+import program from 'commander';
+import fs from 'fs-extra';
 import lockfile from 'proper-lockfile'
-import { LocalizeTask, GlobalOption } from "./LocalizeOption";
-import { Localizer } from "./Localizer";
+import { LocalizeTask, GlobalOption } from "./LocalizeOption.js";
+import { Localizer } from "./Localizer.js";
 import { exit } from 'process';
-import UnityHardTasks from "./example/UnityHardTasks";
-import LayaTasks from "./example/LayaTasks";
-import UnitySoftTasks from './example/UnitySoftTasks';
-import path = require('path');
+import UnityHardTasks from "./example/UnityHardTasks.js";
+import LayaTasks from "./example/LayaTasks.js";
+import UnitySoftTasks from './example/UnitySoftTasks.js';
+import path from 'path';
 import { TLangs, Translator } from './Translator.js';
 
-const myPackage = require('../package.json');
+const myPackage = await fs.readJSON('package.json');
 
 const rmQuotes = (val: string): string => {
     let rst = val.match(/(['"])(.+)\1/);
@@ -51,7 +51,7 @@ interface CmdParams {
     lockfile?: string;
     individual?: boolean;
     validate?: string;
-    transEnv?: string;
+    autoTrans?: boolean;
 }
 
 // for exmaple
@@ -74,7 +74,7 @@ program
 	.option("--lockfile <string>", "Lock file to check.")
 	.option("--individual", "Make individual files for each language.")
 	.option("--validate [string]", "Specify which languages to be validated.")
-	.option("--trans-env [string]", "Auto translate if the translation environment configuration file provided.")
+	.option("--auto-trans", "Auto translate or not.")
     .parse(process.argv);
 
 const opts = program.opts() as CmdParams;
@@ -111,7 +111,8 @@ async function main(): Promise<void> {
         outputRoot: opts.output, 
         langs: opts.langs.split(',') as TLangs[], 
         replacer: {}, 
-        softReplace: opts.softReplace
+        softReplace: opts.softReplace,
+        autoTrans: opts.autoTrans
     };
     
     if(opts.silent) {
@@ -136,15 +137,15 @@ async function main(): Promise<void> {
         globalOption.validate = opts.validate.split(',');
     }
 
-    if (opts.transEnv) {
-        Translator.setup(opts.transEnv);
+    if (opts.autoTrans) {
+        Translator.setup(opts.output);
     }
-    // else {
-    //     Translator.setup('.translatorenv');
-    // }
+    // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'EN');
+    // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'Thai');
     // Translator.translateTo('您获得了：{%d} {%s}', 'EN');
     // Translator.translateTo('购买<color=#BB5959>超值礼包</color>，<color=#BB5959>大幅提升</color>战力', 'EN');
-    // Translator.translateTo('月卡/季卡每日均有概率获得<url={0}><u><color=#{1}>{2}</color></u></url>', 'EN');    
+    // Translator.translateTo('对敌方2个目标攻击2次，每次造成180%X0斗气伤害，附加斗气回复效果降低60%，持续8秒', 'EN');
+    // Translator.translateTo('对敌方2个目标攻击2次，每次造成180%@SH0 斗气伤害，附加斗气回复效果降低60%，持续8秒', 'EN');
     
     if(opts.default) {
         if(opts.default == 'xml2bin') {
@@ -164,10 +165,10 @@ async function main(): Promise<void> {
             if (tasks) {
                 globalOption.replacer = opts.taskReplacer || tasks.replacer;
                 if(opts.search) {
-                    localizer.searchZhInFiles(tasks.searchTasks, globalOption);
+                    await localizer.searchZhInFiles(tasks.searchTasks, globalOption);
                 }
                 if(opts.replace) {
-                    localizer.replaceZhInFiles(tasks.replaceTasks, globalOption);
+                    await localizer.replaceZhInFiles(tasks.replaceTasks, globalOption);
                 }
             } else {
                 console.error('Cannot find default tasks for: %s', opts.default);

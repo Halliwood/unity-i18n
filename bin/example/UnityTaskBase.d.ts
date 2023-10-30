@@ -1,4 +1,4 @@
-import { TaskWithOption } from "../LocalizeOption";
+import { TaskWithOption } from "../LocalizeOption.js";
 declare function makeTasks(): {
     prefabTask: TaskWithOption;
     jsonTask: TaskWithOption;

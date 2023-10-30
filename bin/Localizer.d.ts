@@ -1,4 +1,4 @@
-import { GlobalOption, LocalizeTask } from './LocalizeOption';
+import { GlobalOption, LocalizeTask } from './LocalizeOption.js';
 export declare class Localizer {
     private readonly IgnorePattern;
     private readonly IgnoreBeginPattern;
@@ -38,8 +38,8 @@ export declare class Localizer {
     private outputJSONMap;
     private setting?;
     private colInfoMap;
-    searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption): void;
-    replaceZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption): void;
+    searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption): Promise<void>;
+    replaceZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption): Promise<void>;
     private processTasks;
     private sortRows;
     private readXlsx;

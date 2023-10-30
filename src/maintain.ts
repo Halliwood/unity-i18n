@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
-import LayaTasks from './example/LayaTasks';
-import UnityHardTasks from "./example/UnityHardTasks";
-import UnitySoftTasks from "./example/UnitySoftTasks";
+import LayaTasks from './example/LayaTasks.js';
+import UnityHardTasks from "./example/UnityHardTasks.js";
+import UnitySoftTasks from "./example/UnitySoftTasks.js";
 
 async function makeTaskJson(): Promise<void> {
     const jsonRoot = path.join(__dirname, 'builtinTasks');
