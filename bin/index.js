@@ -10,7 +10,9 @@ import LayaTasks from "./example/LayaTasks.js";
 import UnitySoftTasks from './example/UnitySoftTasks.js';
 import path from 'path';
 import { Translator } from './Translator.js';
-const myPackage = await fs.readJSON('package.json');
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const myPackage = await fs.readJSON(path.join(__dirname, '../package.json'));
 const rmQuotes = (val) => {
     let rst = val.match(/(['"])(.+)\1/);
     if (rst)
