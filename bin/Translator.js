@@ -85,7 +85,12 @@ export class Translator {
                 out = out.replace(key, protectOut.map[key]);
             }
             else if (out.includes(key.trimEnd())) {
+                // 某些情况下会丢失末尾的空格
                 out = out.replace(key.trimEnd(), protectOut.map[key]);
+            }
+            else if (out.includes('@ ' + key.substring(1))) {
+                // 某些情况下中间会插个空格
+                out = out.replace('@ ' + key.substring(1), protectOut.map[key]);
             }
             else {
                 success = false;
