@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import dotenv from 'dotenv';
 import md5 from 'md5';
-import { __http_record, httpGet } from './http.js';
+import { httpGet } from './http.js';
 import path from 'path';
 const LangMap = {
     'Thai': 'TH'
@@ -52,10 +52,17 @@ export class Translator {
                 time,
                 sign
             };
-            const res = await httpGet(process.env.TRANSLATE_URL, param, { timeout: 10000 });
+            let res, tryTimes = 0;
+            while (tryTimes < 3) {
+                res = await httpGet(process.env.TRANSLATE_URL, param, { timeout: 10000 });
+                if (res != null && res.ret == 0) {
+                    break;
+                }
+                tryTimes++;
+            }
             if (res == null || res.ret != 0) {
-                console.error('translate failed, url: ', __http_record.lastURL);
-                console.error(res);
+                // console.error('translate failed: ', raw);
+                // console.error(res);
                 return null;
             }
             // 记录到缓存
@@ -88,9 +95,12 @@ export class Translator {
                 // 某些情况下会丢失末尾的空格
                 out = out.replace(key.trimEnd(), protectOut.map[key]);
             }
-            else if (out.includes('@ ' + key.substring(1))) {
+            else if (out.includes(key[0] + ' ' + key.substring(1))) {
                 // 某些情况下中间会插个空格
-                out = out.replace('@ ' + key.substring(1), protectOut.map[key]);
+                out = out.replace(key[0] + ' ' + key.substring(1), protectOut.map[key]);
+            }
+            else if (out.includes(key[0] + ' ' + key.substring(1).trimEnd())) {
+                out = out.replace(key[0] + ' ' + key.substring(1).trimEnd(), protectOut.map[key]);
             }
             else {
                 success = false;

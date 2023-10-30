@@ -157,12 +157,12 @@ export class Localizer {
                 if (!option.silent) {
                     spinner = ora.default('translating...').start();
                 }
-                let successCnt = 0, failedCnt = 0;
+                let successCnt = 0, failedArr = [];
                 for (const lang of option.langs) {
                     for (const row of filteredRows) {
                         if (!row[lang]) {
                             if (spinner != null) {
-                                spinner.text = `translating... ${successCnt + failedCnt}/${nonCnt}`;
+                                spinner.text = `translating... ${successCnt + failedArr.length}/${nonCnt}`;
                             }
                             const t = await Translator.translateTo(row.CN, lang, option);
                             if (t != null) {
@@ -170,7 +170,7 @@ export class Localizer {
                                 successCnt++;
                             }
                             else {
-                                failedCnt++;
+                                failedArr.push(row.CN);
                             }
                         }
                     }
@@ -178,7 +178,12 @@ export class Localizer {
                 if (spinner != null) {
                     spinner.succeed();
                 }
-                console.log(`Auto translation finished, success: ${successCnt}, failed: ${failedCnt}`);
+                console.log(`Auto translation finished, success: ${successCnt}, failed: ${failedArr.length}`);
+                if (failedArr.length > 0) {
+                    console.error('---------------------------------');
+                    failedArr.forEach((v) => console.error(v));
+                    console.error('---------------------------------');
+                }
             }
             if (option.individual) {
                 for (const lang of option.langs) {

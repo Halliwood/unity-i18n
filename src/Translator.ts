@@ -78,10 +78,17 @@ export class Translator {
                 time,
                 sign
             }
-            const res = await httpGet<ITranslateRes>(process.env.TRANSLATE_URL, param, { timeout: 10000 });
+            let res: ITranslateRes, tryTimes = 0;
+            while (tryTimes < 3) {
+                res = await httpGet<ITranslateRes>(process.env.TRANSLATE_URL, param, { timeout: 10000 });
+                if (res != null && res.ret == 0) {
+                    break;
+                }
+                tryTimes++;
+            }
             if (res == null || res.ret != 0) {
-                console.error('translate failed, url: ', __http_record.lastURL);
-                console.error(res);
+                // console.error('translate failed: ', raw);
+                // console.error(res);
                 return null;
             }
 
@@ -115,9 +122,11 @@ export class Translator {
             } else if (out.includes(key.trimEnd())) {
                 // 某些情况下会丢失末尾的空格
                 out = out.replace(key.trimEnd(), protectOut.map[key]);
-            } else if (out.includes('@ ' + key.substring(1))) {
+            } else if (out.includes(key[0] + ' ' + key.substring(1))) {
                 // 某些情况下中间会插个空格
-                out = out.replace('@ ' + key.substring(1), protectOut.map[key]);
+                out = out.replace(key[0] + ' ' + key.substring(1), protectOut.map[key]);
+            } else if (out.includes(key[0] + ' ' + key.substring(1).trimEnd())) {
+                out = out.replace(key[0] + ' ' + key.substring(1).trimEnd(), protectOut.map[key]);
             } else {
                 success = false;
             }
