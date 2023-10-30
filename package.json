@@ -1,6 +1,6 @@
 {
   "name": "unity-i18n",
-  "version": "1.0.109",
+  "version": "1.0.110",
   "description": "i18n tool for unity game project",
   "type": "module",
   "main": "bin/index.js",
