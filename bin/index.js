@@ -84,7 +84,7 @@ async function main() {
         langs: opts.langs.split(','),
         replacer: {},
         softReplace: opts.softReplace,
-        autoTrans: opts.autoTrans
+        autoTrans: opts.autoTrans?.split(',')
     };
     if (opts.silent) {
         globalOption.silent = opts.silent;
@@ -107,7 +107,7 @@ async function main() {
     if (opts.validate) {
         globalOption.validate = opts.validate.split(',');
     }
-    if (opts.autoTrans) {
+    if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);
     }
     // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'EN');

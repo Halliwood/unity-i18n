@@ -145,7 +145,7 @@ export class Localizer {
                         newCnt++;
                     }
                     for (const lang of option.langs) {
-                        if (!row[lang])
+                        if (!row[lang] && option.autoTrans?.includes(lang))
                             nonCnt++;
                     }
                 }
@@ -159,6 +159,8 @@ export class Localizer {
                 }
                 let successCnt = 0, failedArr = [];
                 for (const lang of option.langs) {
+                    if (!option.autoTrans?.includes(lang))
+                        continue;
                     for (const row of filteredRows) {
                         if (!row[lang]) {
                             if (spinner != null) {

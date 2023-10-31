@@ -53,7 +53,7 @@ interface CmdParams {
     lockfile?: string;
     individual?: boolean;
     validate?: string;
-    autoTrans?: boolean;
+    autoTrans?: string;
 }
 
 // for exmaple
@@ -114,7 +114,7 @@ async function main(): Promise<void> {
         langs: opts.langs.split(',') as TLangs[], 
         replacer: {}, 
         softReplace: opts.softReplace,
-        autoTrans: opts.autoTrans
+        autoTrans: opts.autoTrans?.split(',') as TLangs[]
     };
     
     if(opts.silent) {
@@ -139,7 +139,7 @@ async function main(): Promise<void> {
         globalOption.validate = opts.validate.split(',');
     }
 
-    if (opts.autoTrans) {
+    if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);
     }
     // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'EN');

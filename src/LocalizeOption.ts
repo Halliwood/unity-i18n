@@ -13,7 +13,7 @@ export interface GlobalOption extends LocalizeOption {
     strict?: boolean;
     individual?: boolean;
     validate?: string[];
-    autoTrans?: boolean;
+    autoTrans?: TLangs[];
 }
 
 export interface TaskWithOption {
