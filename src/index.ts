@@ -142,8 +142,8 @@ async function main(): Promise<void> {
     if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);
     }
-    // Translator.translateTo('吞天蟒-孵化', 'EN', globalOption);
-    // Translator.translateTo('吞天蟒-孵化', 'Thai', globalOption);
+    // Translator.translateTo('<url=0>集市中可以购买修为丹药，点击跳转<color=#D5950C>集市</color></url>\n<url=1>炼药房中可以获得修为丹药，点击跳转<color=#D5950C>炼药房</color></url>', 'EN', globalOption);
+    // Translator.translateTo('<url=0>集市中可以购买修为丹药，点击跳转<color=#D5950C>集市</color></url>\n<url=1>炼药房中可以获得修为丹药，点击跳转<color=#D5950C>炼药房</color></url>', 'Thai', globalOption);
     // Translator.translateTo('即将进入九幽黄泉获取传承，彩鳞与萧炎惜别。九彩吞天蟒，不日现世大陆！', 'EN', globalOption);
     // Translator.translateTo('即将进入九幽黄泉获取传承，彩鳞与萧炎惜别。九彩吞天蟒，不日现世大陆！', 'Thai', globalOption);
     // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'Thai');

@@ -100,7 +100,7 @@ export class Translator {
         let out = raw.replace(/<\/?.+?>/g, (substring: string, ...args: any[]) => `^|${substring}|$`);
         out = out.replace(/#N/g, (substring: string, ...args: any[]) => '^|#N|$');
         out = out.replace(/#.+?#/g, (substring: string, ...args: any[]) => `^|${substring}|$`);
-        out = raw.replace(/\{.+?\}/g, (substring: string, ...args: any[]) => `^|${substring}|$`);
+        out = out.replace(/\{.+?\}/g, (substring: string, ...args: any[]) => `^|${substring}|$`);
         return out;
     }
 }
