@@ -16,16 +16,6 @@ interface ITranslateRes {
     str: string
 }
 
-interface IProtectOut {
-    out: string
-    map: { [key: string]: string }
-}
-
-interface IRecoverOut {
-    out: string
-    success: boolean
-}
-
 export class Translator {
     private static output: string;
     private static logFile: string;
@@ -40,7 +30,7 @@ export class Translator {
             console.error('auto translation service failed.');
         }
         Translator.logFile = path.join(output, 'log.txt');
-        await fs.unlink(Translator.logFile);
+        if (fs.existsSync(Translator.logFile)) await fs.unlink(Translator.logFile);
     }
 
     public static async translateTo(raw: string, targetLang: TLangs, option: GlobalOption): Promise<string | null> {
@@ -59,15 +49,7 @@ export class Translator {
         }
 
         // 先将<xxx></xxx>格式符保护起来
-        const pho = Translator.protectHtmlFormats(raw);
-
-        // 再将#xxx#格式符保护起来
-        const pro = Translator.protectRichFormats(pho.out);
-
-        // 再将{xx}保护起来
-        const ppo = Translator.protectPlaceholders(pro.out);
-        
-        const str = ppo.out;
+        const str = Translator.protectHtmlFormats(raw);
         let translated = cache[str];
         if (translated == null) {
             const target = LangMap[targetLang] || targetLang;
@@ -102,86 +84,23 @@ export class Translator {
         }
 
         // 恢复被保护的内容
-        const r0 = Translator.recoverProtecteds(translated, ppo);
-        const r1 = Translator.recoverProtecteds(r0.out, pro);
-        const r2 = Translator.recoverProtecteds(r1.out, pho);
-
-        if (r0.success && r1.success && r2.success) {
-            // console.log('translate succeed:');
-            // console.log(raw);
-            // console.log(r2.out);
-            return r2.out;
-        }
-        if (option.needLog) await fs.appendFile(Translator.logFile, `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
-        return null;
+        const out = Translator.recoverProtecteds(translated);
+        // console.log('Translate success: ');
+        // console.log(raw);
+        // console.log(str);
+        // console.log(out);
+        return out;
     }
 
-    private static recoverProtecteds(raw: string, protectOut: IProtectOut): IRecoverOut {
-        let out = raw;
-        let success = true;
-        for (const key in protectOut.map) {
-            if (out.includes(key)) {
-                out = out.replace(key, protectOut.map[key]);
-            } else if (out.includes(key.trimEnd())) {
-                // 某些情况下会丢失末尾的空格
-                out = out.replace(key.trimEnd(), protectOut.map[key]);
-            } else if (out.includes(key[0] + ' ' + key.substring(1))) {
-                // 某些情况下中间会插个空格
-                out = out.replace(key[0] + ' ' + key.substring(1), protectOut.map[key]);
-            } else if (out.includes(key[0] + ' ' + key.substring(1).trimEnd())) {
-                out = out.replace(key[0] + ' ' + key.substring(1).trimEnd(), protectOut.map[key]);
-            } else {
-                success = false;
-            }
-            
-        }
-        return { out, success };
+    private static recoverProtecteds(raw: string): string {
+        return raw.replace(/\^\|(.*?)\|\$/g, (substring: string, ...args: any[]) => args[0]);
     }
 
-    private static protectHtmlFormats(raw: string): IProtectOut {
-        let protectedIndex = 0, map: { [key: string]: string } = {};
-        const out = raw.replace(/<\/?.+?>/g, (substring: string, ...args: any[]) => {
-            let v = `<F${protectedIndex++}>`;
-            while (raw.includes(v)) {
-                v = `<F${protectedIndex++}>`;
-            }
-            map[v] = substring;
-            return v;
-        });
-        return { out, map };
-    }
-
-    private static protectRichFormats(raw: string): IProtectOut {
-        let protectedIndex = 0, map: { [key: string]: string } = {};
-        let out = raw.replace(/#N/g, (substring: string, ...args: any[]) => {
-            let v = `@N${protectedIndex++} `;
-            while (raw.includes(v)) {
-                v = `@N${protectedIndex++} `;
-            }
-            map[v] = substring;
-            return v;
-        });
-        out = out.replace(/#.+?#/g, (substring: string, ...args: any[]) => {
-            let v = `@R${protectedIndex++} `;
-            while (raw.includes(v)) {
-                v = `@R${protectedIndex++} `;
-            }
-            map[v] = substring;
-            return v;
-        });
-        return { out, map };
-    }
-
-    private static protectPlaceholders(raw: string): IProtectOut {
-        let protectedIndex = 0, map: { [key: string]: string } = {};
-        const out = raw.replace(/\{.+?\}/g, (substring: string, ...args: any[]) => {
-            let v = `@X${protectedIndex++} `;
-            while (raw.includes(v)) {
-                v = `@X${protectedIndex++} `;
-            }
-            map[v] = substring;
-            return v;
-        });
-        return { out, map };
+    private static protectHtmlFormats(raw: string): string {
+        let out = raw.replace(/<\/?.+?>/g, (substring: string, ...args: any[]) => `^|${substring}|$`);
+        out = out.replace(/#N/g, (substring: string, ...args: any[]) => '^|#N|$');
+        out = out.replace(/#.+?#/g, (substring: string, ...args: any[]) => `^|${substring}|$`);
+        out = raw.replace(/\{.+?\}/g, (substring: string, ...args: any[]) => `^|${substring}|$`);
+        return out;
     }
 }

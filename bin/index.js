@@ -110,7 +110,10 @@ async function main() {
     if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);
     }
-    // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'EN');
+    // Translator.translateTo('吞天蟒-孵化', 'EN', globalOption);
+    // Translator.translateTo('吞天蟒-孵化', 'Thai', globalOption);
+    // Translator.translateTo('即将进入九幽黄泉获取传承，彩鳞与萧炎惜别。九彩吞天蟒，不日现世大陆！', 'EN', globalOption);
+    // Translator.translateTo('即将进入九幽黄泉获取传承，彩鳞与萧炎惜别。九彩吞天蟒，不日现世大陆！', 'Thai', globalOption);
     // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'Thai');
     // Translator.translateTo('您获得了：{%d} {%s}', 'EN');
     // Translator.translateTo('购买<color=#BB5959>超值礼包</color>，<color=#BB5959>大幅提升</color>战力', 'EN');

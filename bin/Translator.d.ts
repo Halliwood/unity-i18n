@@ -8,6 +8,4 @@ export declare class Translator {
     static translateTo(raw: string, targetLang: TLangs, option: GlobalOption): Promise<string | null>;
     private static recoverProtecteds;
     private static protectHtmlFormats;
-    private static protectRichFormats;
-    private static protectPlaceholders;
 }
