@@ -76,7 +76,7 @@ program
 	.option("--lockfile <string>", "Lock file to check.")
 	.option("--individual", "Make individual files for each language.")
 	.option("--validate [string]", "Specify which languages to be validated.")
-	.option("--auto-trans", "Auto translate or not.")
+	.option("--auto-trans <string[]>", "Auto translate or not.")
     .parse(process.argv);
 
 const opts = program.opts() as CmdParams;
