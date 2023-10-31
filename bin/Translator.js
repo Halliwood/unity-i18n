@@ -8,6 +8,7 @@ const LangMap = {
 };
 export class Translator {
     static output;
+    static logFile;
     static cacheBook = {};
     static async setup(output) {
         Translator.output = output;
@@ -17,6 +18,8 @@ export class Translator {
             console.error('env configuration read error', envOutput.error);
             console.error('auto translation service failed.');
         }
+        Translator.logFile = path.join(output, 'log.txt');
+        await fs.unlink(Translator.logFile);
     }
     static async translateTo(raw, targetLang, option) {
         // 先读入缓存
@@ -81,7 +84,7 @@ export class Translator {
             return r2.out;
         }
         if (option.needLog)
-            await fs.appendFile(path.join(option.outputRoot, 'log.txt'), `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
+            await fs.appendFile(Translator.logFile, `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
         return null;
     }
     static recoverProtecteds(raw, protectOut) {

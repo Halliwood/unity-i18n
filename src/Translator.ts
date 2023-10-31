@@ -28,6 +28,7 @@ interface IRecoverOut {
 
 export class Translator {
     private static output: string;
+    private static logFile: string;
     private static readonly cacheBook: { [lang: string]: { [raw: string]: string } } = {};
 
     public static async setup(output: string): Promise<void> {
@@ -38,6 +39,8 @@ export class Translator {
             console.error('env configuration read error', envOutput.error);
             console.error('auto translation service failed.');
         }
+        Translator.logFile = path.join(output, 'log.txt');
+        await fs.unlink(Translator.logFile);
     }
 
     public static async translateTo(raw: string, targetLang: TLangs, option: GlobalOption): Promise<string | null> {
@@ -109,7 +112,7 @@ export class Translator {
             // console.log(r2.out);
             return r2.out;
         }
-        if (option.needLog) await fs.appendFile(path.join(option.outputRoot, 'log.txt'), `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
+        if (option.needLog) await fs.appendFile(Translator.logFile, `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
         return null;
     }
 
