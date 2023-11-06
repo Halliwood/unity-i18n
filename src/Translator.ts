@@ -171,7 +171,7 @@ export class Translator {
     }
 
     private static recoverPlaceholders(raw: string): string {
-        return raw.replace(/\^\|(.+)\|\$/g, (substring: string, ...args: any[]) => args[0]);
+        return raw.replace(/\^\|(.+?)\|\$/g, (substring: string, ...args: any[]) => args[0]);
     }
 
     private static protectHtmlFormats(raw: string): IProtectOut {

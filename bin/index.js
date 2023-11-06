@@ -110,7 +110,7 @@ async function main() {
     if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);
     }
-    // console.log(await Translator.translateTo('#M;{^%s}{^%s}#在阵营战中大开杀戒，已经{%d}连杀！', 'Thai', globalOption));
+    // console.log(await Translator.translateTo('雷霆之力增伤：每增加1%则提升雷霆之力额外伤害的1%,效果受到\"雷霆之力减免\"影响', 'Thai', globalOption));
     // Translator.translateTo('十六', 'Thai', globalOption);
     // console.log(await Translator.translateTo('集市中可以购买修为丹药，点击跳转#C=0x5CC5F2,URL=0;集市##N炼药房中可以获得修为丹药，点击跳转#C=0x5CC5F2,URL=1;炼药房#', 'EN', globalOption));
     // console.log(await Translator.translateTo('<url=0>集市中可以购买修为丹药，点击跳转<color=#D5950C>集市</color></url>\n<url=1>炼药房中可以获得修为丹药，点击跳转<color=#D5950C>炼药房</color></url>', 'EN', globalOption));

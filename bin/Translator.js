@@ -140,7 +140,7 @@ export class Translator {
         return { out, success: Object.keys(protectOut.map).length == 0 };
     }
     static recoverPlaceholders(raw) {
-        return raw.replace(/\^\|(.+)\|\$/g, (substring, ...args) => args[0]);
+        return raw.replace(/\^\|(.+?)\|\$/g, (substring, ...args) => args[0]);
     }
     static protectHtmlFormats(raw) {
         let protectedIndex = 0, map = {};
