@@ -7,6 +7,7 @@ const LangMap = {
     'Thai': 'TH'
 };
 export class Translator {
+    static HanPattern = /[\u4e00-\u9fa5]+/;
     static output;
     static logFile;
     static cacheBook = {};
@@ -36,8 +37,33 @@ export class Translator {
                 }
             }
         }
+        if (raw.includes('#N')) {
+            const arr = raw.split('#N');
+            for (let i = 0, len = arr.length; i < len; i++) {
+                const out = await Translator.translateSingleLine(arr[i], targetLang, option, cache, cacheFile);
+                if (out != null)
+                    arr[i] = out;
+            }
+            return arr.join('#N');
+        }
+        if (raw.includes('\\n')) {
+            const arr = raw.split('\\n');
+            for (let i = 0, len = arr.length; i < len; i++) {
+                const out = await Translator.translateSingleLine(arr[i], targetLang, option, cache, cacheFile);
+                if (out != null)
+                    arr[i] = out;
+            }
+            return arr.join('\\n');
+        }
+        return await this.translateSingleLine(raw, targetLang, option, cache, cacheFile);
+    }
+    static async translateSingleLine(raw, targetLang, option, cache, cacheFile) {
         // 先将<xxx></xxx>格式符保护起来
-        const str = Translator.protectHtmlFormats(raw);
+        const pho = Translator.protectHtmlFormats(raw);
+        // 再将#xxx#格式符保护起来
+        const pro = Translator.protectRichFormats(pho.out);
+        // 再将{xx}保护起来
+        const str = Translator.protectPlaceholders(pro.out);
         let translated = cache[str];
         if (translated == null) {
             const target = LangMap[targetLang] || targetLang;
@@ -70,21 +96,96 @@ export class Translator {
             translated = res.str;
         }
         // 恢复被保护的内容
-        const out = Translator.recoverProtecteds(translated);
-        // console.log('Translate success: ');
-        // console.log(raw);
-        // console.log(str);
-        // console.log(out);
-        return out;
+        const r1 = Translator.recoverProtecteds(translated, pro, /<\s?\/?\s?R\s?\d+\s?>/g);
+        const r2 = Translator.recoverProtecteds(r1.out, pho, /<\s?\/?\s?F\s?\d+\s?>/g);
+        const out = Translator.recoverPlaceholders(r2.out);
+        if (r1.success && r2.success) {
+            // console.log('translate succeed:');
+            // console.log(raw);
+            // console.log(str);
+            // console.log(translated);
+            return out;
+        }
+        if (option.needLog)
+            await fs.appendFile(Translator.logFile, `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
+        return null;
     }
-    static recoverProtecteds(raw) {
-        return raw.replace(/\^\|(.*?)\|\$/g, (substring, ...args) => args[0]);
+    // private static recoverProtecteds(raw: string, protectOut: IProtectOut): IRecoverOut {
+    //     let out = raw;
+    //     let success = true;
+    //     for (const key in protectOut.map) {
+    //         if (out.includes(key)) {
+    //             out = out.replace(key, protectOut.map[key]);
+    //         } else if (out.includes(key.trimEnd())) {
+    //             // 某些情况下会丢失末尾的空格
+    //             out = out.replace(key.trimEnd(), protectOut.map[key]);
+    //         } else if (out.includes(key[0] + ' ' + key.substring(1))) {
+    //             // 某些情况下中间会插个空格
+    //             out = out.replace(key[0] + ' ' + key.substring(1), protectOut.map[key]);
+    //         } else if (out.includes(key[0] + ' ' + key.substring(1).trimEnd())) {
+    //             out = out.replace(key[0] + ' ' + key.substring(1).trimEnd(), protectOut.map[key]);
+    //         } else {
+    //             success = false;
+    //         }            
+    //     }
+    //     return { out, success };
+    // }
+    static recoverProtecteds(raw, protectOut, r) {
+        const out = raw.replace(r, (substring, ...args) => {
+            const trimed = substring.replace(/\s+/g, '');
+            const s = protectOut.map[trimed];
+            delete protectOut.map[trimed];
+            return s;
+        });
+        return { out, success: Object.keys(protectOut.map).length == 0 };
+    }
+    static recoverPlaceholders(raw) {
+        return raw.replace(/\^\|(.+)\|\$/g, (substring, ...args) => args[0]);
     }
     static protectHtmlFormats(raw) {
-        let out = raw.replace(/<\/?.+?>/g, (substring, ...args) => `^|${substring}|$`);
-        out = out.replace(/#N/g, (substring, ...args) => '^|#N|$');
-        out = out.replace(/#.+?#/g, (substring, ...args) => `^|${substring}|$`);
-        out = out.replace(/\{.+?\}/g, (substring, ...args) => `^|${substring}|$`);
+        let protectedIndex = 0, map = {};
+        const out = raw.replace(/<\/?.+?>/g, (substring, ...args) => {
+            let v = `<F${protectedIndex++}>`;
+            while (raw.includes(v)) {
+                v = `<F${protectedIndex++}>`;
+            }
+            map[v] = substring;
+            return v;
+        });
+        return { out, map };
+    }
+    static protectRichFormats(raw) {
+        let protectedIndex = 0, map = {};
+        const out = raw.replace(/#.+?#/g, (substring, ...args) => {
+            if (substring.search(Translator.HanPattern) >= 0) {
+                // 针对例如#C=0x5CC5F2,URL=0;集市#这类情形，分号后面部分是需要翻译的，需要拆成两部分进行保护
+                const pairs = substring.split(';');
+                let v1 = `<R${protectedIndex++}>`;
+                while (raw.includes(v1)) {
+                    v1 = `<R${protectedIndex++}>`;
+                }
+                if (pairs.length == 1) {
+                    map[v1] = pairs[0];
+                    return v1;
+                }
+                map[v1] = pairs[0] + ';';
+                const v2 = '</' + v1.substring(1);
+                map[v2] = '#';
+                return v1 + pairs[1].substring(0, pairs[1].length - 1) + v2;
+            }
+            else {
+                let v = `<R${protectedIndex++}>`;
+                while (raw.includes(v)) {
+                    v = `<R${protectedIndex++}>`;
+                }
+                map[v] = substring;
+                return v;
+            }
+        });
+        return { out, map };
+    }
+    static protectPlaceholders(raw) {
+        const out = raw.replace(/\{.+?\}/g, (substring, ...args) => `^|${substring}|$`);
         return out;
     }
 }

@@ -110,11 +110,13 @@ async function main() {
     if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);
     }
-    // Translator.translateTo('<url=0>集市中可以购买修为丹药，点击跳转<color=#D5950C>集市</color></url>\n<url=1>炼药房中可以获得修为丹药，点击跳转<color=#D5950C>炼药房</color></url>', 'EN', globalOption);
-    // Translator.translateTo('<url=0>集市中可以购买修为丹药，点击跳转<color=#D5950C>集市</color></url>\n<url=1>炼药房中可以获得修为丹药，点击跳转<color=#D5950C>炼药房</color></url>', 'Thai', globalOption);
+    // console.log(await Translator.translateTo('#M;{^%s}{^%s}#在阵营战中大开杀戒，已经{%d}连杀！', 'Thai', globalOption));
+    // Translator.translateTo('十六', 'Thai', globalOption);
+    // console.log(await Translator.translateTo('集市中可以购买修为丹药，点击跳转#C=0x5CC5F2,URL=0;集市##N炼药房中可以获得修为丹药，点击跳转#C=0x5CC5F2,URL=1;炼药房#', 'EN', globalOption));
+    // console.log(await Translator.translateTo('<url=0>集市中可以购买修为丹药，点击跳转<color=#D5950C>集市</color></url>\n<url=1>炼药房中可以获得修为丹药，点击跳转<color=#D5950C>炼药房</color></url>', 'EN', globalOption));
     // Translator.translateTo('即将进入九幽黄泉获取传承，彩鳞与萧炎惜别。九彩吞天蟒，不日现世大陆！', 'EN', globalOption);
     // Translator.translateTo('即将进入九幽黄泉获取传承，彩鳞与萧炎惜别。九彩吞天蟒，不日现世大陆！', 'Thai', globalOption);
-    // Translator.translateTo('恭喜#M;{^%s}#暂列#C=0xf3fc00;极限挑战#第一名，凌晨3点结算排行奖励将获得#I={%d};{%d}# #I={%d};{%d}#。', 'Thai');
+    // console.log(await Translator.translateTo('<color=#EDD5B0>倒计时：</color><color=#5BFFC7>{0}后结束</color>', 'Thai', globalOption));
     // Translator.translateTo('您获得了：{%d} {%s}', 'EN');
     // Translator.translateTo('购买<color=#BB5959>超值礼包</color>，<color=#BB5959>大幅提升</color>战力', 'EN');
     // Translator.translateTo('对敌方2个目标攻击2次，每次造成180%X0斗气伤害，附加斗气回复效果降低60%，持续8秒', 'EN');
