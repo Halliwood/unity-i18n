@@ -1149,6 +1149,7 @@ export class Localizer {
 
         const fmtMissings: string[] = [];
         const fmtErrors: string[] = [];
+        const termErrors: string[] = [];
         for (let id in this.strMap) {
             const row = this.strMap[id];
             // 暂时去掉检测，philip没空搞印尼
@@ -1186,14 +1187,32 @@ export class Localizer {
                     }
                 }
             }
+            // 检查术语，譬如泰文自动翻译是先翻成英文再翻成目标文字，部分术语未收录导致残留英文
+            for (const lang of option.validate) {
+                if (lang == 'EN' || lang == 'TW') continue;
+                const local = row[lang];
+                if (local && !termErrors.includes(local)) {
+                    const mchs = local.matchAll(/[a-zA-Z][a-zA-Z ']*/g);
+                    for (const mch of mchs) {
+                        const tokens = mch[0].trim();
+                        if (row.CN.search(new RegExp(tokens, 'i')) < 0) {
+                            termErrors.push(local);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
-        if (fmtMissings.length > 0 || fmtErrors.length > 0) {
+        if (fmtMissings.length > 0 || fmtErrors.length > 0 || termErrors.length > 0) {
             for (const str of fmtMissings) {
                 console.error('[unity-i18n]Format missing:', str);
             }
             for (const str of fmtErrors) {
                 console.error('[unity-i18n]Format error:', str);
+            }
+            for (const str of termErrors) {
+                console.error('[unity-i18n]Term error:', str);
             }
             process.exit(Ei18nErrorCode.FormatError);
         }
