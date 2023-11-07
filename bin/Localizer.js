@@ -1153,16 +1153,31 @@ export class Localizer {
                 }
             }
         }
-        if (fmtMissings.length > 0 || fmtErrors.length > 0 || termErrors.length > 0) {
+        if (fmtMissings.length > 0) {
+            console.error('[unity-i18n]Format missing:', fmtMissings.length);
+            console.error('-----------------------------');
             for (const str of fmtMissings) {
-                console.error('[unity-i18n]Format missing:', str);
+                console.error(str);
             }
+            console.error('-----------------------------');
+        }
+        if (fmtErrors.length > 0) {
+            console.error('[unity-i18n]Format error:', fmtErrors.length);
+            console.error('-----------------------------');
             for (const str of fmtErrors) {
-                console.error('[unity-i18n]Format error:', str);
+                console.error(str);
             }
+            console.error('-----------------------------');
+        }
+        if (termErrors.length > 0) {
+            console.error('[unity-i18n]Term error:', termErrors.length);
+            console.error('-----------------------------');
             for (const str of termErrors) {
-                console.error('[unity-i18n]Term error:', str);
+                console.error(str);
             }
+            console.error('-----------------------------');
+        }
+        if (fmtMissings.length > 0 || fmtErrors.length > 0 || termErrors.length > 0) {
             process.exit(Ei18nErrorCode.FormatError);
         }
     }
