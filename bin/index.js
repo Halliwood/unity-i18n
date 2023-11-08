@@ -110,7 +110,11 @@ async function main() {
     if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);
     }
-    // console.log(await Translator.translateTo('个人账户支付失败: 请访问 <u><a href=\"http://aq.qq.com/qbjz\" target=\"_blank\">http://aq.qq.com/qbjz</a></u>查看详情. 您设置了Q币Q点保护, 此业务不支持验证密保. 如需支付, 请暂时允许消费后重新尝试.', 'Thai', globalOption));
+    // console.log(await Translator.translateTo('(?{D}天)(?{h}时) {mm}:{ss}', 'Thai', globalOption));
+    // console.log(await Translator.translateTo('(?{D}天){hh}:{mm}:{ss}', 'Thai', globalOption));
+    // console.log(await Translator.translateTo('(?{D}天){hh}:{mm}', 'Thai', globalOption));
+    // console.log(await Translator.translateTo('(?{D}天) {h}:{m}:{s}', 'Thai', globalOption));
+    // console.log(await Translator.translateTo('(?{D}天) {hh}:{mm}:{ss}', 'Thai', globalOption));
     // Translator.translateTo('十六', 'Thai', globalOption);
     // console.log(await Translator.translateTo('集市中可以购买修为丹药，点击跳转#C=0x5CC5F2,URL=0;集市##N炼药房中可以获得修为丹药，点击跳转#C=0x5CC5F2,URL=1;炼药房#', 'EN', globalOption));
     // console.log(await Translator.translateTo('<url=0>集市中可以购买修为丹药，点击跳转<color=#D5950C>集市</color></url>\n<url=1>炼药房中可以获得修为丹药，点击跳转<color=#D5950C>炼药房</color></url>', 'EN', globalOption));

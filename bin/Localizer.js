@@ -1098,7 +1098,8 @@ export class Localizer {
             return;
         const fmtMissings = [];
         const fmtErrors = [];
-        const termErrors = [];
+        const termCNErrors = [];
+        const termENErrors = [];
         for (let id in this.strMap) {
             const row = this.strMap[id];
             // 暂时去掉检测，philip没空搞印尼
@@ -1141,12 +1142,19 @@ export class Localizer {
                 if (lang == 'EN' || lang == 'TW')
                     continue;
                 const local = row[lang];
-                if (local && !termErrors.includes(local)) {
+                if (!local)
+                    continue;
+                if (!termCNErrors.includes(local) && local.search(this.HanPattern) >= 0) {
+                    // 检查是否残留中文
+                    termCNErrors.push(local);
+                }
+                else if (!termENErrors.includes(local)) {
+                    // 检查是否残留英文
                     const mchs = local.matchAll(/[a-zA-Z][a-zA-Z ']*/g);
                     for (const mch of mchs) {
                         const tokens = mch[0].trim();
                         if (row.CN.search(new RegExp(tokens, 'i')) < 0) {
-                            termErrors.push(local);
+                            termENErrors.push(local);
                             break;
                         }
                     }
@@ -1169,15 +1177,23 @@ export class Localizer {
             }
             console.error('-----------------------------');
         }
-        if (termErrors.length > 0) {
-            console.error('[unity-i18n]Term error:', termErrors.length);
+        if (termCNErrors.length > 0) {
+            console.error('[unity-i18n]TermCN error:', termCNErrors.length);
             console.error('-----------------------------');
-            for (const str of termErrors) {
+            for (const str of termCNErrors) {
                 console.error(str);
             }
             console.error('-----------------------------');
         }
-        if (fmtMissings.length > 0 || fmtErrors.length > 0 || termErrors.length > 0) {
+        if (termENErrors.length > 0) {
+            console.error('[unity-i18n]TermEN error:', termENErrors.length);
+            console.error('-----------------------------');
+            for (const str of termENErrors) {
+                console.error(str);
+            }
+            console.error('-----------------------------');
+        }
+        if (fmtMissings.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0) {
             process.exit(Ei18nErrorCode.FormatError);
         }
     }
