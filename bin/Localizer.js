@@ -1104,17 +1104,17 @@ export class Localizer {
             const row = this.strMap[id];
             // 暂时去掉检测，philip没空搞印尼
             // 检查文本格式化
-            // const fmts = row.CN.match(/\{\d+\}/g);
-            // if (fmts != null) {
-            //     for (const fmt of fmts) {
-            //         for (const lang of option.langs) {
-            //             const local = row[lang];
-            //             if (local && local.indexOf(fmt) < 0) {
-            //                 fmtMissings.push(local);
-            //             }
-            //         }
-            //     }
-            // }
+            const fmts = row.CN.match(/\{\d+\}/g);
+            if (fmts != null) {
+                for (const fmt of fmts) {
+                    for (const lang of option.validate) {
+                        const local = row[lang];
+                        if (local && local.indexOf(fmt) < 0) {
+                            fmtMissings.push(local);
+                        }
+                    }
+                }
+            }
             // 检查html格式
             const mchs = row.CN.matchAll(/<\/?.*?>/g);
             for (const mch of mchs) {
@@ -1139,7 +1139,7 @@ export class Localizer {
             }
             // 检查术语，譬如泰文自动翻译是先翻成英文再翻成目标文字，部分术语未收录导致残留英文
             for (const lang of option.validate) {
-                if (lang == 'EN' || lang == 'TW')
+                if (lang == 'TW')
                     continue;
                 const local = row[lang];
                 if (!local)
@@ -1148,7 +1148,7 @@ export class Localizer {
                     // 检查是否残留中文
                     termCNErrors.push(local);
                 }
-                else if (!termENErrors.includes(local)) {
+                else if (lang != 'EN' && !termENErrors.includes(local)) {
                     // 检查是否残留英文
                     const mchs = local.matchAll(/[a-zA-Z][a-zA-Z ']*/g);
                     for (const mch of mchs) {
