@@ -1102,7 +1102,6 @@ export class Localizer {
         const termENErrors = [];
         for (let id in this.strMap) {
             const row = this.strMap[id];
-            // 暂时去掉检测，philip没空搞印尼
             // 检查文本格式化
             const fmts = row.CN.match(/\{\d+\}/g);
             if (fmts != null) {
@@ -1112,6 +1111,26 @@ export class Localizer {
                         if (local && local.indexOf(fmt) < 0) {
                             fmtMissings.push(local);
                         }
+                    }
+                }
+            }
+            // 检查#N
+            const newlineCnt = row.CN.match(/#N/g)?.length;
+            if (newlineCnt > 0) {
+                for (const lang of option.validate) {
+                    const local = row[lang];
+                    if (local && !fmtMissings.includes(local) && local.match(/#N/g)?.length != newlineCnt) {
+                        fmtMissings.push(local);
+                    }
+                }
+            }
+            // 检查\n
+            const newlineCnt2 = row.CN.match(/\\n/g)?.length;
+            if (newlineCnt2 > 0) {
+                for (const lang of option.validate) {
+                    const local = row[lang];
+                    if (local && !fmtMissings.includes(local) && local.match(/\\n/g)?.length != newlineCnt2) {
+                        fmtMissings.push(local);
                     }
                 }
             }
@@ -1207,13 +1226,31 @@ export class Localizer {
                 for (const lang of option.langs) {
                     const local = row[lang];
                     if (local) {
-                        // 先校正#N
-                        if (local.match(/#N/g)?.length < newlineCnt) {
+                        if ((local.match(/#N/g)?.length || 0) < newlineCnt) {
                             let newLocal = local.replaceAll('#n', '#N');
-                            if (newLocal.match(/#N/g)?.length < newlineCnt) {
-                                newLocal = local.replace('# n', '#N');
+                            if ((newLocal.match(/#N/g)?.length || 0) < newlineCnt) {
+                                newLocal = local.replaceAll('# n', '#N').replaceAll('# N', '#N');
                             }
                             if (newLocal.match(/#N/g)?.length == newlineCnt) {
+                                row[lang] = newLocal;
+                                fixNewlineCnt++;
+                            }
+                        }
+                    }
+                }
+            }
+            // 修复\n
+            const newlineCnt2 = row.CN.match(/\\n/g)?.length;
+            if (newlineCnt2 > 0) {
+                for (const lang of option.langs) {
+                    const local = row[lang];
+                    if (local) {
+                        if ((local.match(/\\n/g)?.length || 0) < newlineCnt2) {
+                            let newLocal = local.replaceAll('\\N', '\\n');
+                            if ((newLocal.match(/\\n/g)?.length || 0) < newlineCnt2) {
+                                newLocal = local.replaceAll('\\ n', '\\n').replaceAll('\\ N', '\\n');
+                            }
+                            if (newLocal.match(/\\n/g)?.length == newlineCnt2) {
                                 row[lang] = newLocal;
                                 fixNewlineCnt++;
                             }

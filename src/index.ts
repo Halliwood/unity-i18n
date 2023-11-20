@@ -142,6 +142,19 @@ async function main(): Promise<void> {
     if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);
     }
+
+    // for (const lang of ['EN', 'INA', 'TW', 'Thai']) {
+    //     const cacheFile = path.join(opts.output, `${lang}.cache.txt`);
+    //     const content = await fs.readFile(cacheFile, 'utf-8');
+    //     const lines = content.split(/\r?\n/);
+    //     for (let i = 0, cnt = Math.floor(lines.length / 2); i < cnt; i++) {
+    //         if (lines[i * 2].includes('^|^|#N|$')) {
+    //             lines[i * 2] = '';
+    //             lines[i * 2 + 1] = '';
+    //         }
+    //     }
+    //     await fs.writeFile(cacheFile, lines.filter((v) => Boolean(v)).join('\n'), 'utf-8');
+    // }
     // console.log(await Translator.translateTo('(?{D}天)(?{h}时) {mm}:{ss}', 'Thai', globalOption));
     // console.log(await Translator.translateTo('(?{D}天){hh}:{mm}:{ss}', 'Thai', globalOption));
     // console.log(await Translator.translateTo('(?{D}天){hh}:{mm}', 'Thai', globalOption));
@@ -150,7 +163,7 @@ async function main(): Promise<void> {
     // Translator.translateTo('十六', 'Thai', globalOption);
     // console.log(await Translator.translateTo('集市中可以购买修为丹药，点击跳转#C=0x5CC5F2,URL=0;集市##N炼药房中可以获得修为丹药，点击跳转#C=0x5CC5F2,URL=1;炼药房#', 'EN', globalOption));
     // console.log(await Translator.translateTo('<url=0>集市中可以购买修为丹药，点击跳转<color=#D5950C>集市</color></url>\n<url=1>炼药房中可以获得修为丹药，点击跳转<color=#D5950C>炼药房</color></url>', 'EN', globalOption));
-    // Translator.translateTo('即将进入九幽黄泉获取传承，彩鳞与萧炎惜别。九彩吞天蟒，不日现世大陆！', 'EN', globalOption);
+    // console.log(await Translator.translateTo('1. 击败其他位面来袭的修行者可获得万界抵御福袋，每周最多获取10个。#N2. 前往其他位面击败修行者，可获得万界击败福袋，每周最多获取10个。', 'EN', globalOption));
     // Translator.translateTo('即将进入九幽黄泉获取传承，彩鳞与萧炎惜别。九彩吞天蟒，不日现世大陆！', 'Thai', globalOption);
     // console.log(await Translator.translateTo('<color=#EDD5B0>倒计时：</color><color=#5BFFC7>{0}后结束</color>', 'Thai', globalOption));
     // Translator.translateTo('您获得了：{%d} {%s}', 'EN');
