@@ -39,12 +39,12 @@ export class Localizer {
     fromMap = {};
     newMap = {};
     crtTask;
-    crtTaskErrors;
     crtFile;
     totalCnt = 0;
     modifiedFileCnt = 0;
     noLocals = [];
     jsonSafeErrors = [];
+    concatStrErrors;
     logContent = '';
     mode;
     md5Cache = {};
@@ -296,25 +296,42 @@ export class Localizer {
             console.log('[unity-i18n]替换结束! 耗时: %d.', ((endAt - startAt) / 1000).toFixed());
             let errorCode = 0;
             if (this.noLocals.length > 0) {
-                let ncnt = 0;
+                const arr = [];
                 for (const zh of this.noLocals) {
                     if (!blackMap[zh]) {
-                        console.error('[unity-i18n]No local:', zh);
-                        ncnt++;
+                        arr.push(zh);
                     }
                 }
-                if (ncnt > 0 && option.strict) {
-                    console.error('[unity-i18n]Failed, check above.');
+                if (arr.length > 0 && option.strict) {
+                    console.error('[unity-i18n]No local:', arr.length);
+                    console.error('-----------------------------');
+                    for (const str of arr) {
+                        console.error(str);
+                    }
+                    console.error('-----------------------------');
                     errorCode = Ei18nErrorCode.NoLocal;
                 }
             }
-            if (this.jsonSafeErrors.length > 0) {
-                for (const str of this.jsonSafeErrors) {
-                    console.error('[unity-i18n]Syntax error:', str);
+            // 检查任务错误
+            if (this.concatStrErrors.length > 0) {
+                console.error('[unity-i18n]Concat error:', this.concatStrErrors.length);
+                console.error('-----------------------------');
+                for (const e of this.concatStrErrors) {
+                    console.error(e);
                 }
+                console.error('-----------------------------');
+                errorCode = Ei18nErrorCode.ConcatStrings;
+            }
+            if (this.jsonSafeErrors.length > 0) {
+                console.error('[unity-i18n]JSON error:', this.jsonSafeErrors.length);
+                console.error('-----------------------------');
+                for (const str of this.jsonSafeErrors) {
+                    console.error(str);
+                }
+                console.error('-----------------------------');
                 errorCode = Ei18nErrorCode.SyntaxError;
             }
-            if (errorCode != 0)
+            if (!option.ignoreErrors && errorCode != 0)
                 process.exit(errorCode);
         }
     }
@@ -498,7 +515,7 @@ export class Localizer {
             };
         }
         this.crtTask = oneTask;
-        this.crtTaskErrors = [];
+        this.concatStrErrors = [];
         const finalOpt = this.mergeOption(oneTask.option, option);
         const ojs = oneTask.option?.outputJSONs;
         if (ojs) {
@@ -528,14 +545,6 @@ export class Localizer {
             else {
                 this.searchZhInDir(oneRoot, finalOpt);
             }
-        }
-        // 检查任务错误
-        if (this.crtTaskErrors.length > 0) {
-            console.log('[unity-i18n]Task failed!');
-            for (const e of this.crtTaskErrors) {
-                console.error(e);
-            }
-            process.exit(Ei18nErrorCode.ConcatStrings);
         }
     }
     mergeOption(local, global) {
@@ -787,17 +796,17 @@ export class Localizer {
                         // 对于ts和js，不允许使用内嵌字符串
                         if (option.strict && this.crtTask.strict && option.softReplace && (this.crtFile.endsWith('.ts') || this.crtFile.endsWith('.js')) && !rawOneLine.includes('.assert') && !rawOneLine.includes('.log')) {
                             if (quote === '`') {
-                                this.crtTaskErrors.push(`不允许使用内嵌字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
+                                this.concatStrErrors.push(`不允许使用内嵌字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
                             }
                             else {
                                 const headStr = oneLine.substring(0, ret.index);
                                 if (headStr.match(/\+=?\s*$/)) {
-                                    this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
+                                    this.concatStrErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
                                 }
                                 else {
                                     const tailStr = oneLine.substring(ret.index + ret[0].length);
                                     if (tailStr.match(/^\s*\+/)) {
-                                        this.crtTaskErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
+                                        this.concatStrErrors.push(`不允许使用运算符+拼接字符串，请使用uts.format! ${this.crtFile}:${i + 1}:${ret.index + 1}`);
                                     }
                                 }
                             }

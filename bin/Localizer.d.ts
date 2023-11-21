@@ -25,12 +25,12 @@ export declare class Localizer {
     private fromMap;
     private newMap;
     private crtTask;
-    private crtTaskErrors;
     private crtFile;
     private totalCnt;
     private modifiedFileCnt;
     private noLocals;
     private jsonSafeErrors;
+    private concatStrErrors;
     private logContent;
     private mode;
     private md5Cache;
