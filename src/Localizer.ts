@@ -1263,7 +1263,7 @@ export class Localizer {
             }
             console.error('-----------------------------')
         }
-        if (fmtMissings.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0) {
+        if (!option.ignoreErrors && (fmtMissings.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0)) {
             process.exit(Ei18nErrorCode.FormatError);
         }
     }

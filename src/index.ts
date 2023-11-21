@@ -53,6 +53,7 @@ interface CmdParams {
     lockfile?: string;
     individual?: boolean;
     validate?: string;
+    ignoreErrors?: boolean;
     autoTrans?: string;
 }
 
@@ -76,6 +77,7 @@ program
 	.option("--lockfile <string>", "Lock file to check.")
 	.option("--individual", "Make individual files for each language.")
 	.option("--validate [string]", "Specify which languages to be validated.")
+	.option("--ignore-errors", "Ignore errors, won't exit when not passing validation.")
 	.option("--auto-trans <string[]>", "Auto translate or not.")
     .parse(process.argv);
 
@@ -137,6 +139,9 @@ async function main(): Promise<void> {
     }
     if(opts.validate) {
         globalOption.validate = opts.validate.split(',');
+    }
+    if(opts.ignoreErrors) {
+        globalOption.ignoreErrors = opts.ignoreErrors;
     }
 
     if (opts.autoTrans?.length > 0) {

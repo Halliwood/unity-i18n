@@ -13,6 +13,7 @@ export interface GlobalOption extends LocalizeOption {
     strict?: boolean;
     individual?: boolean;
     validate?: string[];
+    ignoreErrors?: boolean;
     autoTrans?: TLangs[];
 }
 
