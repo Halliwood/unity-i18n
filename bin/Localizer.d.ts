@@ -7,6 +7,7 @@ export declare class Localizer {
     private readonly CodeZhPattern;
     private readonly XmlZhPattern;
     private readonly PrefabZhPattern;
+    private readonly RomanNums;
     private readonly TagID;
     private readonly TagCN;
     private readonly OutXlsx;

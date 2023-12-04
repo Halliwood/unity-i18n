@@ -41,6 +41,7 @@ export class Localizer {
     private readonly CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
     private readonly XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
     private readonly PrefabZhPattern = /(?<=\s)(value|m_Text|m_text): (["']{1})([\s\S]*)/;
+    private readonly RomanNums = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
     private readonly TagID = 'ID=';
     private readonly TagCN = 'CN=';
@@ -1231,6 +1232,7 @@ export class Localizer {
                     const mchs = local.matchAll(/[a-zA-Z][a-zA-Z ']*/g);
                     for (const mch of mchs) {
                         const tokens = mch[0].trim();
+                        if (this.RomanNums.includes(tokens)) continue;
                         if (row.CN.search(new RegExp(tokens, 'i')) < 0) {
                             termENErrors.push(local);
                             break;

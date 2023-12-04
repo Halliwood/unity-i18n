@@ -20,6 +20,7 @@ export class Localizer {
     CodeZhPattern = /(?<!\\)(["'`]{1})(.*?)(?<!\\)\1/;
     XmlZhPattern = /\s*<([\d|\w|_]+)>(.*)<\/\1>/;
     PrefabZhPattern = /(?<=\s)(value|m_Text|m_text): (["']{1})([\s\S]*)/;
+    RomanNums = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
     TagID = 'ID=';
     TagCN = 'CN=';
     OutXlsx = 'language.xlsx';
@@ -1181,6 +1182,8 @@ export class Localizer {
                     const mchs = local.matchAll(/[a-zA-Z][a-zA-Z ']*/g);
                     for (const mch of mchs) {
                         const tokens = mch[0].trim();
+                        if (this.RomanNums.includes(tokens))
+                            continue;
                         if (row.CN.search(new RegExp(tokens, 'i')) < 0) {
                             termENErrors.push(local);
                             break;
