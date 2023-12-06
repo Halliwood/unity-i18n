@@ -719,6 +719,8 @@ export class Localizer {
                     zh = rawContent;
                     // 脚本里使用的errorno字符串会用到%%来进行转义
                     zh = zh.replaceAll('%%', '%');
+                    // 替换字符实体 https://learn.microsoft.com/zh-cn/dotnet/desktop/xaml-services/xml-character-entities#xml-character-entities
+                    zh = zh.replaceAll('&amp;', '&').replaceAll('&gt;', '>').replaceAll('&lt;', '<').replaceAll('&quot;', '"').replaceAll('&apos;', "'");
                     this.markTaskUsed(zh);
                 }
             }
