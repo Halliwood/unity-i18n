@@ -15,6 +15,7 @@ export interface GlobalOption extends LocalizeOption {
     validate?: string[];
     ignoreErrors?: boolean;
     autoTrans?: TLangs[];
+    debug?: boolean;
 }
 
 export interface TaskWithOption {

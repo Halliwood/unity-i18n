@@ -51,6 +51,7 @@ program
     .option("--validate [string]", "Specify which languages to be validated.")
     .option("--ignore-errors", "Ignore errors, won't exit when not passing validation.")
     .option("--auto-trans <string[]>", "Auto translate or not.")
+    .option("--debug", "Debug mode.")
     .parse(process.argv);
 const opts = program.opts();
 async function main() {
@@ -110,6 +111,9 @@ async function main() {
     }
     if (opts.ignoreErrors) {
         globalOption.ignoreErrors = opts.ignoreErrors;
+    }
+    if (opts.debug) {
+        globalOption.debug = opts.debug;
     }
     if (opts.autoTrans?.length > 0) {
         Translator.setup(opts.output);

@@ -43,7 +43,7 @@ export class Localizer {
     crtFile;
     totalCnt = 0;
     modifiedFileCnt = 0;
-    noLocals = [];
+    noLocals = {};
     jsonSafeErrors = [];
     concatStrErrors;
     logContent = '';
@@ -68,7 +68,7 @@ export class Localizer {
         this.newMap = {};
         this.totalCnt = 0;
         this.modifiedFileCnt = 0;
-        this.noLocals.length = 0;
+        this.noLocals = {};
         this.jsonSafeErrors.length = 0;
         this.logContent = '';
         let outputRoot = option?.outputRoot || 'output/';
@@ -183,9 +183,7 @@ export class Localizer {
                 }
                 console.log(`Auto translation finished, success: ${successCnt}, failed: ${failedArr.length}`);
                 if (failedArr.length > 0) {
-                    console.error('---------------------------------');
-                    failedArr.forEach((v) => console.error(v));
-                    console.error('---------------------------------');
+                    this.printMultiLines(failedArr, option);
                 }
             }
             if (option.individual) {
@@ -290,51 +288,54 @@ export class Localizer {
             }
         }
         let endAt = (new Date()).getTime();
+        let errorCode = 0;
+        if (Object.keys(this.noLocals).length > 0) {
+            const arr = [];
+            for (const zh in this.noLocals) {
+                if (!blackMap[zh]) {
+                    arr.push(zh + '    ... ' + this.noLocals[zh].join(', '));
+                }
+            }
+            if (arr.length > 0 && option.strict) {
+                console.error('[unity-i18n]No local:', arr.length);
+                this.printMultiLines(arr, option);
+                // 搜索时不以NoLocal为错误
+                if (this.mode == LocalizeMode.Replace)
+                    errorCode = Ei18nErrorCode.NoLocal;
+            }
+        }
         if (this.mode == LocalizeMode.Search) {
             console.log('[unity-i18n]搜索结束! 耗时: %d秒.', ((endAt - startAt) / 1000).toFixed());
         }
         else {
             console.log('[unity-i18n]替换结束! 耗时: %d.', ((endAt - startAt) / 1000).toFixed());
-            let errorCode = 0;
-            if (this.noLocals.length > 0) {
-                const arr = [];
-                for (const zh of this.noLocals) {
-                    if (!blackMap[zh]) {
-                        arr.push(zh);
-                    }
-                }
-                if (arr.length > 0 && option.strict) {
-                    console.error('[unity-i18n]No local:', arr.length);
-                    console.error('-----------------------------');
-                    for (const str of arr) {
-                        console.error(str);
-                    }
-                    console.error('-----------------------------');
-                    errorCode = Ei18nErrorCode.NoLocal;
-                }
-            }
             // 检查任务错误
             if (this.concatStrErrors.length > 0) {
                 console.error('[unity-i18n]Concat error:', this.concatStrErrors.length);
-                console.error('-----------------------------');
-                for (const e of this.concatStrErrors) {
-                    console.error(e);
-                }
-                console.error('-----------------------------');
+                this.printMultiLines(this.concatStrErrors, option);
                 errorCode = Ei18nErrorCode.ConcatStrings;
             }
             if (this.jsonSafeErrors.length > 0) {
                 console.error('[unity-i18n]JSON error:', this.jsonSafeErrors.length);
-                console.error('-----------------------------');
-                for (const str of this.jsonSafeErrors) {
-                    console.error(str);
-                }
-                console.error('-----------------------------');
+                this.printMultiLines(this.jsonSafeErrors, option);
                 errorCode = Ei18nErrorCode.SyntaxError;
             }
-            if (!option.ignoreErrors && errorCode != 0)
-                process.exit(errorCode);
         }
+        if (!option.ignoreErrors && errorCode != 0)
+            process.exit(errorCode);
+    }
+    printMultiLines(arr, option) {
+        console.error('-----------------------------');
+        let len = arr.length;
+        if (option.debug && len > 5)
+            len = 5;
+        for (let i = 0; i < len; i++) {
+            console.error(arr[i]);
+        }
+        if (arr.length > len) {
+            console.log(`              ${arr.length - len} more...`);
+        }
+        console.error('-----------------------------');
     }
     sortRows(rows, option) {
         let out;
@@ -1050,12 +1051,11 @@ export class Localizer {
     }
     getLocal(cn, option) {
         cn = this.formatString(cn);
-        let id = this.getStringMd5(cn);
-        let oneRow = this.strMap[id];
-        if (!oneRow || !oneRow[option.langs[0]]) {
-            if (!this.noLocals.includes(cn)) {
-                this.noLocals.push(cn);
-            }
+        const id = this.getStringMd5(cn);
+        const oneRow = this.strMap[id];
+        const langs = option.langs.filter((v) => !oneRow || !oneRow[v]);
+        if (langs.length > 0 && !this.noLocals[cn]) {
+            this.noLocals[cn] = langs;
         }
         return oneRow;
     }
@@ -1194,35 +1194,19 @@ export class Localizer {
         }
         if (fmtMissings.length > 0) {
             console.error('[unity-i18n]Format missing:', fmtMissings.length);
-            console.error('-----------------------------');
-            for (const str of fmtMissings) {
-                console.error(str);
-            }
-            console.error('-----------------------------');
+            this.printMultiLines(fmtMissings, option);
         }
         if (fmtErrors.length > 0) {
             console.error('[unity-i18n]Format error:', fmtErrors.length);
-            console.error('-----------------------------');
-            for (const str of fmtErrors) {
-                console.error(str);
-            }
-            console.error('-----------------------------');
+            this.printMultiLines(fmtErrors, option);
         }
         if (termCNErrors.length > 0) {
             console.error('[unity-i18n]TermCN error:', termCNErrors.length);
-            console.error('-----------------------------');
-            for (const str of termCNErrors) {
-                console.error(str);
-            }
-            console.error('-----------------------------');
+            this.printMultiLines(termCNErrors, option);
         }
         if (termENErrors.length > 0) {
             console.error('[unity-i18n]TermEN error:', termENErrors.length);
-            console.error('-----------------------------');
-            for (const str of termENErrors) {
-                console.error(str);
-            }
-            console.error('-----------------------------');
+            this.printMultiLines(termENErrors, option);
         }
         if (!option.ignoreErrors && (fmtMissings.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0)) {
             process.exit(Ei18nErrorCode.FormatError);

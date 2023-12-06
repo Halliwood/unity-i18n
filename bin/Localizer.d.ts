@@ -42,6 +42,7 @@ export declare class Localizer {
     searchZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption): Promise<void>;
     replaceZhInFiles(tasks: string | LocalizeTask[], option?: GlobalOption): Promise<void>;
     private processTasks;
+    private printMultiLines;
     private sortRows;
     private readXlsx;
     private smartDerive;
