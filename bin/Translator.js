@@ -9,7 +9,6 @@ const LangMap = {
 export class Translator {
     static HanPattern = /[\u4e00-\u9fa5]+/;
     static output;
-    static logFile;
     static cacheBook = {};
     static async setup(output) {
         Translator.output = output;
@@ -19,9 +18,6 @@ export class Translator {
             console.error('env configuration read error', envOutput.error);
             console.error('auto translation service failed.');
         }
-        Translator.logFile = path.join(output, 'log.txt');
-        if (fs.existsSync(Translator.logFile))
-            await fs.unlink(Translator.logFile);
     }
     static async translateTo(raw, targetLang, option) {
         // 先读入缓存
@@ -106,8 +102,8 @@ export class Translator {
             // console.log(translated);
             return out;
         }
-        if (option.needLog)
-            await fs.appendFile(Translator.logFile, `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
+        if (option.logFile)
+            await fs.appendFile(option.logFile, `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
         return null;
     }
     // private static recoverProtecteds(raw: string, protectOut: IProtectOut): IRecoverOut {

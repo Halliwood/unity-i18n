@@ -29,7 +29,6 @@ interface IRecoverOut {
 export class Translator {
     private static readonly HanPattern = /[\u4e00-\u9fa5]+/;
     private static output: string;
-    private static logFile: string;
     private static readonly cacheBook: { [lang: string]: { [raw: string]: string } } = {};
 
     public static async setup(output: string): Promise<void> {
@@ -40,8 +39,6 @@ export class Translator {
             console.error('env configuration read error', envOutput.error);
             console.error('auto translation service failed.');
         }
-        Translator.logFile = path.join(output, 'log.txt');
-        if (fs.existsSync(Translator.logFile)) await fs.unlink(Translator.logFile);
     }
 
     public static async translateTo(raw: string, targetLang: TLangs, option: GlobalOption): Promise<string | null> {
@@ -135,7 +132,7 @@ export class Translator {
             // console.log(translated);
             return out;
         }
-        if (option.needLog) await fs.appendFile(Translator.logFile, `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
+        if (option.logFile) await fs.appendFile(option.logFile, `[RECOVER]${raw}\n${translated}\n`, 'utf-8');
         return null;
     }
 

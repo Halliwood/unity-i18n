@@ -3,7 +3,6 @@ export declare type TLangs = 'CN' | 'TW' | 'EN' | 'INA' | 'Arabic' | 'Japanese' 
 export declare class Translator {
     private static readonly HanPattern;
     private static output;
-    private static logFile;
     private static readonly cacheBook;
     static setup(output: string): Promise<void>;
     static translateTo(raw: string, targetLang: TLangs, option: GlobalOption): Promise<string | null>;

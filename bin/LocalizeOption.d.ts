@@ -7,7 +7,7 @@ export interface GlobalOption extends LocalizeOption {
         [key: string]: string;
     };
     softReplace?: boolean;
-    needLog?: boolean;
+    logFile?: string;
     silent?: boolean;
     xlsxStyle?: 'prepend' | 'append' | 'sort-by-id';
     pretty?: boolean;

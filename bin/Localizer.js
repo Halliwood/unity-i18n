@@ -45,7 +45,7 @@ export class Localizer {
     modifiedFileCnt = 0;
     noLocals = {};
     jsonSafeErrors = [];
-    concatStrErrors;
+    concatStrErrors = [];
     logContent = '';
     mode;
     md5Cache = {};
@@ -183,7 +183,7 @@ export class Localizer {
                 }
                 console.log(`Auto translation finished, success: ${successCnt}, failed: ${failedArr.length}`);
                 if (failedArr.length > 0) {
-                    this.printMultiLines(failedArr, option);
+                    this.printMultiLines('Translate failed', failedArr, option);
                 }
             }
             if (option.individual) {
@@ -298,7 +298,7 @@ export class Localizer {
             }
             if (arr.length > 0 && option.strict) {
                 console.error('[unity-i18n]No local:', arr.length);
-                this.printMultiLines(arr, option);
+                this.printMultiLines('No local', arr, option);
                 // 搜索时不以NoLocal为错误
                 if (this.mode == LocalizeMode.Replace)
                     errorCode = Ei18nErrorCode.NoLocal;
@@ -312,20 +312,21 @@ export class Localizer {
             // 检查任务错误
             if (this.concatStrErrors.length > 0) {
                 console.error('[unity-i18n]Concat error:', this.concatStrErrors.length);
-                this.printMultiLines(this.concatStrErrors, option);
+                this.printMultiLines('Concat error', this.concatStrErrors, option);
                 errorCode = Ei18nErrorCode.ConcatStrings;
             }
             if (this.jsonSafeErrors.length > 0) {
                 console.error('[unity-i18n]JSON error:', this.jsonSafeErrors.length);
-                this.printMultiLines(this.jsonSafeErrors, option);
+                this.printMultiLines('JSON error', this.jsonSafeErrors, option);
                 errorCode = Ei18nErrorCode.SyntaxError;
             }
         }
         if (!option.ignoreErrors && errorCode != 0)
             process.exit(errorCode);
     }
-    printMultiLines(arr, option) {
-        console.error('-----------------------------');
+    async printMultiLines(group, arr, option) {
+        const startLine = `--------------${group} start--------------`, endLine = '---------------${group} end---------------';
+        console.error(startLine);
         let len = arr.length;
         if (option.debug && len > 5)
             len = 5;
@@ -335,7 +336,10 @@ export class Localizer {
         if (arr.length > len) {
             console.log(`              ${arr.length - len} more...`);
         }
-        console.error('-----------------------------');
+        console.error(endLine);
+        if (option.logFile) {
+            await fs.appendFile(option.logFile, startLine + '\n' + arr.join('\n') + '\n' + endLine + '\n', 'utf-8');
+        }
     }
     sortRows(rows, option) {
         let out;
@@ -517,7 +521,6 @@ export class Localizer {
             };
         }
         this.crtTask = oneTask;
-        this.concatStrErrors = [];
         const finalOpt = this.mergeOption(oneTask.option, option);
         const ojs = oneTask.option?.outputJSONs;
         if (ojs) {
@@ -972,7 +975,7 @@ export class Localizer {
             let zh = '';
             if (quotedContent) {
                 // 处理prefab里显式使用\r和\n进行换行的情况
-                quotedContent = this.unicode2utf8(quotedContent.replaceAll('\\\\n', '\\n').replaceAll('\\\\r', '\\r'));
+                quotedContent = this.unicode2utf8(quotedContent.replaceAll(/(?<!\\)\\n/g, '\n').replaceAll(/(?<!\\)\\r/g, '\r').replaceAll('\\\\n', '\\n').replaceAll('\\\\r', '\\r'));
                 if (this.containsZh(quotedContent)) {
                     zh = quotedContent;
                     this.markTaskUsed(zh);
@@ -1232,19 +1235,19 @@ export class Localizer {
         }
         if (fms.length > 0) {
             console.error('[unity-i18n]Format missing:', fms.length);
-            this.printMultiLines(fms, option);
+            this.printMultiLines('Format missing', fms, option);
         }
         if (fmtErrors.length > 0) {
             console.error('[unity-i18n]Format error:', fmtErrors.length);
-            this.printMultiLines(fmtErrors, option);
+            this.printMultiLines('Format error', fmtErrors, option);
         }
         if (termCNErrors.length > 0) {
             console.error('[unity-i18n]TermCN error:', termCNErrors.length);
-            this.printMultiLines(termCNErrors, option);
+            this.printMultiLines('TermCN error', termCNErrors, option);
         }
         if (termENErrors.length > 0) {
             console.error('[unity-i18n]TermEN error:', termENErrors.length);
-            this.printMultiLines(termENErrors, option);
+            this.printMultiLines('TermEN error', termENErrors, option);
         }
         if (!option.ignoreErrors && (fms.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0)) {
             process.exit(Ei18nErrorCode.FormatError);

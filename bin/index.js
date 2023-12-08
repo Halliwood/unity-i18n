@@ -92,7 +92,9 @@ async function main() {
         globalOption.silent = opts.silent;
     }
     if (opts.log) {
-        globalOption.needLog = opts.log;
+        globalOption.logFile = path.join(opts.output, 'log.txt');
+        if (fs.existsSync(globalOption.logFile))
+            await fs.unlink(globalOption.logFile);
     }
     if (opts.xlsxstyle) {
         globalOption.xlsxStyle = opts.xlsxstyle;

@@ -4,5 +4,5 @@ export enum Ei18nErrorCode {
     NoLocal = 1000, 
     ConcatStrings = 1001,
     SyntaxError = 1002,
-    FormatError = 1003
+    FormatError = 1003,
 }
