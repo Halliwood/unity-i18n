@@ -70,11 +70,13 @@ export declare class Localizer {
     private normalizePath;
     private ensureString;
     private validate;
+    private recordMissedFormats;
     private correct;
     private processQuote;
     private processQuoteInJson;
     private ensureRegExp;
     private getIndividualXlsx;
+    private count;
     private addLog;
     private assert;
 }

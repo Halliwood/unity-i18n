@@ -1158,7 +1158,7 @@ export class Localizer {
     private validate(option: GlobalOption): void {
         if (option.validate == null) return;
 
-        const fmtMissings: string[] = [];
+        const fmtMissings: { [local: string]: string[] } = {};
         const fmtErrors: string[] = [];
         const termCNErrors: string[] = [];
         const termENErrors: string[] = [];
@@ -1171,29 +1171,61 @@ export class Localizer {
                     for (const lang of option.validate) {
                         const local = row[lang];
                         if (local && local.indexOf(fmt) < 0) {
-                            fmtMissings.push(local);
+                            this.recordMissedFormats(local, fmt, fmtMissings);
                         }
                     }
                 }
             }
 
-            // 检查#N
+            // 检查富文本格式（同xml2json的检查，只不过xml2json无法检查后台的errorno）
+            if (this.count(row.CN.replaceAll('#N', '').replaceAll(/<color=#\w.+>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, ''), '#') % 2 != 0) {
+                fmtErrors.push(row.CN);
+            }
+
+            // 检查富文本格式丢失
             const newlineCnt = row.CN.match(/#N/g)?.length;
             if (newlineCnt > 0) {
+                // 检查#N
                 for (const lang of option.validate) {
                     const local = row[lang];
-                    if (local && !fmtMissings.includes(local) && local.match(/#N/g)?.length != newlineCnt) {
-                        fmtMissings.push(local);
+                    if (local && local.match(/#N/g)?.length != newlineCnt) {
+                        this.recordMissedFormats(local, '#N', fmtMissings);
                     }
                 }
             }
+            // 检查其它富文本格式
+            const lines = row.CN.split('#N');
+            for (const lang of option.validate) {
+                const local = row[lang];
+                if (!local) continue;
+                let missing = false;
+                const localLines = local.split('#N');
+                for (let i = 0, len = lines.length; i < len; i++) {
+                    const line = lines[i];
+                    const localLine = localLines[i];
+                    const rfs = line.matchAll(/#.+?#/g);
+                    for (const mch of rfs) {
+                        let rf = mch[0];
+                        if (rf.includes(';')) {
+                            rf = rf.substring(0, rf.indexOf(';') + 1);
+                        }
+                        if (!localLine.includes(rf)) {
+                            this.recordMissedFormats(local, mch[0], fmtMissings);
+                            missing = true;
+                            break;
+                        }
+                    }
+                    if (missing) break;
+                }
+            }
+
             // 检查\n
             const newlineCnt2 = row.CN.match(/\\n/g)?.length;
             if (newlineCnt2 > 0) {
                 for (const lang of option.validate) {
                     const local = row[lang];
-                    if (local && !fmtMissings.includes(local) && local.match(/\\n/g)?.length != newlineCnt2) {
-                        fmtMissings.push(local);
+                    if (local && local.match(/\\n/g)?.length != newlineCnt2) {
+                        this.recordMissedFormats(local, '\\n', fmtMissings);
                     }
                 }
             }
@@ -1243,9 +1275,13 @@ export class Localizer {
             }
         }
 
-        if (fmtMissings.length > 0) {
-            console.error('[unity-i18n]Format missing:', fmtMissings.length);
-            this.printMultiLines(fmtMissings, option);
+        const fms: string[] = [];
+        for (const local in fmtMissings) {
+            fms.push('<' + fmtMissings[local].join(',') + '>    ' + local);
+        }
+        if (fms.length > 0) {
+            console.error('[unity-i18n]Format missing:', fms.length);
+            this.printMultiLines(fms, option);
         }
         if (fmtErrors.length > 0) {
             console.error('[unity-i18n]Format error:', fmtErrors.length);
@@ -1259,9 +1295,15 @@ export class Localizer {
             console.error('[unity-i18n]TermEN error:', termENErrors.length);
             this.printMultiLines(termENErrors, option);
         }
-        if (!option.ignoreErrors && (fmtMissings.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0)) {
+        if (!option.ignoreErrors && (fms.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0)) {
             process.exit(Ei18nErrorCode.FormatError);
         }
+    }
+
+    private recordMissedFormats(local: string, fmt: string, record: { [local: string]: string[]}): void {
+        let fmts = record[local];
+        if (!fmts) record[local] = fmts = [];
+        fmts.push(fmt);
     }
 
     private correct(option: GlobalOption): void {
@@ -1388,6 +1430,17 @@ export class Localizer {
     private getIndividualXlsx(file: string, lang: string): string {
         const ext = path.extname(file);
         return file.replace(ext, '.' + lang + ext);
+    }
+
+    private count(s: string, subs: string): number {
+        let count = 0;
+        let idx = s.indexOf(subs);
+        while (idx >= 0) {
+            count++;
+            s = s.substring(idx + subs.length);
+            idx = s.indexOf(subs);
+        }
+        return count;
     }
 
     private addLog(tag: 'SEARCH' | 'SKIP' | 'REPLACE' | 'NOREPLACE' | 'NOLOCAL', text: string) {
