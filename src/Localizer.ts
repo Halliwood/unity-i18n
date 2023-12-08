@@ -1183,7 +1183,10 @@ export class Localizer {
             }
 
             // 检查富文本格式（同xml2json的检查，只不过xml2json无法检查后台的errorno）
-            if (this.count(row.CN.replaceAll('#N', '').replaceAll(/<color=#\w.+>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, ''), '#') % 2 != 0) {
+            // 简单地统计除了#N以外的#数量是否是偶数
+            // 但脚本里可能存在 #"SCRIPTDEF_LIGHTBULETEXT";[ 剩余时间 ]# 的情况，需让脚本改成
+            // "#"SCRIPDEF_LIGHTBULETEXT";[ ""剩余时间"" ]#"
+            if (this.count(row.CN.replaceAll('#N', '').replaceAll(/<color=#.+?>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, ''), '#') % 2 != 0) {
                 fmtErrors.push(row.CN);
             }
 

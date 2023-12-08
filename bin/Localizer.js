@@ -1130,7 +1130,7 @@ export class Localizer {
                 }
             }
             // 检查富文本格式（同xml2json的检查，只不过xml2json无法检查后台的errorno）
-            if (this.count(row.CN.replaceAll('#N', '').replaceAll(/<color=#\w.+>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, ''), '#') % 2 != 0) {
+            if (this.count(row.CN.replaceAll('#N', '').replaceAll(/<color=#.+?>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, ''), '#') % 2 != 0) {
                 fmtErrors.push(row.CN);
             }
             // 检查富文本格式丢失
