@@ -1130,7 +1130,10 @@ export class Localizer {
                 }
             }
             // 检查富文本格式（同xml2json的检查，只不过xml2json无法检查后台的errorno）
-            if (this.count(row.CN.replaceAll('#N', '').replaceAll(/<color=#.+?>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, ''), '#') % 2 != 0) {
+            // 简单地统计除了#N以外的#数量是否是偶数
+            // 但脚本里可能存在 #"SCRIPTDEF_LIGHTBULETEXT";[ 剩余时间 ]# 的情况，需让脚本改成
+            // "#"SCRIPDEF_LIGHTBULETEXT";[ ""剩余时间"" ]#"
+            if (this.count(this.hideForRichFormatTest(row.CN.replaceAll('#N', '')), '#') % 2 != 0) {
                 fmtErrors.push(row.CN);
             }
             // 检查富文本格式丢失
@@ -1145,7 +1148,7 @@ export class Localizer {
                 }
             }
             // 检查其它富文本格式
-            const lines = row.CN.split('#N');
+            const lines = this.hideForRichFormatTest(row.CN).split('#N');
             for (const lang of option.validate) {
                 const local = row[lang];
                 if (!local)
@@ -1252,6 +1255,9 @@ export class Localizer {
         if (!option.ignoreErrors && (fms.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0)) {
             process.exit(Ei18nErrorCode.FormatError);
         }
+    }
+    hideForRichFormatTest(s) {
+        return s.replaceAll(/<color=#.+?>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, '');
     }
     recordMissedFormats(local, fmt, record) {
         let fmts = record[local];

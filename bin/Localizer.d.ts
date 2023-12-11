@@ -70,6 +70,7 @@ export declare class Localizer {
     private normalizePath;
     private ensureString;
     private validate;
+    private hideForRichFormatTest;
     private recordMissedFormats;
     private correct;
     private processQuote;

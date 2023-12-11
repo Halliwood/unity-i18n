@@ -1186,7 +1186,7 @@ export class Localizer {
             // 简单地统计除了#N以外的#数量是否是偶数
             // 但脚本里可能存在 #"SCRIPTDEF_LIGHTBULETEXT";[ 剩余时间 ]# 的情况，需让脚本改成
             // "#"SCRIPDEF_LIGHTBULETEXT";[ ""剩余时间"" ]#"
-            if (this.count(row.CN.replaceAll('#N', '').replaceAll(/<color=#.+?>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, ''), '#') % 2 != 0) {
+            if (this.count(this.hideForRichFormatTest(row.CN.replaceAll('#N', '')), '#') % 2 != 0) {
                 fmtErrors.push(row.CN);
             }
 
@@ -1202,7 +1202,7 @@ export class Localizer {
                 }
             }
             // 检查其它富文本格式
-            const lines = row.CN.split('#N');
+            const lines = this.hideForRichFormatTest(row.CN).split('#N');
             for (const lang of option.validate) {
                 const local = row[lang];
                 if (!local) continue;
@@ -1306,6 +1306,10 @@ export class Localizer {
         if (!option.ignoreErrors && (fms.length > 0 || fmtErrors.length > 0 || termCNErrors.length > 0 || termENErrors.length > 0)) {
             process.exit(Ei18nErrorCode.FormatError);
         }
+    }
+
+    private hideForRichFormatTest(s: string): string {
+        return s.replaceAll(/<color=#.+?>/g, '').replaceAll(/<font color=('|")#\w.+\1>/g, '');
     }
 
     private recordMissedFormats(local: string, fmt: string, record: { [local: string]: string[]}): void {
