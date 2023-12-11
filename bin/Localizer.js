@@ -325,7 +325,7 @@ export class Localizer {
             process.exit(errorCode);
     }
     async printMultiLines(group, arr, option) {
-        const startLine = `--------------${group} start--------------`, endLine = '---------------${group} end---------------';
+        const startLine = `--------------${group} start--------------`, endLine = `---------------${group} end---------------`;
         console.error(startLine);
         let len = arr.length;
         if (option.debug && len > 5)

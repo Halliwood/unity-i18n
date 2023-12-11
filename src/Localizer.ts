@@ -375,7 +375,7 @@ export class Localizer {
     }
 
     private async printMultiLines(group: string, arr: string[], option: GlobalOption): Promise<void> {
-        const startLine = `--------------${group} start--------------`, endLine = '---------------${group} end---------------';
+        const startLine = `--------------${group} start--------------`, endLine = `---------------${group} end---------------`;
         console.error(startLine);
         let len = arr.length;
         if (option.debug && len > 5) len = 5;
